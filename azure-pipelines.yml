@@ -9,7 +9,7 @@ pr:
 
 variables:
 - template: eng/common-variables.yml
-- SignType: test
+- _SignType: test
 - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
   - group: DotNet-Install-Scripts-SDLValidation-Params
 
