@@ -8,7 +8,6 @@ pr:
   - master
 
 variables:
-- template: eng/common-variables.yml
 - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
   - group: DotNet-Install-Scripts-SDLValidation-Params
 
@@ -48,8 +47,6 @@ stages:
             value: DotNetDevUxPrague
           - name: _SignType
             value: test
-          - name: _SignArgs
-            value: ''
         strategy:
           matrix:
             Build_Release:
@@ -66,8 +63,8 @@ stages:
             -prepareMachine
             $(_InternalBuildArgs)
             /p:Test=false
-            /p:DotNetSignType=test
-            /p:TeamName=DotNetDevUxPrague
+            /p:DotNetSignType=$(_SignType)
+            /p:TeamName=$(_TeamName)
           displayName: Windows Build / Publish
       - ${{ if eq(variables._RunAsPublic, True) }}:
         - job: Linux
