@@ -7,6 +7,9 @@ trigger:
 pr:
   - master
 
+variables:
+- template: eng/common-variables.yml
+
 resources:
   containers:
   - container: LinuxContainer
