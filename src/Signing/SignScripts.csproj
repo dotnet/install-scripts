@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+   <PropertyGroup>
+    <IsPackable>true</IsPackable>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+    <CopyBuildOutputToPublishDirectory>false</CopyBuildOutputToPublishDirectory>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <AssemblyName>UNUSED</AssemblyName>
+  </PropertyGroup>
+   <ItemGroup>
+     <None Include="..\dotnet-install.ps1" Link="dotnet-install.ps1">
+       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+     </None>
+   </ItemGroup>
+</Project>
