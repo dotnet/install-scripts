@@ -3,6 +3,7 @@ trigger:
   branches:
     include:
     - master
+    - dev/bozturk/arcade-integration
 
 pr:
   - master
