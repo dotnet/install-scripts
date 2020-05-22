@@ -1,0 +1,5 @@
+<Project>
+    <ItemGroup>
+        <ItemsToSign Include="$(OutputPath)dotnet-install.ps1" />
+    </ItemGroup>
+</Project>
