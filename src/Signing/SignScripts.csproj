@@ -8,13 +8,14 @@
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <AssemblyName>UNUSED</AssemblyName>
   </PropertyGroup>
-   <ItemGroup>
-     <None Include="..\dotnet-install.ps1" Link="dotnet-install.ps1">
-       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-     </None>
-   </ItemGroup>
-   <Target Name="Delete Unused" AfterTargets="Build">
-      <Delete Files="$(OutputPath)UNUSED.dll"/>
-      <Delete Files="$(OutputPath)UNUSED.pdb"/>
-   </Target>
+  <ItemGroup>
+    <None Include="..\dotnet-install.ps1" Link="dotnet-install.ps1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <ItemsToSign Include="$(OutputPath)dotnet-install.ps1" />
+  </ItemGroup>
+  <Target Name="Delete Unused" AfterTargets="Build">
+    <Delete Files="$(OutputPath)UNUSED.dll"/>
+    <Delete Files="$(OutputPath)UNUSED.pdb"/>
+  </Target>
 </Project>
