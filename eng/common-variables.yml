@@ -21,7 +21,7 @@ variables:
     - name: _RunAsInternal
       value: True
     - name: _SignType
-      value: real
+      value: test
     - name: _UseBuildManifest
       value: False
     # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
