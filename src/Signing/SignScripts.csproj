@@ -13,7 +13,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <Target Name="Delete Unused" AfterTargets="Build">
+  <Target Name="Delete Unused">
     <Delete Files="$(OutputPath)UNUSED.dll"/>
     <Delete Files="$(OutputPath)UNUSED.pdb"/>
   </Target>
