@@ -12,7 +12,6 @@
     <None Include="..\dotnet-install.ps1" Link="dotnet-install.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <ItemsToSign Include="$(OutputPath)dotnet-install.ps1" />
   </ItemGroup>
   <Target Name="Delete Unused" AfterTargets="Build">
     <Delete Files="$(OutputPath)UNUSED.dll"/>

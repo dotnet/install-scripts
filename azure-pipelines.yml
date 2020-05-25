@@ -1,5 +1,5 @@
 trigger:
-  batch: true
+  batch: false # keep false to speed up testing
   branches:
     include:
     - master
