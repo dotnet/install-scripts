@@ -1,9 +1,5 @@
 trigger:
-  batch: false # keep false to speed up testing
-  branches:
-    include:
-    - master
-    - dev/bozturk/arcade-integration
+  - master
 
 pr:
   - master
