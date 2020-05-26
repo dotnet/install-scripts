@@ -181,6 +181,8 @@ stages:
 
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
+      enableSigningValidation: false
+      enableNugetValidation: false
       # Symbol validation isn't being very reliable lately. This should be enabled back
       # once this issue is resolved: https://github.com/dotnet/arcade/issues/2871
       enableSymbolValidation: false
