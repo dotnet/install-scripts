@@ -1,0 +1,5 @@
+<Project>
+    <ItemGroup>
+        <ItemsToSign Include="$(ArtifactsDir)bin/SignScripts/$(Configuration)/dotnet-install.ps1" />
+    </ItemGroup>
+</Project>

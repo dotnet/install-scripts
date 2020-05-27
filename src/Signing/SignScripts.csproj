@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+   <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+    <CopyBuildOutputToPublishDirectory>false</CopyBuildOutputToPublishDirectory>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <AssemblyName>UNUSED</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\dotnet-install.ps1" Link="dotnet-install.ps1">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <Target Name="Delete Unused" AfterTargets="Build">
+    <Delete Files="$(OutputPath)UNUSED.dll"/>
+    <Delete Files="$(OutputPath)UNUSED.pdb"/>
+  </Target>
+  <Target Name="ArtifactsDir Setup" AfterTargets="Build">
+    <!-- To prevent "directory not found" errors, create empty directory -->
+    <MakeDir Directories="$(ArtifactsPackagesDir)"/>
+  </Target>
+</Project>
