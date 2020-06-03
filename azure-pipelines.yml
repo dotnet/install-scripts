@@ -51,7 +51,15 @@ stages:
             /p:Test=false
             /p:DotNetSignType=$(_SignType)
             /p:TeamName=$(_TeamName)
-          displayName: Windows Build / Publish
+          displayName: Sign dotnet-install.ps1
+        - ${{ if eq(variables._RunAsInternal, True) }}:
+          - task: PowerShell@2
+            displayName: Validate Signature
+            inputs:
+              filePath: eng/common/sdk-task.ps1
+              arguments: -task SigningValidation -restore -msbuildEngine vs 
+                /p:InputFiles='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/**/*.ps1'
+                /p:PackageBasePath='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/'
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - stage: ValidateSdk
@@ -64,7 +72,6 @@ stages:
           -prepareMachine
           $(_InternalBuildArgs)
           /p:Test=false
-
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
       enableSigningValidation: false
