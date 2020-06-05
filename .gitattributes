@@ -1,0 +1,3 @@
+# dotnet-install scripts must have LF line endings to support macOS and Linux
+*.sh text eol=lf
+*.ps1 text eol=lf
