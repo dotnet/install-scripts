@@ -154,7 +154,16 @@ function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [int]$MaxAttempts = 3, [in
 function Get-Machine-Architecture() {
     Say-Invocation $MyInvocation
 
-    # possible values: amd64, x64, x86, arm64, arm
+    # On PS x86, PROCESSOR_ARCHITECTURE reports x86 even on x64 systems.
+    # To get the correct architecture, we need to use PROCESSOR_ARCHITEW6432.
+    # PS x64 doesn't define this, so we fall back to PROCESSOR_ARCHITECTURE.
+    # Possible values: amd64, x64, x86, arm64, arm
+
+    if( $ENV:PROCESSOR_ARCHITEW6432 -ne $null )
+    {    
+        return $ENV:PROCESSOR_ARCHITEW6432
+    }
+
     return $ENV:PROCESSOR_ARCHITECTURE
 }
 
