@@ -154,8 +154,10 @@ function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [int]$MaxAttempts = 3, [in
 function Get-Machine-Architecture() {
     Say-Invocation $MyInvocation
 
+    # emulated x86 processes (such as powershell classic on ARM64) can report the wrong architecture
+    # read the variable from the machine level to get the true OS architecture.
     # possible values: amd64, x64, x86, arm64, arm
-    return $ENV:PROCESSOR_ARCHITECTURE
+    return [System.Environment]::GetEnvironmentVariable("PROCESSOR_ARCHITECTURE", [System.EnvironmentVariableTarget]::Machine)
 }
 
 function Get-CLIArchitecture-From-Architecture([string]$Architecture) {
