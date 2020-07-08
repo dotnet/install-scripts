@@ -44,8 +44,17 @@ stages:
         - checkout: self
           clean: true
         steps:
+        - task: UseDotNet@2
+          displayName: Get .NET Core sdk
+          inputs:
+            version: 3.x
+        - task: DotNetCoreCLI@2
+          displayName: Run Tests
+          inputs: 
+            command: test
         - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig)
+            -projects src/Signing/SignScripts.csproj
             -prepareMachine
             $(_InternalBuildArgs)
             /p:Test=false
@@ -60,6 +69,18 @@ stages:
               arguments: -task SigningValidation -restore -msbuildEngine vs 
                 /p:InputFiles='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/**/*.ps1'
                 /p:PackageBasePath='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/'
+          # Disable function publishing until key vault is available
+          - ${{ if False }}:
+            - task: AzureKeyVault@1
+              inputs:
+                azureSubscription: 'InstallScripts_KeyVault'
+                KeyVaultName: Dotnet-Install-Keys
+                SecretsFilter: 'ConnectionStrings--AzureWebJobsStorage'
+            - task: DotNetCoreCLI@2
+              inputs:
+                command: publish
+                publishWebProjects: false
+                projects: src/MonitoringFunctions/MonitoringFunctions.csproj
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - stage: ValidateSdk
