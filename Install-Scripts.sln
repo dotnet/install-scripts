@@ -5,6 +5,10 @@ VisualStudioVersion = 16.0.30105.208
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignScripts", "src\Signing\SignScripts.csproj", "{8335F5A8-00BD-4457-924B-CAF878E5D929}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonitoringFunctions", "src\MonitoringFunctions\MonitoringFunctions.csproj", "{BF6E1679-3E2C-4B36-BBA8-A9DAF1114CF3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonitoringFunctions.Test", "tests\MonitoringFunctions.Test\MonitoringFunctions.Test.csproj", "{EF881AB7-BFF9-4FAD-998A-7B6A6A93F2F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{8335F5A8-00BD-4457-924B-CAF878E5D929}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8335F5A8-00BD-4457-924B-CAF878E5D929}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8335F5A8-00BD-4457-924B-CAF878E5D929}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF6E1679-3E2C-4B36-BBA8-A9DAF1114CF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF6E1679-3E2C-4B36-BBA8-A9DAF1114CF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF6E1679-3E2C-4B36-BBA8-A9DAF1114CF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF6E1679-3E2C-4B36-BBA8-A9DAF1114CF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EF881AB7-BFF9-4FAD-998A-7B6A6A93F2F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EF881AB7-BFF9-4FAD-998A-7B6A6A93F2F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EF881AB7-BFF9-4FAD-998A-7B6A6A93F2F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EF881AB7-BFF9-4FAD-998A-7B6A6A93F2F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
