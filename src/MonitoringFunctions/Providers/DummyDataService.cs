@@ -1,14 +1,17 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+
+using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MonitoringFunctions.Providers
 {
-    internal class DummyDataService : IDataService
+    internal sealed class DummyDataService : IDataService
     {
-        public async Task ReportUrlAccess(string monitorName, HttpResponseMessage httpResponse)
+        public async Task ReportUrlAccessAsync(string monitorName, HttpResponseMessage httpResponse, CancellationToken cancellationToken = default)
         {
-            await Task.Delay(new Random().Next(200, 4000)).ConfigureAwait(false);
+            await Task.Delay(new Random().Next(200, 4000), cancellationToken).ConfigureAwait(false);
         }
 
         public void Dispose()

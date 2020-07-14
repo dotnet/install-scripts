@@ -14,7 +14,7 @@ namespace MonitoringFunctions.Test
         public async Task TestCheckUrlAccess()
         {
             using IDataService dataService = new DummyDataService();
-            await HelperMethods.CheckAndReportUrlAccess(NullLogger.Instance, "test_run", "https://www.microsoft.com", dataService);
+            await HelperMethods.CheckAndReportUrlAccessAsync(NullLogger.Instance, "test_run", "https://www.microsoft.com", dataService);
         }
 
         [DataRow("definitely not a url")]
@@ -25,7 +25,7 @@ namespace MonitoringFunctions.Test
             try
             {
                 using IDataService dataService = new DummyDataService();
-                await HelperMethods.CheckAndReportUrlAccess(NullLogger.Instance, "test_run", url, dataService);
+                await HelperMethods.CheckAndReportUrlAccessAsync(NullLogger.Instance, "test_run", url, dataService);
                 Assert.Fail();
             }
             catch

@@ -3,6 +3,7 @@
 using System;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -27,11 +28,11 @@ namespace MonitoringFunctions
         /// <param name="monitorName">Name of this monitor to be included in the logs and in the data sent to Kusto.</param>
         /// <param name="url">Url that this method will attempt to access.</param>
         /// <returns></returns>
-        internal static async Task CheckAndReportUrlAccess(ILogger log, string monitorName, string url, IDataService dataService)
+        internal static async Task CheckAndReportUrlAccessAsync(ILogger log, string monitorName, string url, IDataService dataService, CancellationToken cancellationToken = default)
         {
-            HttpResponseMessage response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait(false);
+            HttpResponseMessage response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
 
-            await dataService.ReportUrlAccess(monitorName, response);
+            await dataService.ReportUrlAccessAsync(monitorName, response, cancellationToken).ConfigureAwait(false);
 
             if (response.IsSuccessStatusCode)
             {

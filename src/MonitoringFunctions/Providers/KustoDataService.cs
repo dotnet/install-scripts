@@ -7,21 +7,22 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MonitoringFunctions
 {
-    internal class KustoDataService : IDataService
+    internal sealed class KustoDataService : IDataService
     {
-        private const string serviceNameAndRegion = "dotnetinstallcluster.eastus2";
-        private const string databaseName = "dotnet_install_monitoring_database";
-        private const string tableName = "DaemonLogs";
+        private const string ServiceNameAndRegion = "dotnetinstallcluster.eastus2";
+        private const string DatabaseName = "dotnet_install_monitoring_database";
+        private const string TableName = "DaemonLogs";
 
         private static IEnumerable<ColumnMapping> DaemonLogsJsonMapping { get; }
 
         static KustoDataService()
         {
-            DaemonLogsJsonMapping = new List<ColumnMapping>()
+            DaemonLogsJsonMapping = new ColumnMapping[]
                 {
                     new ColumnMapping()
                     {
@@ -64,13 +65,13 @@ namespace MonitoringFunctions
         /// <param name="monitorName"></param>
         /// <param name="httpResponse"></param>
         /// <returns></returns>
-        public async Task ReportUrlAccess(string monitorName, HttpResponseMessage httpResponse)
+        public async Task ReportUrlAccessAsync(string monitorName, HttpResponseMessage httpResponse, CancellationToken cancellationToken = default)
         {
-            KustoConnectionStringBuilder kcsb = new KustoConnectionStringBuilder($"https://ingest-{serviceNameAndRegion}.kusto.windows.net")
+            KustoConnectionStringBuilder kcsb = new KustoConnectionStringBuilder($"https://ingest-{ServiceNameAndRegion}.kusto.windows.net")
                 .WithAadManagedIdentity("system");
 
             using IKustoQueuedIngestClient ingestClient = KustoIngestFactory.CreateQueuedIngestClient(kcsb);
-            KustoQueuedIngestionProperties ingestProps = new KustoQueuedIngestionProperties(databaseName, tableName);
+            KustoQueuedIngestionProperties ingestProps = new KustoQueuedIngestionProperties(DatabaseName, TableName);
 
             ingestProps.ReportLevel = IngestionReportLevel.FailuresOnly;
             ingestProps.ReportMethod = IngestionReportMethod.Queue;
@@ -93,7 +94,8 @@ namespace MonitoringFunctions
             writer.Flush();
             memStream.Seek(0, SeekOrigin.Begin);
 
-            await ingestClient.IngestFromStreamAsync(memStream, ingestProps, leaveOpen: true).ConfigureAwait(false);
+            // IKustoQueuedIngestClient doesn't support cancellation at the moment. Update the line below if it does in the future.
+            await ingestClient.IngestFromStreamAsync(memStream, ingestProps, leaveOpen: true);
         }
 
         public void Dispose()
