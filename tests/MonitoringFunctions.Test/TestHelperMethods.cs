@@ -18,7 +18,7 @@ namespace MonitoringFunctions.Test
         }
 
         [DataRow("definitely not a url")]
-        [DataRow("https://www.somewebsitethatdontexist1239420312392304.com")]
+        [DataRow("https://0.com")]
         [TestMethod]
         public async Task TestCheckUrlAccessFailure(string url)
         {
