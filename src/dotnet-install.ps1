@@ -119,11 +119,27 @@ $VersionRegEx="/\d+\.\d+[^/]+/"
 $OverrideNonVersionedFiles = !$SkipNonVersionedFiles
 
 function Say($str) {
-    Write-Host "dotnet-install: $str"
+    try
+    {
+        Write-Host "dotnet-install: $str"
+    }
+    catch
+    {
+        # Some platforms cannot utilize Write-Host (Azure Functions, for instance). Fall back to Write-Output
+        Write-Output "dotnet-install: $str"
+    }
 }
 
 function Say-Verbose($str) {
-    Write-Verbose "dotnet-install: $str"
+    try
+    {
+        Write-Verbose "dotnet-install: $str"
+    }
+    catch
+    {
+        # Some platforms cannot utilize Write-Verbose (Azure Functions, for instance). Fall back to Write-Output
+        Write-Output "dotnet-install: $str"
+    }
 }
 
 function Say-Invocation($Invocation) {
