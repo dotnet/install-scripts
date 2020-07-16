@@ -47,7 +47,7 @@ stages:
           clean: true
         steps:
         - task: UseDotNet@2
-          displayName: Get .NET Core sdk
+          displayName: Get .NET Core SDK
           inputs:
             version: 3.x
         - task: DotNetCoreCLI@2
@@ -73,7 +73,7 @@ stages:
                 /p:PackageBasePath='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/'
           # Signing step overrides the default SDK version to 5.0. Reinstall is needed.
           - task: UseDotNet@2
-            displayName: Get .NET Core sdk
+            displayName: Get .NET Core SDK
             inputs:
               # Azure Functions client library (v3.0.9) has a dependency on SDK 3.x
               version: 3.x

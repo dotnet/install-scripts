@@ -71,16 +71,17 @@ namespace MonitoringFunctions
                 .WithAadManagedIdentity("system");
 
             using IKustoQueuedIngestClient ingestClient = KustoIngestFactory.CreateQueuedIngestClient(kcsb);
-            KustoQueuedIngestionProperties ingestProps = new KustoQueuedIngestionProperties(DatabaseName, TableName);
-
-            ingestProps.ReportLevel = IngestionReportLevel.FailuresOnly;
-            ingestProps.ReportMethod = IngestionReportMethod.Queue;
-            ingestProps.IngestionMapping = new IngestionMapping()
+            KustoQueuedIngestionProperties ingestProps = new KustoQueuedIngestionProperties(DatabaseName, TableName)
             {
-                IngestionMappingKind = Kusto.Data.Ingestion.IngestionMappingKind.Json,
-                IngestionMappings = HttpRequestLogColumnMapping
+                ReportLevel = IngestionReportLevel.FailuresOnly,
+                ReportMethod = IngestionReportMethod.Queue,
+                IngestionMapping = new IngestionMapping()
+                {
+                    IngestionMappingKind = Kusto.Data.Ingestion.IngestionMappingKind.Json,
+                    IngestionMappings = HttpRequestLogColumnMapping
+                },
+                Format = DataSourceFormat.json
             };
-            ingestProps.Format = DataSourceFormat.json;
 
             using MemoryStream memStream = new MemoryStream();
             using StreamWriter writer = new StreamWriter(memStream);
