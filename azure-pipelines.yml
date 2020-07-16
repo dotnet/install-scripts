@@ -5,7 +5,8 @@ pr:
   - master
 
 variables:
-- group: DotNet-Install-Scripts-BuildPipeline-Params
+- ${{ if eq(variables._RunAsInternal, True) }}:
+  - group: DotNet-Install-Scripts-BuildPipeline-Params
 - template: eng/common-variables.yml
 
 stages:
