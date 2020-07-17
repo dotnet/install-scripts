@@ -14,7 +14,7 @@ namespace MonitoringFunctions.Functions
         [FunctionName("DownloadSh")]
         public static async Task RunAsync([TimerTrigger("0 */30 * * * *")]TimerInfo myTimer, ILogger log)
         {
-            using IDataService dataService = new KustoDataService();
+            using IDataService dataService = new DataServiceFactory().GetDataService();
             await HelperMethods.CheckAndReportUrlAccessAsync(log, _monitorName, _url, dataService).ConfigureAwait(false);
         }
     }

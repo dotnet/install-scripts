@@ -14,9 +14,15 @@ namespace MonitoringFunctions.Providers
             await Task.Delay(new Random().Next(200, 4000), cancellationToken).ConfigureAwait(false);
         }
 
+        public async Task ReportScriptExecutionAsync(string monitorName, string scriptName, string commandLineArgs, string error, CancellationToken cancellationToken = default)
+        {
+            await Task.Delay(new Random().Next(200, 4000), cancellationToken).ConfigureAwait(false);
+        }
+
         public void Dispose()
         {
             // Do nothing
         }
+
     }
 }

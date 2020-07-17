@@ -7,9 +7,9 @@ using System;
 namespace MonitoringFunctions.Models
 {
     /// <summary>
-    /// Represents an http request event made from a function to be inserted into Kusto.
+    /// Represents a script execution event to be inserted into Kusto.
     /// </summary>
-    internal class HttpRequestLogEntry : IKustoTableRow
+    internal class ScriptExecutionLogEntry : IKustoTableRow
     {
         [JsonProperty("monitor_name"), JsonRequired]
         public string? MonitorName { get; set; }
@@ -17,10 +17,13 @@ namespace MonitoringFunctions.Models
         [JsonProperty("timestamp"), JsonRequired]
         public DateTime EventTime { get; set; }
 
-        [JsonProperty("requested_url"), JsonRequired]
-        public string? RequestedUrl { get; set; }
+        [JsonProperty("script_name")]
+        public string? ScriptName { get; set; }
 
-        [JsonProperty("http_response_code"), JsonRequired]
-        public int? HttpResponseCode { get; set; }
+        [JsonProperty("cmd_args")]
+        public string? CommandLineArgs { get; set; }
+
+        [JsonProperty("error")]
+        public string? Error { get; set; }
     }
 }

@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignScripts", "src\Signing\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonitoringFunctions", "src\MonitoringFunctions\MonitoringFunctions.csproj", "{BF6E1679-3E2C-4B36-BBA8-A9DAF1114CF3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonitoringFunctions.Test", "tests\MonitoringFunctions.Test\MonitoringFunctions.Test.csproj", "{EF881AB7-BFF9-4FAD-998A-7B6A6A93F2F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonitoringFunctions.Test", "tests\MonitoringFunctions.Test\MonitoringFunctions.Test.csproj", "{EF881AB7-BFF9-4FAD-998A-7B6A6A93F2F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
