@@ -98,7 +98,7 @@ param(
    [string]$FeedCredential,
    [string]$ProxyAddress,
    [switch]$ProxyUseDefaultCredentials,
-   [string]$ProxyBypassList="",
+   [string[]]$ProxyBypassList,
    [switch]$SkipNonVersionedFiles,
    [switch]$NoCdn
 )
@@ -259,7 +259,7 @@ function GetHTTPResponse([Uri] $Uri)
                 $HttpClientHandler.Proxy =  New-Object System.Net.WebProxy -Property @{
                     Address=$ProxyAddress;
                     UseDefaultCredentials=$ProxyUseDefaultCredentials;
-                    BypassList = $ProxyBypassList.Split(",")
+                    BypassList = $ProxyBypassList;
                 }
                 $HttpClient = New-Object System.Net.Http.HttpClient -ArgumentList $HttpClientHandler
             }
