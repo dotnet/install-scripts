@@ -15,8 +15,8 @@ namespace MonitoringFunctions
         private const string ServiceNameAndRegion = "dotnetinstallcluster.eastus2";
         private const string DatabaseName = "dotnet_install_monitoring_database";
 
-        private readonly KustoTable<HttpRequestLogEntry> HttpRequestLogsTable;
-        private readonly KustoTable<ScriptExecutionLogEntry> ScriptExecutionLogsTable;
+        private readonly KustoTable<HttpRequestLogEntry> _httpRequestLogsTable;
+        private readonly KustoTable<ScriptExecutionLogEntry> _scriptExecutionLogsTable;
 
         internal KustoDataService()
         {
@@ -25,8 +25,8 @@ namespace MonitoringFunctions
 
             DirectJsonMappingResolver directJsonMappingResolver = new DirectJsonMappingResolver();
 
-            HttpRequestLogsTable = new KustoTable<HttpRequestLogEntry>(kcsb, DatabaseName, "UrlAccessLogs", directJsonMappingResolver);
-            ScriptExecutionLogsTable = new KustoTable<ScriptExecutionLogEntry>(kcsb, DatabaseName, "ScriptExecLogs", directJsonMappingResolver);
+            _httpRequestLogsTable = new KustoTable<HttpRequestLogEntry>(kcsb, DatabaseName, "UrlAccessLogs", directJsonMappingResolver);
+            _scriptExecutionLogsTable = new KustoTable<ScriptExecutionLogEntry>(kcsb, DatabaseName, "ScriptExecLogs", directJsonMappingResolver);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace MonitoringFunctions
                 HttpResponseCode = (int)httpResponse.StatusCode
             };
 
-            await HttpRequestLogsTable.InsertRow(logEntry, cancellationToken).ConfigureAwait(false);
+            await _httpRequestLogsTable.InsertRowAsync(logEntry, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace MonitoringFunctions
                 Error = error
             };
 
-            await ScriptExecutionLogsTable.InsertRow(logEntry, cancellationToken).ConfigureAwait(false);
+            await _scriptExecutionLogsTable.InsertRowAsync(logEntry, cancellationToken).ConfigureAwait(false);
         }
 
         public void Dispose()

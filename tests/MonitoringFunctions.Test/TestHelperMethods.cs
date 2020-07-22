@@ -13,7 +13,7 @@ namespace MonitoringFunctions.Test
     public class TestHelperMethods
     {
         [TestMethod]
-        public async Task TestCheckUrlAccess()
+        public async Task TestCheckUrlAccessAsync()
         {
             using IDataService dataService = new DummyDataService();
             // Test if we can access a highly available website without throwing an exception.
@@ -23,7 +23,7 @@ namespace MonitoringFunctions.Test
         [DataRow("definitely not a url")]
         [DataRow("https://0.com")]
         [TestMethod]
-        public async Task TestCheckUrlAccessFailure(string url)
+        public async Task TestCheckUrlAccessFailureAsync(string url)
         {
             try
             {
@@ -41,7 +41,7 @@ namespace MonitoringFunctions.Test
         [DataRow("-DryRun -c release/5.0.1xx-preview7")]
         [DataRow("-DryRun -Version LTS")]
         [TestMethod]
-        public async Task TestExecuteInstallScriptPs1(string cmdArgs = "-DryRun")
+        public async Task TestExecuteInstallScriptPs1Async(string cmdArgs = "-DryRun")
         {
             try
             {
@@ -60,7 +60,7 @@ namespace MonitoringFunctions.Test
         [DataRow("-Channel 12")]
         [DataRow("-switchThatDoesntExist")]
         [TestMethod]
-        public async Task TestExecuteInstallScriptPs1WrongArgs(string cmdArgs = "-switchThatDoesntExist")
+        public async Task TestExecuteInstallScriptPs1WrongArgsAsync(string cmdArgs = "-switchThatDoesntExist")
         {
             try
             {

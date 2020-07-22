@@ -33,13 +33,10 @@ namespace MonitoringFunctions.Test
             private string somePrivateString { get; set; }
         }
 
-        private class ComplexMappingModel : IKustoTableRow
+        private class ComplexMappingModel : CommonMappingModel, IKustoTableRow
         {
-            [JsonProperty("some_float")]
-            public float someFloat { get; set; }
-
             [JsonIgnore]
-            public int someInteger { get; set; }
+            public int someOtherInteger { get; set; }
 
             public string privateGetter { private get; set; }
 
@@ -51,7 +48,7 @@ namespace MonitoringFunctions.Test
         /// for a simple type <see cref="BasicMappingModel"/>
         /// </summary>
         [TestMethod]
-        public void TestBasicMapping()
+        public void TestBasicMappingAsync()
         {
             string[] expectedColumnNames = new string[] { "someFloat", "someString" };
             CompareMappings<BasicMappingModel>(expectedColumnNames);
@@ -62,7 +59,7 @@ namespace MonitoringFunctions.Test
         /// for a not-so-basic type <see cref="CommonMappingModel"/>
         /// </summary>
         [TestMethod]
-        public void TestCommonMapping()
+        public void TestCommonMappingAsync()
         {
             string[] expectedColumnNames = new string[] { "some_float", "someInteger" };
             CompareMappings<CommonMappingModel>(expectedColumnNames);
@@ -73,9 +70,9 @@ namespace MonitoringFunctions.Test
         /// for a complicated type <see cref="ComplexMappingModel"/>
         /// </summary>
         [TestMethod]
-        public void TestComplexMapping()
+        public void TestComplexMappingAsync()
         {
-            string[] expectedColumnNames = new string[] { "some_float", "someField" };
+            string[] expectedColumnNames = new string[] { "some_float", "someInteger", "someField" };
             CompareMappings<ComplexMappingModel>(expectedColumnNames);
         }
 

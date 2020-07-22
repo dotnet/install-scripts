@@ -29,8 +29,9 @@ namespace MonitoringFunctions
         /// <param name="log"><see cref="ILogger"/> that is used to report log information.</param>
         /// <param name="monitorName">Name of this monitor to be included in the logs and in the data sent to Kusto.</param>
         /// <param name="url">Url that this method will attempt to access.</param>
-        /// <returns></returns>
-        internal static async Task CheckAndReportUrlAccessAsync(ILogger log, string monitorName, string url, IDataService dataService, CancellationToken cancellationToken = default)
+        /// <returns>A task, tracking the initiated async operation. Errors should be reported through exceptions.</returns>
+        internal static async Task CheckAndReportUrlAccessAsync(ILogger log, string monitorName, string url, IDataService dataService,
+            CancellationToken cancellationToken = default)
         {
             HttpResponseMessage response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
 

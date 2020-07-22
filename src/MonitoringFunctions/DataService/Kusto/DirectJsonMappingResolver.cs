@@ -13,17 +13,17 @@ namespace MonitoringFunctions.DataService.Kusto
     /// </summary>
     internal sealed class DirectJsonMappingResolver : IJsonColumnMappingResolver
     {
-        public IEnumerable<ColumnMapping> GetColumnMappings<T>() where T : IKustoTableRow
+        public IEnumerable<ColumnMapping> GetColumnMappings<TModel>() where TModel : IKustoTableRow
         {
             DefaultContractResolver contractResolver = new DefaultContractResolver();
-            var contract = contractResolver.ResolveContract(typeof(T)) as JsonObjectContract;
+            JsonObjectContract? contract = contractResolver.ResolveContract(typeof(TModel)) as JsonObjectContract;
 
             if (contract == null)
             {
-                throw new Exception($"Failed to resolve contract. Automatic column mapping is not possible with this type {typeof(T)}.");
+                throw new ArgumentException($"Failed to resolve contract. Automatic column mapping is not possible with this type {typeof(TModel)}.");
             }
 
-            foreach (var property in contract.Properties.Where(p => !p.Ignored && p.Readable))
+            foreach (JsonProperty property in contract.Properties.Where(p => !p.Ignored && p.Readable))
             {
                 yield return new ColumnMapping()
                 {

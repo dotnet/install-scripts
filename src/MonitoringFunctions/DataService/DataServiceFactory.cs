@@ -5,7 +5,7 @@ using System;
 
 namespace MonitoringFunctions
 {
-    internal class DataServiceFactory
+    internal sealed class DataServiceFactory
     {
         public IDataService GetDataService()
         {

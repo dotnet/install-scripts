@@ -41,7 +41,7 @@ namespace MonitoringFunctions.DataService.Kusto
             };
         }
 
-        public async Task InsertRow(T row, CancellationToken cancellationToken = default)
+        public async Task InsertRowAsync(T row, CancellationToken cancellationToken = default)
         {
             using IKustoQueuedIngestClient ingestClient = KustoIngestFactory.CreateQueuedIngestClient(_connectionStringBuilder);
 

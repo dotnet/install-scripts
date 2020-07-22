@@ -9,7 +9,7 @@ namespace MonitoringFunctions.Models
     /// <summary>
     /// Represents an http request event made from a function to be inserted into Kusto.
     /// </summary>
-    internal class HttpRequestLogEntry : IKustoTableRow
+    internal sealed class HttpRequestLogEntry : IKustoTableRow
     {
         [JsonProperty("monitor_name"), JsonRequired]
         public string? MonitorName { get; set; }
@@ -22,5 +22,10 @@ namespace MonitoringFunctions.Models
 
         [JsonProperty("http_response_code"), JsonRequired]
         public int? HttpResponseCode { get; set; }
+
+        public override string? ToString()
+        {
+            return $"HttpRequestLogEntry - MonitorName: {MonitorName}, EventTime: {EventTime}, HttpResponseCode: {HttpResponseCode}, RequestedUrl: {RequestedUrl}";
+        }
     }
 }

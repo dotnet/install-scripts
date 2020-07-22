@@ -9,7 +9,7 @@ namespace MonitoringFunctions.Models
     /// <summary>
     /// Represents a script execution event to be inserted into Kusto.
     /// </summary>
-    internal class ScriptExecutionLogEntry : IKustoTableRow
+    internal sealed class ScriptExecutionLogEntry : IKustoTableRow
     {
         [JsonProperty("monitor_name"), JsonRequired]
         public string? MonitorName { get; set; }
@@ -25,5 +25,10 @@ namespace MonitoringFunctions.Models
 
         [JsonProperty("error")]
         public string? Error { get; set; }
+
+        public override string? ToString()
+        {
+            return $"ScriptExecutionLogEntry - MonitorName: {MonitorName}, EventTime: {EventTime}, ScriptName: {ScriptName}, CommandLineArgs: {CommandLineArgs}, Error: {Error}";
+        }
     }
 }

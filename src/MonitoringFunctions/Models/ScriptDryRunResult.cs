@@ -2,9 +2,14 @@
 
 namespace MonitoringFunctions.Models
 {
-    internal class ScriptDryRunResult
+    internal sealed class ScriptDryRunResult
     {
         public string? PrimaryUrl { get; set; }
         public string? LegacyUrl { get; set; }
+
+        public override string? ToString()
+        {
+            return $"ScriptDryRunResult - PrimaryUrl: {PrimaryUrl}, LegacyUrl: {LegacyUrl}";
+        }
     }
 }
