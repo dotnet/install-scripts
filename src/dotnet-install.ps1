@@ -69,6 +69,8 @@
 .PARAMETER ProxyUseDefaultCredentials
     Default: false
     Use default credentials, when using proxy address.
+.PARAMETER ProxyBypassList
+    If set with ProxyAddress, will provide the list of comma separated urls that will bypass the proxy
 .PARAMETER SkipNonVersionedFiles
     Default: false
     Skips installing non-versioned files if they already exist, such as dotnet.exe.
@@ -96,6 +98,7 @@ param(
    [string]$FeedCredential,
    [string]$ProxyAddress,
    [switch]$ProxyUseDefaultCredentials,
+   [string[]]$ProxyBypassList,
    [switch]$SkipNonVersionedFiles,
    [switch]$NoCdn
 )
@@ -253,7 +256,11 @@ function GetHTTPResponse([Uri] $Uri)
 
             if($ProxyAddress) {
                 $HttpClientHandler = New-Object System.Net.Http.HttpClientHandler
-                $HttpClientHandler.Proxy =  New-Object System.Net.WebProxy -Property @{Address=$ProxyAddress;UseDefaultCredentials=$ProxyUseDefaultCredentials}
+                $HttpClientHandler.Proxy =  New-Object System.Net.WebProxy -Property @{
+                    Address=$ProxyAddress;
+                    UseDefaultCredentials=$ProxyUseDefaultCredentials;
+                    BypassList = $ProxyBypassList;
+                }
                 $HttpClient = New-Object System.Net.Http.HttpClient -ArgumentList $HttpClientHandler
             }
             else {
