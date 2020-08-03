@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MonitoringFunctions.Functions
 {
-    public static class Ps1Downloader
+    internal static class Ps1Downloader
     {
         private const string _monitorName = "download_ps1";
         private const string _url = "https://dot.net/v1/dotnet-install.ps1";
