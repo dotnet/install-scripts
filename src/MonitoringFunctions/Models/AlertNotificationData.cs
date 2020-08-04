@@ -1,14 +1,17 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace MonitoringFunctions.Models
 {
     /// <summary>
     /// Stores the data arriving from a notification that was created as a result of a triggering alert in Grafana.
     /// </summary>
-    internal sealed class AlertNotificationData
+    internal struct AlertNotificationData : IEquatable<AlertNotificationData>
     {
         [JsonProperty("title")]
         public string? Title { get; set; }
@@ -41,6 +44,41 @@ namespace MonitoringFunctions.Models
         public Dictionary<string, string>? Tags { get; set; }
 
         [JsonProperty("evalMatches")]
-        public AlertEvaluation[]? MatchingAlerts { get; set; }
+        public AlertEvaluation?[]? MatchingAlerts { get; set; }
+
+        public bool Equals(AlertNotificationData other)
+        {
+            bool equals = Title == other.Title &&
+                Message == other.Message &&
+                OrganisationId == other.OrganisationId &&
+                PanelId == other.PanelId &&
+                DashboardId == other.DashboardId &&
+                RuleId == other.RuleId &&
+                RuleName == other.RuleName &&
+                RuleUrl == other.RuleUrl &&
+                State == other.State;
+
+            if (!equals)
+            {
+                return false;
+            }
+
+            if (MatchingAlerts == other.MatchingAlerts)
+            {
+                return true;
+            }
+
+            if (MatchingAlerts == null || other.MatchingAlerts == null)
+            {
+                return false;
+            }
+
+            return MatchingAlerts.SequenceEqual(other.MatchingAlerts);
+        }
+
+        public override string ToString()
+        {
+            return $"Alert State: {State} - Message: {Message}";
+        }
     }
 }

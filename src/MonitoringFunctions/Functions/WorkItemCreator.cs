@@ -24,7 +24,7 @@ namespace MonitoringFunctions.Functions
 {
     internal static class WorkItemCreator
     {
-        private const string _projectName = "devdiv";
+        private const string ProjectName = "devdiv";
         private static readonly string? _devdivAdoPAT = Environment.GetEnvironmentVariable("devdiv-ado-pat");
         private static readonly Uri _devdivCollectionUri = new Uri("https://devdiv.visualstudio.com/DefaultCollection/");
 
@@ -50,8 +50,9 @@ namespace MonitoringFunctions.Functions
             }
             catch(JsonException e)
             {
-                log.LogError(e, "Deserialization of the request body has failed.");
-                return new BadRequestObjectResult("Deserialization of the request body has failed.");
+                string errorMessage = "Deserialization of the request body has failed.";
+                log.LogError(e, errorMessage);
+                return new BadRequestObjectResult(errorMessage);
             }
 
             string alertMessage = data.Message ?? "Alert triggered";
@@ -59,27 +60,28 @@ namespace MonitoringFunctions.Functions
 
             if(data.State != AlertState.Alerting)
             {
-                log.LogError("Alert state is not \"Alerting\". This notification shouldn't have been sent to this function.");
-                return new BadRequestObjectResult("Alert state is not \"Alerting\". This notification shouldn't have been sent to this function.");
+                string errorMessage = "Alert state is not \"Alerting\". This notification shouldn't have been sent to this function.";
+                log.LogError(errorMessage);
+                return new BadRequestObjectResult(errorMessage);
             }
 
             for(int i=0; i<alertingMonitorCount; i++)
             {
                 AlertEvaluation? match = data.MatchingAlerts![i];
 
-                if(match == null || match.Tags == null)
+                if(match == null || match.Value.Tags == null)
                 {
                     log.LogError($"Evaluationg match #{i} has invalid data.");
                     continue;
                 }
 
-                if(!match.Tags.ContainsKey("monitor_name"))
+                if(!match.Value.Tags.ContainsKey("monitor_name"))
                 {
                     log.LogError($"Evaluation match #{i} doesn't specify a monitor name which is required.");
                     continue;
                 }
 
-                string title = $"{match.Tags["monitor_name"]} {alertMessage}";
+                string title = $"{match.Value.Tags["monitor_name"]} {alertMessage}";
                 string description = $"Alert details:{Environment.NewLine}{requestBody}";
                 WorkItem workItem = await CreateAdoTask("DevDiv\\NET Tools\\install-scripts-incidents", title, description).ConfigureAwait(false);
 
@@ -112,11 +114,11 @@ namespace MonitoringFunctions.Functions
         {
             VssCredentials creds = new VssBasicCredential("", _devdivAdoPAT);
             ProjectHttpClient projectClient = new ProjectHttpClient(_devdivCollectionUri, creds);
-            TeamProject devdivProject = await projectClient.GetProject(_projectName).ConfigureAwait(false);
+            TeamProject devdivProject = await projectClient.GetProject(ProjectName).ConfigureAwait(false);
 
             if (devdivProject == null)
             {
-                throw new ProjectDoesNotExistException($"The project \"{_projectName}\" was not found or you do not have permission to access it.");
+                throw new ProjectDoesNotExistException($"The project \"{ProjectName}\" was not found or you do not have permission to access it.");
             }
 
             WorkItemTrackingHttpClient workItemClient = new WorkItemTrackingHttpClient(_devdivCollectionUri, creds);

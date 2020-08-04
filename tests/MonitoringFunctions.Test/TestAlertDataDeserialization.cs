@@ -16,14 +16,7 @@ namespace MonitoringFunctions.Test
         {
             string jsonData = File.ReadAllText("Assets/SampleAlertNotificationData.json");
 
-            try
-            {
-                AlertNotificationData data = JsonConvert.DeserializeObject<AlertNotificationData>(jsonData);
-            }
-            catch(JsonException e)
-            {
-                Assert.Fail($"Notification deserialization has failed with exception:{Environment.NewLine}{e.ToString()}");
-            }
+            AlertNotificationData data = JsonConvert.DeserializeObject<AlertNotificationData>(jsonData);
         }
     }
 }
