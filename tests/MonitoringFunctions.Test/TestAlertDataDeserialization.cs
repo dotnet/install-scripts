@@ -16,7 +16,7 @@ namespace MonitoringFunctions.Test
         {
             string jsonData = File.ReadAllText("Assets/SampleAlertNotificationData.json");
 
-            AlertNotificationData data = JsonConvert.DeserializeObject<AlertNotificationData>(jsonData);
+            _ = JsonConvert.DeserializeObject<AlertNotificationData>(jsonData);
         }
     }
 }
