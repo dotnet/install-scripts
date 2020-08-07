@@ -98,7 +98,7 @@ param(
    [string]$FeedCredential,
    [string]$ProxyAddress,
    [switch]$ProxyUseDefaultCredentials,
-   [string[]]$ProxyBypassList,
+   [string[]]$ProxyBypassList=@(),
    [switch]$SkipNonVersionedFiles,
    [switch]$NoCdn
 )
