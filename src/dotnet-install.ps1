@@ -245,6 +245,7 @@ function GetHTTPResponse([Uri] $Uri)
                     if($DefaultProxy -and (-not $DefaultProxy.IsBypassed($Uri))) {
                         $ProxyAddress = $DefaultProxy.GetProxy($Uri).OriginalString
                         $ProxyUseDefaultCredentials = $true
+                        $ProxyBypassList = ([System.Net.WebProxy]$DefaultProxy).BypassList
                     }
                 } catch {
                     # Eat the exception and move forward as the above code is an attempt
