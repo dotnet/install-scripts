@@ -130,7 +130,7 @@ namespace MonitoringFunctions.Functions
             WorkItemQueryResult queryResult = await workItemClient.QueryByWiqlAsync(new Wiql() { Query = wiqlQuery }, project.Id,
                 null, null, null, cancellationToken).ConfigureAwait(false);
 
-            return queryResult.WorkItems.FirstOrDefault() != null;
+            return queryResult.WorkItems.Any();
         }
 
         /// <summary>
@@ -153,7 +153,6 @@ namespace MonitoringFunctions.Functions
             string? tags = null,
             CancellationToken cancellationToken = default)
         {
-
             JsonPatchDocument workItemJson = GetJsonForNewWorkItem(areaPath, title, description, tags);
             WorkItem generatedBug = await workItemClient.CreateWorkItemAsync(workItemJson, project.Id, "Task",
                 null, null, null, null, null, cancellationToken).ConfigureAwait(false);
