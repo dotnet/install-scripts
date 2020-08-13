@@ -77,7 +77,7 @@ stages:
             displayName: Get .NET Core SDK
             inputs:
               # Azure Functions client library (v3.0.9) has a dependency on SDK 3.x
-              version: 3.1
+              version: 3.x
           - task: DotNetCoreCLI@2
             displayName: Publish functions to folder
             inputs:
