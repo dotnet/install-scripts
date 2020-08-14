@@ -9,6 +9,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonitoringFunctions", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonitoringFunctions.Test", "tests\MonitoringFunctions.Test\MonitoringFunctions.Test.csproj", "{EF881AB7-BFF9-4FAD-998A-7B6A6A93F2F9}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonitoringFunctions.Linux", "src\MonitoringFunctions.Linux\MonitoringFunctions.Linux.csproj", "{46F9D90A-F988-4597-B0D9-CA552BB3D85A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonitoringFunctions.Common", "src\MonitoringFunctions.Common\MonitoringFunctions.Common.csproj", "{A0F3D5B4-88CC-49F3-A58E-9BE889CAFFD8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{EF881AB7-BFF9-4FAD-998A-7B6A6A93F2F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF881AB7-BFF9-4FAD-998A-7B6A6A93F2F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF881AB7-BFF9-4FAD-998A-7B6A6A93F2F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46F9D90A-F988-4597-B0D9-CA552BB3D85A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46F9D90A-F988-4597-B0D9-CA552BB3D85A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46F9D90A-F988-4597-B0D9-CA552BB3D85A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46F9D90A-F988-4597-B0D9-CA552BB3D85A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0F3D5B4-88CC-49F3-A58E-9BE889CAFFD8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0F3D5B4-88CC-49F3-A58E-9BE889CAFFD8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0F3D5B4-88CC-49F3-A58E-9BE889CAFFD8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0F3D5B4-88CC-49F3-A58E-9BE889CAFFD8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
