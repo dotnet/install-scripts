@@ -1,6 +1,5 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
-using Kusto.Cloud.Platform.IO;
 using MonitoringFunctions.Models;
 using System.Diagnostics;
 using System.IO;
@@ -54,8 +53,12 @@ namespace MonitoringFunctions
 
             ScriptDryRunResult result = new ScriptDryRunResult();
 
-            using StringStream stringStream = new StringStream(output);
-            using StreamReader streamReader = new StreamReader(stringStream);
+            if(output == null)
+            {
+                return result;
+            }
+
+            using StringReader streamReader = new StringReader(output);
 
             string? line;
             while ((line = streamReader.ReadLine()) != null)

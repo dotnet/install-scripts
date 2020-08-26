@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\MonitoringFunctions\MonitoringFunctions.csproj" />
+    <ProjectReference Include="..\..\src\MonitoringFunctions.Windows\MonitoringFunctions.Windows.csproj" />
   </ItemGroup>
 
 </Project>
