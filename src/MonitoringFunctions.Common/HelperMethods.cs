@@ -1,15 +1,11 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
-using System.Diagnostics;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using MonitoringFunctions.Models;
-
-[assembly:InternalsVisibleTo("MonitoringFunctions.Test, PublicKey=0024000004800000940000000602000000240000525341310004000001000100b5fc90e7027f67871e773a8fde8938c81dd402ba65b9201d60593e96c492651e889cc13f1415ebb53fac1131ae0bd333c5ee6021672d9718ea31a8aebd0da0072f25d87dba6fc90ffd598ed4da35e44c398c454307e8e33b8426143daec9f596836f97c8f74750e5975c64e2189f45def46b2a2b1247adc3652bf5c308055da9")]
 
 namespace MonitoringFunctions
 {
@@ -49,30 +45,46 @@ namespace MonitoringFunctions
         }
 
         /// <summary>
-        /// Executes dotnet-install.ps1 script with given arguments and returns the content of the output and error streams.
+        /// Executes the Ps1 script with DryDun switch,
+        /// Parses the output to acquire primary and legacy Urls,
+        /// Tests the primary Url to see if it is available,
+        /// Reports the results to the data service provided.
         /// </summary>
-        internal static async Task<ScriptExecutionResult> ExecuteInstallScriptPs1Async(string? args = null)
+        internal static async Task ExecuteDryRunCheckAndReportUrlAccessAsync(ILogger log, string monitorName, string additionalCmdArgs,
+            CancellationToken cancellationToken = default)
         {
-            ProcessStartInfo processStartInfo = new ProcessStartInfo("powershell",
-                @"-NoProfile -Command ""[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;" +
-                @" $ProgressPreference = 'SilentlyContinue'; &([scriptblock]::Create((Invoke-WebRequest -UseBasicParsing" +
-                @" 'https://raw.githubusercontent.com/dotnet/install-scripts/master/src/dotnet-install.ps1')))" +
-                $@" {args}""");
+            string commandLineArgs = $"-DryRun {additionalCmdArgs}";
 
-            processStartInfo.CreateNoWindow = true;
-            processStartInfo.UseShellExecute = false;
-            processStartInfo.RedirectStandardOutput = true;
-            processStartInfo.RedirectStandardError = true;
+            using IDataService dataService = new DataServiceFactory().GetDataService();
 
-            Process installScriptProc = Process.Start(processStartInfo);
-            string consoleOutput = await installScriptProc.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
-            string consoleError = await installScriptProc.StandardError.ReadToEndAsync().ConfigureAwait(false);
+            // Execute the script;
+            ScriptExecutionResult results = await InstallScriptRunner.ExecuteInstallScriptAsync(commandLineArgs).ConfigureAwait(false);
+            string scriptName = results.ScriptName;
 
-            return new ScriptExecutionResult()
+            log.LogInformation($"Ouput stream: {results.Output}");
+
+            if (!string.IsNullOrWhiteSpace(results.Error))
             {
-                Output = consoleOutput,
-                Error = consoleError
-            };
+                log.LogError($"Error stream: {results.Error}");
+                await dataService.ReportScriptExecutionAsync(monitorName, scriptName, commandLineArgs, results.Error, cancellationToken)
+                    .ConfigureAwait(false);
+                return;
+            }
+
+            // Parse the output
+            ScriptDryRunResult dryRunResults = InstallScriptRunner.ParseDryRunOutput(results.Output);
+
+            if (string.IsNullOrWhiteSpace(dryRunResults.PrimaryUrl))
+            {
+                log.LogError($"Primary Url was not found for channel {additionalCmdArgs}");
+                await dataService.ReportScriptExecutionAsync(monitorName, scriptName, commandLineArgs,
+                    "Failed to parse primary url from the following DryRun execution output: " + results.Output
+                    , cancellationToken).ConfigureAwait(false);
+                return;
+            }
+
+            // Validate URL accessibility
+            await HelperMethods.CheckAndReportUrlAccessAsync(log, monitorName, dryRunResults.PrimaryUrl, dataService);
         }
     }
 }

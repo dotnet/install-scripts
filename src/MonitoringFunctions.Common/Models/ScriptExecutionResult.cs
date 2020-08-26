@@ -8,6 +8,9 @@ namespace MonitoringFunctions.Models
     /// <summary> Stores the contents of output streams of a script execution. </summary>
     internal struct ScriptExecutionResult : IEquatable<ScriptExecutionResult>
     {
+        /// <summary> Name of the script that was run. </summary>
+        public string ScriptName { get; set; }
+
         /// <summary> Contents of the output stream as string </summary>
         public string? Output { get; set; }
 
@@ -16,13 +19,14 @@ namespace MonitoringFunctions.Models
 
         public bool Equals([AllowNull] ScriptExecutionResult other)
         {
-            return Output == other.Output &&
+            return ScriptName == other.ScriptName &&
+                Output == other.Output &&
                 Error == other.Error;
         }
 
         public override string? ToString()
         {
-            return $"ScriptExecutionResult - Output: {Output}, Error: {Error}";
+            return $"ScriptExecutionResult - {ScriptName} Output: {Output}, Error: {Error}";
         }
     }
 }

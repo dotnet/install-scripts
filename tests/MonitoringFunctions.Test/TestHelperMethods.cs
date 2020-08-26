@@ -41,11 +41,11 @@ namespace MonitoringFunctions.Test
         [DataRow("-DryRun -c release/5.0.1xx-preview7")]
         [DataRow("-DryRun -Version LTS")]
         [TestMethod]
-        public async Task TestExecuteInstallScriptPs1Async(string cmdArgs = "-DryRun")
+        public async Task TestExecuteInstallScriptAsync(string cmdArgs = "-DryRun")
         {
             try
             {
-                ScriptExecutionResult executionResult = await HelperMethods.ExecuteInstallScriptPs1Async(cmdArgs).ConfigureAwait(false);
+                ScriptExecutionResult executionResult = await InstallScriptRunner.ExecuteInstallScriptAsync(cmdArgs).ConfigureAwait(false);
                 
                 Assert.IsFalse(string.IsNullOrWhiteSpace(executionResult.Output), "Script execution hasn't returned an output.");
                 Assert.IsTrue(string.IsNullOrWhiteSpace(executionResult.Error), $"Script execution has returned the following error: {executionResult.Error}");
@@ -60,11 +60,11 @@ namespace MonitoringFunctions.Test
         [DataRow("-Channel 12")]
         [DataRow("-switchThatDoesntExist")]
         [TestMethod]
-        public async Task TestExecuteInstallScriptPs1WrongArgsAsync(string cmdArgs = "-switchThatDoesntExist")
+        public async Task TestExecuteInstallScriptWrongArgsAsync(string cmdArgs = "-switchThatDoesntExist")
         {
             try
             {
-                ScriptExecutionResult executionResult = await HelperMethods.ExecuteInstallScriptPs1Async(cmdArgs).ConfigureAwait(false);
+                ScriptExecutionResult executionResult = await InstallScriptRunner.ExecuteInstallScriptAsync(cmdArgs).ConfigureAwait(false);
 
                 Assert.IsFalse(string.IsNullOrWhiteSpace(executionResult.Error), $"Script execution hasn't returned any errors, but it should have." + 
                     $" Used command line arguments: " + cmdArgs);
