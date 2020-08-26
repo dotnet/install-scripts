@@ -53,7 +53,7 @@ namespace MonitoringFunctions
 
             ScriptDryRunResult result = new ScriptDryRunResult();
 
-            if(output == null)
+            if (output == null)
             {
                 return result;
             }
