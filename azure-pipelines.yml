@@ -152,10 +152,10 @@ stages:
       ${{ if eq(variables._RunAsInternal, True) }}:
         name: NetCoreInternal-Pool
         queue: BuildPool.Ubuntu.1604.Amd64.Arcade
-    preSteps:
-    - checkout: self
-      clean: true
     steps:
+    - checkout: self
+      displayName: Checkout Self
+      clean: true
     - task: UseDotNet@2
       displayName: Get .NET Core SDK
       inputs:
