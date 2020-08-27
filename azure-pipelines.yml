@@ -88,7 +88,7 @@ stages:
               modifyOutputPath: false
               zipAfterPublish: false
           - task: DotNetCoreCLI@2
-            displayName: Publish functions to folder
+            displayName: Publish Linux functions to folder
             inputs:
               command: publish
               arguments: '--configuration Release --output publish_output_linux'
@@ -109,6 +109,7 @@ stages:
               includeRootFolder: false
               archiveFile: "$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip"
           - task: AzureRmWebAppDeployment@4
+            displayName: "Deploy Windows Functions"
             inputs:
               ConnectionType: 'AzureRM'
               # Name of the service connection that will give us access to Dotnet-Install-Monitoring resource group
@@ -121,6 +122,7 @@ stages:
               SlotName: 'production'
               packageForLinux: '$(System.DefaultWorkingDirectory)/build_windows_$(Build.BuildId).zip'
           - task: AzureRmWebAppDeployment@4
+            displayName: "Deploy Linux Functions"
             inputs:
               ConnectionType: 'AzureRM'
               # Name of the service connection that will give us access to Dotnet-Install-Monitoring-Visualization resource group
