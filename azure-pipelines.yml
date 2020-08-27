@@ -153,6 +153,10 @@ stages:
         - checkout: self
           clean: true
         steps:
+        - task: UseDotNet@2
+          displayName: Get .NET Core SDK
+          inputs:
+            version: 3.x
         - task: DotNetCoreCLI@2
           displayName: Run Tests
           inputs: 
