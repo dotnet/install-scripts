@@ -139,28 +139,31 @@ stages:
               ResourceGroupName: 'Dotnet-Install-Monitoring-Visualization'
               SlotName: 'production'
               packageForLinux: '$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip'
-      - job: Linux
-        timeoutInMinutes: 30
-        container: LinuxContainer
-        pool:
-          ${{ if eq(variables._RunAsPublic, True) }}:
-            name:  NetCorePublic-Pool
-            queue: BuildPool.Ubuntu.1604.Amd64.Arcade.Open
-          ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCoreInternal-Pool
-            queue: BuildPool.Ubuntu.1604.Amd64.Arcade
-        preSteps:
-        - checkout: self
-          clean: true
-        steps:
-        - task: UseDotNet@2
-          displayName: Get .NET Core SDK
-          inputs:
-            version: 3.x
-        - task: DotNetCoreCLI@2
-          displayName: Run Tests
-          inputs: 
-            command: test
+- stage: test_linux
+  displayName: Linux Tests
+  jobs:
+  - job: Linux
+    timeoutInMinutes: 30
+    container: LinuxContainer
+    pool:
+      ${{ if eq(variables._RunAsPublic, True) }}:
+        name:  NetCorePublic-Pool
+        queue: BuildPool.Ubuntu.1604.Amd64.Arcade.Open
+      ${{ if eq(variables._RunAsInternal, True) }}:
+        name: NetCoreInternal-Pool
+        queue: BuildPool.Ubuntu.1604.Amd64.Arcade
+    preSteps:
+    - checkout: self
+      clean: true
+    steps:
+    - task: UseDotNet@2
+      displayName: Get .NET Core SDK
+      inputs:
+        version: 3.x
+    - task: DotNetCoreCLI@2
+      displayName: Run Tests
+      inputs: 
+        command: test
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - stage: ValidateSdk
