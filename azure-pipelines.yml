@@ -139,10 +139,7 @@ stages:
               ResourceGroupName: 'Dotnet-Install-Monitoring-Visualization'
               SlotName: 'production'
               packageForLinux: '$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip'
-- stage: test_linux
-  displayName: Linux Tests
-  jobs:
-  - job: Linux
+  - job: LinuxTests
     timeoutInMinutes: 30
     container: LinuxContainer
     pool:
