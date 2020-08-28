@@ -13,13 +13,19 @@ namespace MonitoringFunctions
     internal sealed class KustoDataService : IDataService
     {
         private const string ServiceNameAndRegion = "dotnetinstallcluster.eastus2";
-        private const string DatabaseName = "dotnet_install_monitoring_database";
+        private static readonly string? DatabaseName = Environment.GetEnvironmentVariable("kusto_db_name");
 
         private readonly KustoTable<HttpRequestLogEntry> _httpRequestLogsTable;
         private readonly KustoTable<ScriptExecutionLogEntry> _scriptExecutionLogsTable;
 
         internal KustoDataService()
         {
+            if (string.IsNullOrWhiteSpace(DatabaseName))
+            {
+                throw new ArgumentException($"{nameof(DatabaseName)} was not correctly configured. " +
+                    "Make sure \"kusto_db_name\" is properly assigned in function app configuration.");
+            }
+
             KustoConnectionStringBuilder kcsb = new KustoConnectionStringBuilder($"https://ingest-{ServiceNameAndRegion}.kusto.windows.net")
                 .WithAadManagedIdentity("system");
 
