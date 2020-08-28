@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 namespace MonitoringFunctions.Linux
 {
     /// <summary>
-    /// Runs the shell script in -DryRun mode and checks weather the generated links are accessible
+    /// Runs the shell script in -DryRun mode and checks whether the generated links are accessible
     /// </summary>
     internal static class DryRunUrlChecker
     {

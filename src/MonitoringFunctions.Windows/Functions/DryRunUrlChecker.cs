@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 namespace MonitoringFunctions.Functions
 {
     /// <summary>
-    /// Runs the powershell script in -DryRun mode and checks weather the generated links are accessible
+    /// Runs the powershell script in -DryRun mode and checks whether the generated links are accessible
     /// </summary>
     internal static class DryRunUrlChecker
     {
@@ -28,7 +28,7 @@ namespace MonitoringFunctions.Functions
 
             await HelperMethods.ExecuteDryRunCheckAndReportUrlAccessAsync(log, monitorName, cmdArgs).ConfigureAwait(false);
         }
-        
+
         [FunctionName("DryRun3_0Runtime")]
         public static async Task Run3_0RuntimeAsync([TimerTrigger("0 */30 * * * *")] TimerInfo myTimer, ILogger log)
         {

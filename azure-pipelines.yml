@@ -9,6 +9,11 @@ variables:
   - group: DotNet-Install-Scripts-BuildPipeline-Params
 - template: eng/common-variables.yml
 
+resources:
+  containers:
+  - container: LinuxContainer
+    image: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
+
 stages:
 - stage: build
   displayName: Build
@@ -79,30 +84,83 @@ stages:
               # Azure Functions client library (v3.0.9) has a dependency on SDK 3.x
               version: 3.x
           - task: DotNetCoreCLI@2
-            displayName: Publish functions to folder
+            displayName: Publish Windows functions to folder
             inputs:
               command: publish
-              arguments: '--configuration Release --output publish_output'
-              projects: src/MonitoringFunctions/MonitoringFunctions.csproj
+              arguments: '--configuration Release --output publish_output_windows'
+              projects: src/MonitoringFunctions.Windows/MonitoringFunctions.Windows.csproj
+              publishWebProjects: false
+              modifyOutputPath: false
+              zipAfterPublish: false
+          - task: DotNetCoreCLI@2
+            displayName: Publish Linux functions to folder
+            inputs:
+              command: publish
+              arguments: '--configuration Release --output publish_output_linux'
+              projects: src/MonitoringFunctions.Linux/MonitoringFunctions.Linux.csproj
               publishWebProjects: false
               modifyOutputPath: false
               zipAfterPublish: false
           - task: ArchiveFiles@2
-            displayName: "Archive files"
+            displayName: "Archive Windows functions"
             inputs:
-              rootFolderOrFile: "$(System.DefaultWorkingDirectory)/publish_output"
+              rootFolderOrFile: "$(System.DefaultWorkingDirectory)/publish_output_windows"
               includeRootFolder: false
-              archiveFile: "$(System.DefaultWorkingDirectory)/build$(Build.BuildId).zip"
+              archiveFile: "$(System.DefaultWorkingDirectory)/build_windows_$(Build.BuildId).zip"
+          - task: ArchiveFiles@2
+            displayName: "Archive Linux functions"
+            inputs:
+              rootFolderOrFile: "$(System.DefaultWorkingDirectory)/publish_output_linux"
+              includeRootFolder: false
+              archiveFile: "$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip"
           - task: AzureRmWebAppDeployment@4
+            displayName: "Deploy Windows Functions"
             inputs:
               ConnectionType: 'AzureRM'
+              # Name of the service connection that will give us access to Dotnet-Install-Monitoring resource group
+              # This is where the windows based Azure Functions are allocated.
               azureSubscription: 'InstallScripts_KeyVault'
               appType: 'functionApp'
               WebAppName: 'dotnet-install-daemon-functions'
               deployToSlotOrASE: true
               ResourceGroupName: 'Dotnet-Install-Monitoring'
               SlotName: 'production'
-              packageForLinux: '$(System.DefaultWorkingDirectory)/build$(Build.BuildId).zip'
+              packageForLinux: '$(System.DefaultWorkingDirectory)/build_windows_$(Build.BuildId).zip'
+          - task: AzureRmWebAppDeployment@4
+            displayName: "Deploy Linux Functions"
+            inputs:
+              ConnectionType: 'AzureRM'
+              # Name of the service connection that will give us access to Dotnet-Install-Monitoring-Visualization resource group
+              # This is where the linux based Azure Functions are allocated.
+              azureSubscription: 'InstallScripts_Visualization_RG'
+              appType: 'functionApp'
+              WebAppName: 'dotnet-install-daemon-functions-linux'
+              deployToSlotOrASE: true
+              ResourceGroupName: 'Dotnet-Install-Monitoring-Visualization'
+              SlotName: 'production'
+              packageForLinux: '$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip'
+  - job: LinuxTests
+    timeoutInMinutes: 30
+    container: LinuxContainer
+    pool:
+      ${{ if eq(variables._RunAsPublic, True) }}:
+        name:  NetCorePublic-Pool
+        queue: BuildPool.Ubuntu.1604.Amd64.Arcade.Open
+      ${{ if eq(variables._RunAsInternal, True) }}:
+        name: NetCoreInternal-Pool
+        queue: BuildPool.Ubuntu.1604.Amd64.Arcade
+    steps:
+    - checkout: self
+      displayName: Checkout Self
+      clean: true
+    - task: UseDotNet@2
+      displayName: Get .NET Core SDK
+      inputs:
+        version: 3.x
+    - task: DotNetCoreCLI@2
+      displayName: Run Tests
+      inputs: 
+        command: test
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - stage: ValidateSdk

@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.30105.208
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignScripts", "src\Signing\SignScripts.csproj", "{8335F5A8-00BD-4457-924B-CAF878E5D929}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonitoringFunctions", "src\MonitoringFunctions\MonitoringFunctions.csproj", "{BF6E1679-3E2C-4B36-BBA8-A9DAF1114CF3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonitoringFunctions.Windows", "src\MonitoringFunctions.Windows\MonitoringFunctions.Windows.csproj", "{BF6E1679-3E2C-4B36-BBA8-A9DAF1114CF3}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonitoringFunctions.Test", "tests\MonitoringFunctions.Test\MonitoringFunctions.Test.csproj", "{EF881AB7-BFF9-4FAD-998A-7B6A6A93F2F9}"
 EndProject
