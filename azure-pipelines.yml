@@ -190,6 +190,9 @@ stages:
       displayName: Get .NET Core SDK
       inputs:
         version: 3.x
+    - script: |
+        chmod u+x src/dotnet-install.sh
+      displayName: 'Add permission to execute'
     - task: DotNetCoreCLI@2
       displayName: Run Tests
       inputs: 
