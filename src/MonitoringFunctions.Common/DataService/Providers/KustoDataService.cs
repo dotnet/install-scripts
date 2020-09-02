@@ -22,7 +22,7 @@ namespace MonitoringFunctions
         {
             if (string.IsNullOrWhiteSpace(DatabaseName))
             {
-                throw new ArgumentException($"{nameof(DatabaseName)} was not correctly configured. " +
+                throw new InvalidOperationException($"{nameof(DatabaseName)} was not correctly configured. " +
                     "Make sure \"kusto_db_name\" is properly assigned in function app configuration.");
             }
 
