@@ -127,7 +127,7 @@ stages:
               deployToSlotOrASE: true
               ResourceGroupName: 'Dotnet-Install-Monitoring-Visualization'
               SlotName: production
-              packageForLinux: '$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip'
+              Package: '$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip'
           - task: AzureRmWebAppDeployment@4
             condition: eq(variables['TestPublishing'], 'true')
             displayName: "Deploy Windows Functions to Test"
@@ -141,7 +141,7 @@ stages:
               deployToSlotOrASE: true
               ResourceGroupName: 'Dotnet-Install-Monitoring'
               SlotName: test
-              packageForLinux: '$(System.DefaultWorkingDirectory)/build_windows_$(Build.BuildId).zip'
+              Package: '$(System.DefaultWorkingDirectory)/build_windows_$(Build.BuildId).zip'
 
           - task: AzureRmWebAppDeployment@4
             condition: eq(variables['TestPublishing'], 'false')
@@ -156,7 +156,7 @@ stages:
               deployToSlotOrASE: true
               ResourceGroupName: 'Dotnet-Install-Monitoring-Visualization'
               SlotName: production
-              packageForLinux: '$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip'
+              Package: '$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip'
           - task: AzureRmWebAppDeployment@4
             condition: eq(variables['TestPublishing'], 'false')
             displayName: "Deploy Windows Functions to Prod"
@@ -170,7 +170,7 @@ stages:
               deployToSlotOrASE: true
               ResourceGroupName: 'Dotnet-Install-Monitoring'
               SlotName: production
-              packageForLinux: '$(System.DefaultWorkingDirectory)/build_windows_$(Build.BuildId).zip'
+              Package: '$(System.DefaultWorkingDirectory)/build_windows_$(Build.BuildId).zip'
 
   - job: LinuxTests
     timeoutInMinutes: 30
