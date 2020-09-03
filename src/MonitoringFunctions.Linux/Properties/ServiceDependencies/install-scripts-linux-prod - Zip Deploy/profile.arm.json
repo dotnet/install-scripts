@@ -21,7 +21,7 @@
     },
     "resourceName": {
       "type": "string",
-      "defaultValue": "dotnet-install-daemon-functions-linux",
+      "defaultValue": "install-scripts-linux-prod",
       "metadata": {
         "description": "Name of the main resource to be created by this template."
       }

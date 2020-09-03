@@ -1,9 +1,3 @@
 {
-  "dependencies": {
-    "storage1": {
-      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Storage/storageAccounts/monitoringfuncsstorage",
-      "type": "storage.azure",
-      "connectionId": "AzureWebJobsStorage"
-    }
-  }
+  "dependencies": {}
 }

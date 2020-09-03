@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 
-namespace MonitoringFunctions.Functions
+namespace MonitoringFunctions.Windows.Functions
 {
     /// <summary>
     /// Runs the powershell script in -DryRun mode and checks whether the generated links are accessible

@@ -52,31 +52,31 @@ stages:
         - checkout: self
           clean: true
         steps:
-        - task: UseDotNet@2
-          displayName: Get .NET Core SDK
-          inputs:
-            version: 3.x
-        - task: DotNetCoreCLI@2
-          displayName: Run Tests
-          inputs: 
-            command: test
-        - script: eng\common\cibuild.cmd
-            -configuration $(_BuildConfig)
-            -projects src/Signing/SignScripts.csproj
-            -prepareMachine
-            $(_InternalBuildArgs)
-            /p:Test=false
-            /p:DotNetSignType=$(_SignType)
-            /p:TeamName=$(_TeamName)
-          displayName: Sign dotnet-install.ps1
-        - ${{ if eq(variables._RunAsInternal, True) }}:
-          - task: PowerShell@2
-            displayName: Validate Signature
-            inputs:
-              filePath: eng/common/sdk-task.ps1
-              arguments: -task SigningValidation -restore -msbuildEngine vs 
-                /p:InputFiles='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/**/*.ps1'
-                /p:PackageBasePath='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/'
+        #- task: UseDotNet@2
+        #  displayName: Get .NET Core SDK
+        #  inputs:
+        #    version: 3.x
+        #- task: DotNetCoreCLI@2
+        #  displayName: Run Tests
+        #  inputs: 
+        #    command: test
+        #- script: eng\common\cibuild.cmd
+        #    -configuration $(_BuildConfig)
+        #    -projects src/Signing/SignScripts.csproj
+        #    -prepareMachine
+        #    $(_InternalBuildArgs)
+        #    /p:Test=false
+        #    /p:DotNetSignType=$(_SignType)
+        #    /p:TeamName=$(_TeamName)
+        #  displayName: Sign dotnet-install.ps1
+        #- ${{ if eq(variables._RunAsInternal, True) }}:
+        #  - task: PowerShell@2
+        #    displayName: Validate Signature
+        #    inputs:
+        #      filePath: eng/common/sdk-task.ps1
+        #      arguments: -task SigningValidation -restore -msbuildEngine vs 
+        #        /p:InputFiles='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/**/*.ps1'
+        #        /p:PackageBasePath='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/'
           # Signing step overrides the default SDK version to 5.0. Reinstall is needed.
           - task: UseDotNet@2
             displayName: Get .NET Core SDK
@@ -119,14 +119,13 @@ stages:
             displayName: "Deploy Linux Functions to Test"
             inputs:
               ConnectionType: 'AzureRM'
-              # Name of the service connection that will give us access to Dotnet-Install-Monitoring-Visualization resource group
-              # This is where the linux based Azure Functions are allocated.
-              azureSubscription: 'InstallScripts_Visualization_RG'
-              appType: 'functionApp'
-              WebAppName: dotnet-install-daemon-functions-linux-test
+              # Name of the service connection that will give us access to Dotnet-Install-Monitoring resource group
+              # This is where the linux based test Azure Functions are allocated.
+              azureSubscription: 'InstallScripts_KeyVault'
+              appType: 'functionAppLinux'
+              WebAppName: 'install-scripts-linux-test'
               deployToSlotOrASE: true
-              ResourceGroupName: 'Dotnet-Install-Monitoring-Visualization'
-              SlotName: production
+              ResourceGroupName: 'Dotnet-Install-Monitoring'
               Package: '$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip'
           - task: AzureRmWebAppDeployment@4
             condition: eq(variables['TestPublishing'], 'true')
@@ -137,10 +136,9 @@ stages:
               # This is where the windows based Azure Functions are allocated.
               azureSubscription: 'InstallScripts_KeyVault'
               appType: 'functionApp'
-              WebAppName: dotnet-install-daemon-functions
+              WebAppName: install-scripts-win-test
               deployToSlotOrASE: true
               ResourceGroupName: 'Dotnet-Install-Monitoring'
-              SlotName: test
               Package: '$(System.DefaultWorkingDirectory)/build_windows_$(Build.BuildId).zip'
 
           - task: AzureRmWebAppDeployment@4
@@ -152,10 +150,9 @@ stages:
               # This is where the linux based Azure Functions are allocated.
               azureSubscription: 'InstallScripts_Visualization_RG'
               appType: 'functionApp'
-              WebAppName: dotnet-install-daemon-functions-linux
+              WebAppName: install-scripts-linux-prod
               deployToSlotOrASE: true
               ResourceGroupName: 'Dotnet-Install-Monitoring-Visualization'
-              SlotName: production
               Package: '$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip'
           - task: AzureRmWebAppDeployment@4
             condition: eq(variables['TestPublishing'], 'false')
@@ -166,10 +163,9 @@ stages:
               # This is where the windows based Azure Functions are allocated.
               azureSubscription: 'InstallScripts_KeyVault'
               appType: 'functionApp'
-              WebAppName: dotnet-install-daemon-functions
+              WebAppName: install-scripts-win-prod
               deployToSlotOrASE: true
               ResourceGroupName: 'Dotnet-Install-Monitoring'
-              SlotName: production
               Package: '$(System.DefaultWorkingDirectory)/build_windows_$(Build.BuildId).zip'
 
   - job: LinuxTests
