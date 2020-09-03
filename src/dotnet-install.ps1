@@ -453,7 +453,7 @@ function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion) {
         $ProductVersionTxtURL = "$AzureFeed/Sdk/$SpecificVersion/productVersion.txt"
     }
     else {
-        throw "Invalid value specified for `$Runtime"
+        throw "Invalid value '$Runtime' specified for `$Runtime"
     }
 
     Say-Verbose "Checking for existence of $ProductVersionTxtURL"
@@ -475,7 +475,7 @@ function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion) {
             $productVersion = $SpecificVersion
         }
     } catch {
-        Say-Verbose "Could not read productVersion.txt at $productVersionTxtUrl, so using default value of $SpecificVersion"
+        Say-Verbose "Could not read productVersion.txt at $productVersionTxtUrl, so using default value of $SpecificVersion (Exception: '$($_.Exception.Message)' )"
         $productVersion = $SpecificVersion
     }
 
@@ -663,6 +663,11 @@ if ($DryRun) {
         }
     }
     Say "Repeatable invocation: $RepeatableCommand"
+    if ($SpecificVersion -ne $EffectiveVersion)
+    {
+        Say "NOTE: Due to finding a version manifest with this runtime, it would actually install with version '$EffectiveVersion'"
+    }
+
     exit 0
 }
 
