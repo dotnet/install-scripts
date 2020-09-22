@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 
-namespace MonitoringFunctions.Functions
+namespace MonitoringFunctions.Windows.Functions
 {
     internal static class ShDownloader
     {

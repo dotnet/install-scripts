@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 
-namespace MonitoringFunctions.Linux
+namespace MonitoringFunctions.Linux.Functions
 {
     /// <summary>
     /// Runs the shell script in -DryRun mode and checks whether the generated links are accessible

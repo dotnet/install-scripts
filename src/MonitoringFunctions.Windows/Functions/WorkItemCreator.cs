@@ -20,7 +20,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MonitoringFunctions.Functions
+namespace MonitoringFunctions.Windows.Functions
 {
     internal static class WorkItemCreator
     {

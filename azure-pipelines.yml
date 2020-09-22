@@ -119,14 +119,13 @@ stages:
             displayName: "Deploy Linux Functions to Test"
             inputs:
               ConnectionType: 'AzureRM'
-              # Name of the service connection that will give us access to Dotnet-Install-Monitoring-Visualization resource group
-              # This is where the linux based Azure Functions are allocated.
-              azureSubscription: 'InstallScripts_Visualization_RG'
-              appType: 'functionApp'
-              WebAppName: dotnet-install-daemon-functions-linux-test
+              # Name of the service connection that will give us access to Dotnet-Install-Monitoring resource group
+              # This is where the linux based test Azure Functions are allocated.
+              azureSubscription: 'InstallScripts_KeyVault'
+              appType: 'functionAppLinux'
+              WebAppName: 'install-scripts-linux-test'
               deployToSlotOrASE: true
-              ResourceGroupName: 'Dotnet-Install-Monitoring-Visualization'
-              SlotName: production
+              ResourceGroupName: 'Dotnet-Install-Monitoring'
               Package: '$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip'
           - task: AzureRmWebAppDeployment@4
             condition: eq(variables['TestPublishing'], 'true')
@@ -137,10 +136,9 @@ stages:
               # This is where the windows based Azure Functions are allocated.
               azureSubscription: 'InstallScripts_KeyVault'
               appType: 'functionApp'
-              WebAppName: dotnet-install-daemon-functions
+              WebAppName: install-scripts-win-test
               deployToSlotOrASE: true
               ResourceGroupName: 'Dotnet-Install-Monitoring'
-              SlotName: test
               Package: '$(System.DefaultWorkingDirectory)/build_windows_$(Build.BuildId).zip'
 
           - task: AzureRmWebAppDeployment@4
@@ -152,10 +150,9 @@ stages:
               # This is where the linux based Azure Functions are allocated.
               azureSubscription: 'InstallScripts_Visualization_RG'
               appType: 'functionApp'
-              WebAppName: dotnet-install-daemon-functions-linux
+              WebAppName: install-scripts-linux-prod
               deployToSlotOrASE: true
               ResourceGroupName: 'Dotnet-Install-Monitoring-Visualization'
-              SlotName: production
               Package: '$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip'
           - task: AzureRmWebAppDeployment@4
             condition: eq(variables['TestPublishing'], 'false')
@@ -166,10 +163,9 @@ stages:
               # This is where the windows based Azure Functions are allocated.
               azureSubscription: 'InstallScripts_KeyVault'
               appType: 'functionApp'
-              WebAppName: dotnet-install-daemon-functions
+              WebAppName: install-scripts-win-prod
               deployToSlotOrASE: true
               ResourceGroupName: 'Dotnet-Install-Monitoring'
-              SlotName: production
               Package: '$(System.DefaultWorkingDirectory)/build_windows_$(Build.BuildId).zip'
 
   - job: LinuxTests
