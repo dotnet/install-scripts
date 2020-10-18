@@ -1,0 +1,14 @@
+﻿{
+  "monitor-name": "test name",
+  "symptoms": [
+    {
+      "symptom": "Some operations returned an unsuccessful http response code"
+    }
+  ],
+  "how-detected": 1,
+  "impact": null,
+  "root-cause": null,
+  "recovery-steps": null,
+  "occurrence-date": "2020-10-18T09:42:51.3324877Z",
+  "recovery-date": "2020-10-19T11:23:51.3324877Z"
+}

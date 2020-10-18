@@ -1,0 +1,44 @@
+﻿{
+  "monitor-name": "test name",
+  "symptoms": [
+    {
+      "symptom": "Some operations returned an unsuccessful http response code"
+    },
+    {
+      "symptom": "symtpom2"
+    }
+  ],
+  "how-detected": 1,
+  "impact": [
+    {
+      "impact-description": "some incident impact1",
+      "impacted-script": 2
+    },
+    {
+      "impact-description": "some incident impact2",
+      "impacted-script": 0
+    }
+  ],
+  "root-cause": [
+    {
+      "category": 1,
+      "cause": "root cause1"
+    },
+    {
+      "category": 0,
+      "cause": "root cause2"
+    }
+  ],
+  "recovery-steps": [
+    {
+      "recovery-step": "recovery step1",
+      "code-changes": false
+    },
+    {
+      "recovery-step": "recovery step2",
+      "code-changes": true
+    }
+  ],
+  "occurrence-date": "2020-10-14T22:52:27.2589376Z",
+  "recovery-date": "2020-10-18T10:52:27.258839Z"
+}
