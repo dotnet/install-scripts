@@ -12,15 +12,15 @@ namespace MonitoringFunctions.Incidents.Models
     internal struct Symptom : IEquatable<Symptom>
     {
         /// <summary>
-        /// <see cref="string"/> symptom description.
+        /// <see cref="CommonContent"/> describing symptom.
         /// </summary>
-        [DataMember(Name = "symptom", IsRequired = true)]
-        public string? Item { get; set; }
+        [DataMember(Name = "details")]
+        public CommonContent Details { get; set; }
 
 
         public override string ToString()
         {
-            return Item ?? string.Empty;
+            return Details.ToString();
         }
 
         public override bool Equals(object? obj)
@@ -30,12 +30,12 @@ namespace MonitoringFunctions.Incidents.Models
 
         public override int GetHashCode()
         {
-            return Item?.GetHashCode() ?? 0;
+            return Details.GetHashCode();
         }
 
         public bool Equals(Symptom other)
         {
-            return other.Item == Item;
+            return other.Details.Equals(Details);
         }
     }
 }

@@ -12,21 +12,21 @@ namespace MonitoringFunctions.Incidents.Models
     internal struct RecoveryStep : IEquatable<RecoveryStep>
     {
         /// <summary>
-        /// <see cref="string"/> describing the recovery step.
-        /// </summary>
-        [DataMember(Name = "recovery-step")]
-        public string? Step { get; set; }
-
-        /// <summary>
         /// True if the recovery step required code changes, false otherwise.
         /// </summary>
         [DataMember(Name = "code-changes")]
         public bool RequiredCodeChange { get; set; }
 
- 
+        /// <summary>
+        /// <see cref="CommonContent"/> describing an inciednt symptom.
+        /// </summary>
+        [DataMember(Name = "details")]
+        public CommonContent Details { get; set; }
+
+
         public override string ToString()
         {
-            return $"Recovery Step: {Step ?? string.Empty} (Required code change? {RequiredCodeChange})";
+            return Details.ToString();
         }
 
         public override bool Equals(object? obj)
@@ -36,12 +36,12 @@ namespace MonitoringFunctions.Incidents.Models
 
         public override int GetHashCode()
         {
-            return (Step?.GetHashCode() ?? 0) ^ RequiredCodeChange.GetHashCode();
+            return Details.GetHashCode() ^ RequiredCodeChange.GetHashCode();
         }
 
         public bool Equals(RecoveryStep other)
         {
-            return other.Step == Step && other.RequiredCodeChange == RequiredCodeChange;
+            return other.Details.Equals(Details) && other.RequiredCodeChange == RequiredCodeChange;
         }
     }
 }

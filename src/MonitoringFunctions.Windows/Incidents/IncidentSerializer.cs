@@ -53,7 +53,14 @@ namespace MonitoringFunctions.Incidents
                 {
                     new Symptom
                     {
-                        Item = $"{data.Message ?? string.Empty}"
+                        Details = new CommonContent
+                        {
+                            Description = $"{data.Message ?? string.Empty}",
+                            Labels = new string[]
+                            {
+                                "monitoring failure"
+                            }
+                        }
                     }
                 }
             };

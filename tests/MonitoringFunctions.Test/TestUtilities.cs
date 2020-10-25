@@ -41,7 +41,7 @@ namespace MonitoringFunctions.Test
             Assert.IsNotNull(incident);
             Assert.IsNotNull(incident.Symptoms);
             Assert.IsTrue(incident.Symptoms.Count > 0, $"unexpected # of symptoms, {incident.Symptoms.Count}");
-            Assert.IsTrue(incident.Symptoms[0].Item.Contains("Some operations returned an unsuccessful http response code"));
+            Assert.IsTrue(incident.Symptoms[0].Details.Description.Contains("Some operations returned an unsuccessful http response code"));
             Assert.AreEqual(incident.HowDetected, Detection.Monitoring, $"Expected {Detection.Monitoring}, received {incident.HowDetected}");
         }
 
@@ -55,24 +55,52 @@ namespace MonitoringFunctions.Test
                 {
                     new Symptom
                     {
-                        Item = symptom
+                        Details = new CommonContent
+                        {
+                            Description = "symptom",
+                            Labels = new string[]
+                            {
+                                "symptom label"
+                            }
+                        }
                     },
                     new Symptom
                     {
-                        Item = "symtpom2"
+                        Details = new CommonContent
+                        {
+                            Description = "symptom2",
+                            Labels = new string[]
+                            {
+                                "symptom label2"
+                            }
+                        }
                     }
                 },
                 Impacts = new List<Impact>
                 {
                     new Impact
                     {
-                        Description = "some incident impact1",
-                        Script = ImpactedScript.Both
+                        Script = ImpactedScript.Both,
+                        Details = new CommonContent
+                        {
+                            Description = "impact desc 2",
+                            Labels = new string[]
+                            {
+                                "impact label 1"
+                            }
+                        }
                     },
                     new Impact
                     {
-                        Description = "some incident impact2",
-                        Script = ImpactedScript.PS1
+                        Script = ImpactedScript.PS1,
+                        Details = new CommonContent
+                        {
+                            Description = "impact desc 2",
+                            Labels = new string[]
+                            {
+                                "impact label 1"
+                            }
+                        }
                     }
                 },
                 RecoverySteps = new List<RecoveryStep>
@@ -80,25 +108,28 @@ namespace MonitoringFunctions.Test
                     new RecoveryStep
                     {
                         RequiredCodeChange = false,
-                        Step = "recovery step1"
-                    },
-                                        new RecoveryStep
-                    {
-                        RequiredCodeChange = true,
-                        Step = "recovery step2"
+                        Details = new CommonContent
+                        {
+                            Description = "recovery step",
+                            Labels = new string[]
+                            {
+                                "recovery step label"
+                            }
+                        }
                     }
                 },
                 RootCauses = new List<RootCause>
                 {
                     new RootCause
                     {
-                        Cause = "root cause1",
-                        Reason = RcCategory.Bug
-                    },
-                    new RootCause
-                    {
-                        Cause = "root cause2",
-                        Reason = RcCategory.BuildAgent
+                        Details = new CommonContent
+                        {
+                            Description = "root-cause",
+                            Labels = new string[]
+                            {
+                                "root-cause label"
+                            }
+                        }
                     }
                 },
                 RecoveryDate = DateTime.UtcNow,

@@ -12,21 +12,15 @@ namespace MonitoringFunctions.Incidents.Models
     internal struct RootCause : IEquatable<RootCause>
     {
         /// <summary>
-        /// <see cref="RcCategory"/> detailing the root-cause's category.
+        /// <see cref="CommonContent"/> describing an incident root-cause.
         /// </summary>
-        [DataMember(Name = "category")]
-        public RcCategory Reason { get; set; }
-
-        /// <summary>
-        /// <see cref="string"/> describing the root-cause.
-        /// </summary>
-        [DataMember(Name = "cause")]
-        public string? Cause { get; set; }
+        [DataMember(Name = "details")]
+        public CommonContent Details { get; set; }
 
 
         public override string ToString()
         {
-            return $"Root-Cause: ({Reason}) {Cause ?? string.Empty}";
+            return $"Root-Cause: {Details}";
         }
 
         public override bool Equals(object? obj)
@@ -36,12 +30,12 @@ namespace MonitoringFunctions.Incidents.Models
 
         public override int GetHashCode()
         {
-            return Reason.GetHashCode() ^ (Cause?.GetHashCode() ?? 0);
+            return Details.GetHashCode();
         }
 
         public bool Equals(RootCause other)
         {
-            return other.Reason == Reason && other.Cause == Cause;
+            return other.Details.Equals(Details);
         }
     }
 }

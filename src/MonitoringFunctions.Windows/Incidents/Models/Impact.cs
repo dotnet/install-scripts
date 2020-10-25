@@ -12,21 +12,21 @@ namespace MonitoringFunctions.Incidents.Models
     internal struct Impact : IEquatable<Impact>
     {
         /// <summary>
-        /// <see cref="string"/> describing the impact.
-        /// </summary>
-        [DataMember(Name = "impact-description")]
-        public string? Description { get; set; }
-
-        /// <summary>
         /// <see cref="ImpactedScript"/> detailing the impacted scripts.
         /// </summary>
         [DataMember(Name = "impacted-script")]
         public ImpactedScript Script { get; set; }
 
+        /// <summary>
+        /// <see cref="CommonContent"/> describing impact.
+        /// </summary>
+        [DataMember(Name = "details")]
+        public CommonContent Details { get; set; }
+
 
         public override string ToString()
         {
-            return $"Impact: {Description ?? string.Empty} ({Script})";
+            return $"Impact: {Details} ({Script})";
         }
 
         public override bool Equals(object? obj)
@@ -36,12 +36,12 @@ namespace MonitoringFunctions.Incidents.Models
 
         public override int GetHashCode()
         {
-            return (Description?.GetHashCode() ?? 0) ^ Script.GetHashCode();
+            return Details.GetHashCode() ^ Script.GetHashCode();
         }
 
         public bool Equals(Impact other)
         {
-            return other.Description == Description && other.Script == Script;
+            return other.Details.Equals(Details) && other.Script == Script;
         }
     }
 }
