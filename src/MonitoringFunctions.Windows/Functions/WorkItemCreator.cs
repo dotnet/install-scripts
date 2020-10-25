@@ -92,7 +92,7 @@ namespace MonitoringFunctions.Windows.Functions
                     continue;
                 }
 
-                string description = IncidentSerializer.GetIncidentDescription(match.Value.Tags["monitor_name"], data);
+                string description = IncidentSerializer.GetIncidentDescription(match.Value.Tags["monitor_name"], data, log);
                 log.LogInformation($"Incident description body: {description}");
                 WorkItem workItem = await CreateAdoTask(workItemClient, devdivProject, IncidentAreaPath, title, description).ConfigureAwait(false);
 

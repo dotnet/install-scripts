@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using Microsoft.Extensions.Logging;
 using MonitoringFunctions.Incidents.Models;
 using MonitoringFunctions.Incidents.Serialization;
 using MonitoringFunctions.Incidents.Serialization.Providers.Json;
@@ -41,8 +42,9 @@ namespace MonitoringFunctions.Incidents
         /// </summary>
         /// <param name="monitorName"><see cref="string"/> name of relevant monitor.</param>
         /// <param name="data">Specified <see cref="AlertNotificationData"/> instance.</param>
+        /// <param name="logger">OPTIONAL: <see cref="ILogger"/> handle.</param>
         /// <returns><see cref="string"/> representing serialized <see cref="Incident"/></returns>
-        public string GetIncidentDescription(string monitorName, AlertNotificationData data)
+        public string GetIncidentDescription(string monitorName, AlertNotificationData data, ILogger? logger = null)
         {
             Incident incident = new Incident
             {
@@ -65,7 +67,15 @@ namespace MonitoringFunctions.Incidents
                 }
             };
 
-            return _serializer.GetString(incident);
+            try
+            {
+                return _serializer.GetString(incident);
+            }
+            catch (Exception e)
+            {
+                logger?.LogError($"Problem serializing {typeof(Incident)} instance.  Error: {e}");
+                return string.Empty;
+            }
         }
 
         /// <summary>

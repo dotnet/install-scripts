@@ -67,51 +67,5 @@ namespace MonitoringFunctions.Test
             Incident incident = jsonSerializer.GetIncident(incidentJson);
             TestUtilities.AssertIncident(incident);
         }
-
-        [TestMethod]
-        public void Test()
-        {
-            var impact = new Impact
-            {
-                Script = ImpactedScript.PS1,
-                Details = new CommonContent
-                {
-                    Description = "impact desc",
-                    Labels = new string[]
-                    {
-                        "impact label"
-                    }
-                }
-            };
-
-            string item = Newtonsoft.Json.JsonConvert.SerializeObject(impact, Newtonsoft.Json.Formatting.Indented);
-
-
-            var symptom = new Symptom
-            {
-                Details = new CommonContent
-                {
-                    Description = "symptom desc",
-                    Labels = new string[]
-                    {
-                        "symptom label"
-                    }
-                }
-            };
-            item = Newtonsoft.Json.JsonConvert.SerializeObject(symptom, Newtonsoft.Json.Formatting.Indented);
-
-            var recovery = new RecoveryStep
-            {
-                Details = new CommonContent
-                {
-                    Description = "recovery step desc",
-                    Labels = new string[]
-                    {
-                        "recovery label"
-                    }
-                }
-            };
-            item = Newtonsoft.Json.JsonConvert.SerializeObject(recovery, Newtonsoft.Json.Formatting.Indented);
-        }
     }
 }
