@@ -17,7 +17,7 @@ namespace MonitoringFunctions.Test
         private const string NewIncidentJson = "SampleNewIncident.json", ResolvedIncidentJson = "SampleResolvedIncident.json";
 
         /// <summary>
-        /// Verifies incident content serialization as it hapens in incident record creation.
+        /// Verifies incident content serialization as it happens in incident record creation.
         /// </summary>
         [TestMethod]
         public void TestNominativeSerialization()

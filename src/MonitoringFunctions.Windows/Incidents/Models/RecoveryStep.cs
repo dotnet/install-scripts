@@ -18,7 +18,7 @@ namespace MonitoringFunctions.Incidents.Models
         public bool RequiredCodeChange { get; set; }
 
         /// <summary>
-        /// <see cref="CommonContent"/> describing an inciednt symptom.
+        /// <see cref="CommonContent"/> describing an incident symptom.
         /// </summary>
         [DataMember(Name = "details")]
         public CommonContent Details { get; set; }
