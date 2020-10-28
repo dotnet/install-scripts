@@ -11,6 +11,7 @@ using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
+using MonitoringFunctions.Incidents;
 using MonitoringFunctions.Models;
 using Newtonsoft.Json;
 using System;
@@ -28,6 +29,7 @@ namespace MonitoringFunctions.Windows.Functions
         private const string IncidentAreaPath = "DevDiv\\NET Tools\\install-scripts-incidents";
         private static readonly string? _devdivAdoPAT = Environment.GetEnvironmentVariable("devdiv-ado-pat");
         private static readonly Uri _devdivCollectionUri = new Uri("https://devdiv.visualstudio.com/DefaultCollection/");
+        private static readonly IncidentSerializer IncidentSerializer = new IncidentSerializer();
 
         [FunctionName("WorkItemCreator")]
         public static async Task<IActionResult> Run(
@@ -80,8 +82,6 @@ namespace MonitoringFunctions.Windows.Functions
                 }
 
                 string title = $"#{match.Value.Tags["monitor_name"]}# {alertMessage}";
-                string description = $"Alert details:{Environment.NewLine}{requestBody}";
-
 
                 bool workItemExists = await ActiveWorkItemExists(workItemClient, devdivProject, title, IncidentAreaPath)
                     .ConfigureAwait(false);
@@ -92,6 +92,8 @@ namespace MonitoringFunctions.Windows.Functions
                     continue;
                 }
 
+                string description = IncidentSerializer.GetIncidentDescription(match.Value.Tags["monitor_name"], data, log);
+                log.LogInformation($"Incident description body: {description}");
                 WorkItem workItem = await CreateAdoTask(workItemClient, devdivProject, IncidentAreaPath, title, description).ConfigureAwait(false);
 
                 string workItemUrl = (workItem.Links?.Links?["html"] as ReferenceLink)?.Href ?? "<url-not-found>";

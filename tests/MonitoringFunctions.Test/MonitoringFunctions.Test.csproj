@@ -26,4 +26,13 @@
     <ProjectReference Include="..\..\src\MonitoringFunctions.Windows\MonitoringFunctions.Windows.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Assets\SampleNewIncident.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Assets\SampleResolvedIncident.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

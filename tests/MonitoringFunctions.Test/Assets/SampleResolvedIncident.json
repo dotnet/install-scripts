@@ -1,0 +1,48 @@
+﻿{
+  "monitor-name": "test name",
+  "symptoms": [
+    {
+      "details": {
+        "description": "Some operations returned an unsuccessful http response code",
+        "labels": [
+          "monitoring failure"
+        ]
+      }
+    }
+  ],
+  "how-detected": 1,
+  "impact": [
+    {
+      "impacted-script": 2,
+      "details": {
+        "description": "Some operations returned an unsuccessful http response code",
+        "labels": [
+          "monitoring failure"
+        ]
+      }
+    }
+  ],
+  "root-cause": [
+    {
+      "details": {
+        "description": "Some operations returned an unsuccessful http response code",
+        "labels": [
+          "monitoring failure"
+        ]
+      }
+    }
+  ],
+  "recovery-steps": [
+    {
+      "code-changes": true,
+      "details": {
+        "description": "Some operations returned an unsuccessful http response code",
+        "labels": [
+          "monitoring failure"
+        ]
+      }
+    }
+  ],
+  "occurrence-date": "2020-10-14T22:52:27.2589376Z",
+  "recovery-date": "2020-10-18T10:52:27.258839Z"
+}
