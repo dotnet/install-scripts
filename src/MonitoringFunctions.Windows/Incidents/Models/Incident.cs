@@ -13,10 +13,10 @@ namespace MonitoringFunctions.Incidents.Models
     internal struct Incident : IEquatable<Incident>
     {
         /// <summary>
-        /// <see cref="string"/> name of the mointor, in cases where <see cref="Incident.HowDetected"/> is <see cref="Detection.Monitoring"/>.
+        /// <see cref="string?"/> name of the mointor, in cases where <see cref="Incident.HowDetected"/> is <see cref="Detection.Monitoring"/>.
         /// </summary>
         [DataMember(Name = "monitor-name")]
-        public string MonitorName { get; set; }
+        public string? MonitorName { get; set; }
 
         /// <summary>
         /// <see cref="List{Symptom}"/> describing incident symptoms.
