@@ -13,11 +13,14 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 {
     public class GivenThatIWantToInstallTheSdkFromAScript
     {
-        [Fact]
-        public void WhenJsonFileIsPassedToInstallScripts()
+        [Theory]
+        [InlineData("InstallationScriptTests.json")]
+        [InlineData("InstallationScriptTestsWithMultipleSdkFields.json")]
+        [InlineData("InstallationScriptTestsWithVersionFieldInTheMiddle.json")]
+        public void WhenJsonFileIsPassedToInstallScripts(string filename)
         {
             var installationScriptTestsJsonFile = Path.Combine(Environment.CurrentDirectory,
-                "Assets", "InstallationScriptTests.json");
+                "Assets", filename);
 
             var args = new List<string> { "-dryrun", "-jsonfile", installationScriptTestsJsonFile };
 
@@ -30,7 +33,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().NotHaveStdOutContaining("jsonfile");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
-            commandResult.Should().HaveStdOutContaining("1.0.0-beta.19463.3");
+            commandResult.Should().HaveStdOutContaining("\"1.0.0-beta.19463.3\"");
         }
 
         [Theory]
