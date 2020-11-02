@@ -1,3 +1,5 @@
+[![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet.install-scripts?branchName=master)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=846&branchName=master)
+
 This repo is the central place for dotnet install scripts.
 
 For more information about the usage, see:
