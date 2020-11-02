@@ -241,42 +241,6 @@ check_min_reqs() {
     return 0
 }
 
-check_pre_reqs() {
-    eval $invocation
-
-    if [ "${DOTNET_INSTALL_SKIP_PREREQS:-}" = "1" ]; then
-        return 0
-    fi
-
-    if [ "$(uname)" = "Linux" ]; then
-        if is_musl_based_distro; then
-            if ! command -v scanelf > /dev/null; then
-                say_warning "scanelf not found, please install pax-utils package."
-                return 0
-            fi
-            LDCONFIG_COMMAND="scanelf --ldpath -BF '%f'"
-            [ -z "$($LDCONFIG_COMMAND 2>/dev/null | grep libintl)" ] && say_warning "Unable to locate libintl. Probable prerequisite missing; install libintl (or gettext)."
-        else
-            if [ ! -x "$(command -v ldconfig)" ]; then
-                say_verbose "ldconfig is not in PATH, trying /sbin/ldconfig."
-                LDCONFIG_COMMAND="/sbin/ldconfig"
-            else
-                LDCONFIG_COMMAND="ldconfig"
-            fi
-            local librarypath=${LD_LIBRARY_PATH:-}
-            LDCONFIG_COMMAND="$LDCONFIG_COMMAND -NXv ${librarypath//:/ }"
-        fi
-
-        [ -z "$($LDCONFIG_COMMAND 2>/dev/null | grep zlib)" ] && say_warning "Unable to locate zlib. Probable prerequisite missing; install zlib."
-        [ -z "$($LDCONFIG_COMMAND 2>/dev/null | grep ssl)" ] && say_warning "Unable to locate libssl. Probable prerequisite missing; install libssl."
-        [ -z "$($LDCONFIG_COMMAND 2>/dev/null | grep libicu)" ] && say_warning "Unable to locate libicu. Probable prerequisite missing; install libicu."
-        [ -z "$($LDCONFIG_COMMAND 2>/dev/null | grep lttng)" ] && say_warning "Unable to locate liblttng. Probable prerequisite missing; install liblttng."
-        [ -z "$($LDCONFIG_COMMAND 2>/dev/null | grep libcurl)" ] && say_warning "Unable to locate libcurl. Probable prerequisite missing; install libcurl."
-    fi
-
-    return 0
-}
-
 # args:
 # input - $1
 to_lowercase() {
@@ -1118,7 +1082,6 @@ if [ "$dry_run" = true ]; then
     exit 0
 fi
 
-check_pre_reqs
 install_dotnet
 
 bin_path="$(get_absolute_path "$(combine_paths "$install_root" "$bin_folder_relative_path")")"
@@ -1129,4 +1092,6 @@ else
     say "Binaries of dotnet can be found in $bin_path"
 fi
 
+say "Please note that the script does not resolve dependencies during installation."
+say "To check the list of dependencies, go to https://docs.microsoft.com/en-us/dotnet/core/install, select your operating system and check the \"Dependencies\" section."
 say "Installation finished successfully."
