@@ -673,7 +673,7 @@ if ($DryRun) {
         Say "NOTE: Due to finding a version manifest with this runtime, it would actually install with version '$EffectiveVersion'"
     }
 
-    exit 0
+    return
 }
 
 if ($Runtime -eq "dotnet") {
@@ -707,7 +707,7 @@ $isAssetInstalled = Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -Relat
 if ($isAssetInstalled) {
     Say "$assetName version $SpecificVersion is already installed."
     Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot -BinFolderRelativePath $BinFolderRelativePath
-    exit 0
+    return
 }
 
 New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
@@ -716,7 +716,7 @@ $installDrive = $((Get-Item $InstallRoot).PSDrive.Name);
 $diskInfo = Get-PSDrive -Name $installDrive
 if ($diskInfo.Free / 1MB -le 100) {
     Say "There is not enough disk space on drive ${installDrive}:"
-    exit 0
+    return
 }
 
 $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
@@ -781,4 +781,3 @@ Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot -BinFolderRelativePath
 Say "Note that the script does not resolve dependencies during installation."
 Say "To check the list of dependencies, go to https://docs.microsoft.com/dotnet/core/install/windows#dependencies"
 Say "Installation finished"
-exit 0
