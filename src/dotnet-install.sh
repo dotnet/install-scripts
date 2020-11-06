@@ -382,14 +382,12 @@ is_dotnet_package_installed() {
 # azure_feed - $1
 # channel - $2
 # normalized_architecture - $3
-# coherent - $4
 get_latest_version_info() {
     eval $invocation
 
     local azure_feed="$1"
     local channel="$2"
     local normalized_architecture="$3"
-    local coherent="$4"
 
     local version_file_url=null
     if [[ "$runtime" == "dotnet" ]]; then
@@ -397,11 +395,7 @@ get_latest_version_info() {
     elif [[ "$runtime" == "aspnetcore" ]]; then
         version_file_url="$uncached_feed/aspnetcore/Runtime/$channel/latest.version"
     elif [ -z "$runtime" ]; then
-        if [ "$coherent" = true ]; then
-            version_file_url="$uncached_feed/Sdk/$channel/latest.coherent.version"
-        else
-            version_file_url="$uncached_feed/Sdk/$channel/latest.version"
-        fi
+         version_file_url="$uncached_feed/Sdk/$channel/latest.version"
     else
         say_err "Invalid value for \$runtime"
         return 1
@@ -468,26 +462,16 @@ get_specific_version_from_version() {
     local json_file="$5"
 
     if [ -z "$json_file" ]; then
-        case "$version" in
-            latest)
-                local version_info
-                version_info="$(get_latest_version_info "$azure_feed" "$channel" "$normalized_architecture" false)" || return 1
-                say_verbose "get_specific_version_from_version: version_info=$version_info"
-                echo "$version_info" | get_version_from_version_info
-                return 0
-                ;;
-            coherent)
-                local version_info
-                version_info="$(get_latest_version_info "$azure_feed" "$channel" "$normalized_architecture" true)" || return 1
-                say_verbose "get_specific_version_from_version: version_info=$version_info"
-                echo "$version_info" | get_version_from_version_info
-                return 0
-                ;;
-            *)
-                echo "$version"
-                return 0
-                ;;
-        esac
+        if [[ "$version" == "latest" ]]; then 
+            local version_info
+            version_info="$(get_latest_version_info "$azure_feed" "$channel" "$normalized_architecture" false)" || return 1
+            say_verbose "get_specific_version_from_version: version_info=$version_info"
+            echo "$version_info" | get_version_from_version_info
+            return 0
+        else
+            echo "$version"
+            return 0
+        fi
     else
         local version_info
         version_info="$(parse_jsonfile_for_version "$json_file")" || return 1
@@ -1013,8 +997,6 @@ do
             echo "      -Version"
             echo "          Possible values:"
             echo "          - latest - most latest build on specific channel"
-            echo "          - coherent - most latest coherent build on specific channel"
-            echo "              coherent applies only to SDK downloads"
             echo "          - 3-part version in a format A.B.C - represents specific version of build"
             echo "              examples: 2.0.0-preview2-006120; 1.1.0"
             echo "  -i,--install-dir <DIR>             Install under specified location (see Install Location below)"

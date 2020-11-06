@@ -23,8 +23,6 @@
     Default: latest
     Represents a build version on specific channel. Possible values:
     - latest - most latest build on specific channel
-    - coherent - most latest coherent build on specific channel
-          coherent applies only to SDK downloads
     - 3-part version in a format A.B.C - represents specific version of build
           examples: 2.0.0-preview2-006120, 1.1.0
 .PARAMETER InstallDir
@@ -291,7 +289,7 @@ function GetHTTPResponse([Uri] $Uri)
     })
 }
 
-function Get-Latest-Version-Info([string]$AzureFeed, [string]$Channel, [bool]$Coherent) {
+function Get-Latest-Version-Info([string]$AzureFeed, [string]$Channel) {
     Say-Invocation $MyInvocation
 
     $VersionFileUrl = $null
@@ -306,12 +304,7 @@ function Get-Latest-Version-Info([string]$AzureFeed, [string]$Channel, [bool]$Co
         $VersionFileUrl = "$UncachedFeed/Runtime/$Channel/latest.version"
     }
     elseif (-not $Runtime) {
-        if ($Coherent) {
-            $VersionFileUrl = "$UncachedFeed/Sdk/$Channel/latest.coherent.version"
-        }
-        else {
-            $VersionFileUrl = "$UncachedFeed/Sdk/$Channel/latest.version"
-        }
+        $VersionFileUrl = "$UncachedFeed/Sdk/$Channel/latest.version"
     }
     else {
         throw "Invalid value for `$Runtime"
@@ -375,16 +368,12 @@ function Get-Specific-Version-From-Version([string]$AzureFeed, [string]$Channel,
     Say-Invocation $MyInvocation
 
     if (-not $JSonFile) {
-        switch ($Version.ToLower()) {
-            { $_ -eq "latest" } {
-                $LatestVersionInfo = Get-Latest-Version-Info -AzureFeed $AzureFeed -Channel $Channel -Coherent $False
-                return $LatestVersionInfo.Version
-            }
-            { $_ -eq "coherent" } {
-                $LatestVersionInfo = Get-Latest-Version-Info -AzureFeed $AzureFeed -Channel $Channel -Coherent $True
-                return $LatestVersionInfo.Version
-            }
-            default { return $Version }
+        if ($Version.ToLower() -eq "latest") {
+            $LatestVersionInfo = Get-Latest-Version-Info -AzureFeed $AzureFeed -Channel $Channel
+            return $LatestVersionInfo.Version
+        }
+        else {
+            return $Version 
         }
     }
     else {
