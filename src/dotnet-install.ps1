@@ -619,6 +619,24 @@ function DownloadFile($Source, [string]$OutPath) {
     }
 }
 
+function SafeRemoveFile($Path) {
+	try {
+		if (Test-Path $Path) 
+		{
+			Remove-Item $Path
+			Say-Verbose "The temporary file `"$Path`" was removed."
+		}
+		else
+		{
+			Say-Verbose "The temporary file `"$Path`" does not exist, therefore is not removed."
+		}
+	}
+	catch
+	{
+		Say "Failed to remove the temporary file: `"$Path`", remove it manually."
+	}
+}
+
 function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot, [string]$BinFolderRelativePath) {
     $BinPath = Get-Absolute-Path $(Join-Path -Path $InstallRoot -ChildPath $BinFolderRelativePath)
     if (-Not $NoPath) {
@@ -729,6 +747,8 @@ try {
 }
 catch {
     Say "Cannot download: $DownloadLink"
+	SafeRemoveFile -Path $ZipPath
+
     if ($LegacyDownloadLink) {
         $DownloadLink = $LegacyDownloadLink
         $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
@@ -739,6 +759,7 @@ catch {
         }
         catch {
             Say "Cannot download: $DownloadLink"
+			SafeRemoveFile -Path $ZipPath
             $DownloadFailed = $true
         }
     }
@@ -774,7 +795,7 @@ if (!$isAssetInstalled) {
     throw "`"$assetName`" with version = $SpecificVersion failed to install with an unknown error."
 }
 
-Remove-Item $ZipPath
+SafeRemoveFile -Path $ZipPath
 
 Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot -BinFolderRelativePath $BinFolderRelativePath
 

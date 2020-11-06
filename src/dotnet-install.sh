@@ -692,6 +692,7 @@ extract_dotnet_package() {
     find "$temp_out_path" -type f | grep -Ev "$folders_with_version_regex" | copy_files_or_dirs_from_list "$temp_out_path" "$out_path" "$override_non_versioned_files"
 
     rm -rf "$temp_out_path"
+	rm -f "$zip_path" && say_verbose "Temporary zip file $zip_path was removed"
 
     if [ "$failed" = true ]; then
         say_err "Extraction failed"
@@ -840,7 +841,7 @@ install_dotnet() {
     #  if the download fails, download the legacy_download_link
     if [ "$download_failed" = true ]; then
         say "Cannot download: $download_link"
-
+		rm -f "$zip_path" 2>&1 && say_verbose "Temporary zip file $zip_path was removed or doesn't exist"
         if [ "$valid_legacy_download_link" = true ]; then
             download_failed=false
             download_link="$legacy_download_link"
@@ -851,6 +852,7 @@ install_dotnet() {
 
             if [ "$download_failed" = true ]; then
                 say "Cannot download: $download_link"
+				rm -f "$zip_path" 2>&1 && say_verbose "Temporary zip file $zip_path was removed or doesn't exist"
             fi
         fi
     fi
@@ -1074,27 +1076,27 @@ say "To set up a development environment or to run apps, use installers rather t
 
 check_min_reqs
 calculate_vars
-script_name=$(basename "$0")
+cscript_name=$(basename "$0")
 
-if [ "$dry_run" = true ]; then
-    say "Payload URLs:"
-    say "Primary named payload URL: $download_link"
-    if [ "$valid_legacy_download_link" = true ]; then
-        say "Legacy named payload URL: $legacy_download_link"
-    fi
-    repeatable_command="./$script_name --version "\""$specific_version"\"" --install-dir "\""$install_root"\"" --architecture "\""$normalized_architecture"\"""
-    if [[ "$runtime" == "dotnet" ]]; then
-        repeatable_command+=" --runtime "\""dotnet"\"""
-    elif [[ "$runtime" == "aspnetcore" ]]; then
-        repeatable_command+=" --runtime "\""aspnetcore"\"""
-    fi
-    repeatable_command+="$non_dynamic_parameters"
-    say "Repeatable invocation: $repeatable_command"
+if [ "$dry_run" = true ]; then	
+    say "Payload URLs:"	
+    say "Primary named payload URL: $download_link"	
+    if [ "$valid_legacy_download_link" = true ]; then	
+        say "Legacy named payload URL: $legacy_download_link"	
+    fi	
+    repeatable_command="./$script_name --version "\""$specific_version"\"" --install-dir "\""$install_root"\"" --architecture "\""$normalized_architecture"\"""	
+    if [[ "$runtime" == "dotnet" ]]; then	
+        repeatable_command+=" --runtime "\""dotnet"\"""	
+    elif [[ "$runtime" == "aspnetcore" ]]; then	
+        repeatable_command+=" --runtime "\""aspnetcore"\"""	
+    fi	
+    repeatable_command+="$non_dynamic_parameters"	
+    say "Repeatable invocation: $repeatable_command"	
     exit 0
 fi
 
-install_dotnet
 
+install_dotnet
 bin_path="$(get_absolute_path "$(combine_paths "$install_root" "$bin_folder_relative_path")")"
 if [ "$no_path" = false ]; then
     say "Adding to current process PATH: \`$bin_path\`. Note: This change will be visible only when sourcing script."
