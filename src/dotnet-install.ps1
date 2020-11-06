@@ -620,21 +620,20 @@ function DownloadFile($Source, [string]$OutPath) {
 }
 
 function SafeRemoveFile($Path) {
-	try {
-		if (Test-Path $Path) 
-		{
-			Remove-Item $Path
-			Say-Verbose "The temporary file `"$Path`" was removed."
-		}
-		else
-		{
-			Say-Verbose "The temporary file `"$Path`" does not exist, therefore is not removed."
-		}
-	}
-	catch
-	{
-		Say "Failed to remove the temporary file: `"$Path`", remove it manually."
-	}
+    try {
+        if (Test-Path $Path) {
+            Remove-Item $Path
+            Say-Verbose "The temporary file `"$Path`" was removed."
+        }
+        else
+        {
+            Say-Verbose "The temporary file `"$Path`" does not exist, therefore is not removed."
+        }
+    }
+    catch
+    {
+        Say "Failed to remove the temporary file: `"$Path`", remove it manually."
+    }
 }
 
 function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot, [string]$BinFolderRelativePath) {
@@ -747,7 +746,7 @@ try {
 }
 catch {
     Say "Cannot download: $DownloadLink"
-	SafeRemoveFile -Path $ZipPath
+    SafeRemoveFile -Path $ZipPath
 
     if ($LegacyDownloadLink) {
         $DownloadLink = $LegacyDownloadLink
@@ -759,7 +758,7 @@ catch {
         }
         catch {
             Say "Cannot download: $DownloadLink"
-			SafeRemoveFile -Path $ZipPath
+            SafeRemoveFile -Path $ZipPath
             $DownloadFailed = $true
         }
     }
