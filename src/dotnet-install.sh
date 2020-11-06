@@ -551,14 +551,20 @@ get_specific_product_version() {
         return 1
     fi
 
-    specific_product_version=$(curl -s --fail "$download_link")
-    if [ $? -ne 0 ]
+    if machine_has "curl"
     then
-      specific_product_version=$(wget -qO- "$download_link")
-      if [ $? -ne 0 ]
-      then
-        specific_product_version=$specific_version
-      fi
+        specific_product_version=$(curl -s --fail "$download_link")
+        if [ $? -ne 0 ]
+        then
+            specific_product_version=$specific_version
+        fi
+    elif machine_has "wget"
+    then
+        specific_product_version=$(wget -qO- "$download_link")
+        if [ $? -ne 0 ]
+        then
+            specific_product_version=$specific_version
+        fi
     fi
     specific_product_version="${specific_product_version//[$'\t\r\n']}"
 
