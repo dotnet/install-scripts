@@ -1061,7 +1061,7 @@ if [ "$no_cdn" = true ]; then
     azure_feed="$uncached_feed"
 fi
 
-say "Please note that the intended use of this script is for Continuous Integration (CI) scenarios, where:"
+say "Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:"
 say "- The SDK needs to be installed without user interaction and without admin rights."
 say "- The SDK installation doesn't need to persist across multiple CI runs."
 say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.\n"
@@ -1097,6 +1097,6 @@ else
     say "Binaries of dotnet can be found in $bin_path"
 fi
 
-say "Please note that the script does not resolve dependencies during installation."
-say "To check the list of dependencies, go to https://docs.microsoft.com/en-us/dotnet/core/install, select your operating system and check the \"Dependencies\" section."
+say "Note that the script does not resolve dependencies during installation."
+say "To check the list of dependencies, go to https://docs.microsoft.com/dotnet/core/install, select your operating system and check the \"Dependencies\" section."
 say "Installation finished successfully."

@@ -635,7 +635,7 @@ function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot, [string]$BinFolde
     }
 }
 
-Say "Please note that the intended use of this script is for Continuous Integration (CI) scenarios, where:"
+Say "Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:"
 Say "- The SDK needs to be installed without user interaction and without admin rights."
 Say "- The SDK installation doesn't need to persist across multiple CI runs."
 Say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.`r`n"
@@ -778,7 +778,7 @@ Remove-Item $ZipPath
 
 Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot -BinFolderRelativePath $BinFolderRelativePath
 
-Say "Please note that the script does not resolve dependencies during installation."
-Say "To check the list of dependencies, go to https://docs.microsoft.com/en-us/dotnet/core/install/windows#dependencies"
+Say "Note that the script does not resolve dependencies during installation."
+Say "To check the list of dependencies, go to https://docs.microsoft.com/dotnet/core/install/windows#dependencies"
 Say "Installation finished"
 exit 0
