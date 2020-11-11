@@ -676,6 +676,7 @@ extract_dotnet_package() {
     find "$temp_out_path" -type f | grep -Ev "$folders_with_version_regex" | copy_files_or_dirs_from_list "$temp_out_path" "$out_path" "$override_non_versioned_files"
 
     rm -rf "$temp_out_path"
+    rm -f "$zip_path" && say_verbose "Temporary zip file $zip_path was removed"
 
     if [ "$failed" = true ]; then
         say_err "Extraction failed"
@@ -824,7 +825,7 @@ install_dotnet() {
     #  if the download fails, download the legacy_download_link
     if [ "$download_failed" = true ]; then
         say "Cannot download: $download_link"
-
+        rm -f "$zip_path" 2>&1 && say_verbose "Temporary zip file $zip_path was removed"
         if [ "$valid_legacy_download_link" = true ]; then
             download_failed=false
             download_link="$legacy_download_link"
@@ -835,6 +836,7 @@ install_dotnet() {
 
             if [ "$download_failed" = true ]; then
                 say "Cannot download: $download_link"
+                rm -f "$zip_path" 2>&1 && say_verbose "Temporary zip file $zip_path was removed"
             fi
         fi
     fi
