@@ -120,47 +120,42 @@ $VersionRegEx="/\d+\.\d+[^/]+/"
 $OverrideNonVersionedFiles = !$SkipNonVersionedFiles
 
 function Say($str) {
-    try
-    {
+    try {
         Write-Host "dotnet-install: $str"
     }
-    catch
-    {
+    catch {
         # Some platforms cannot utilize Write-Host (Azure Functions, for instance). Fall back to Write-Output
         Write-Output "dotnet-install: $str"
     }
 }
 
 function Say-Warning($str) {
-    try
-    {
+    try {
         Write-Warning "dotnet-install: $str"
     }
-    catch
-    {
+    catch {
         # Some platforms cannot utilize Write-Warning (Azure Functions, for instance). Fall back to Write-Output
-        Write-Output "Warning: dotnet-install: $str"
+        Write-Output "dotnet-install: Warning: $str"
     }
 }
 
+# Writes a line with error style settings.
+# Use this function to show a human-readable comment along with an exception.
 function Say-Error($str) {
-    try
-    {
+    try {
+        # Write-Error is quite oververbose for the purpose of the function, let's write one line with error style settings.
         $Host.UI.WriteErrorLine("dotnet-install: $str")
     }
-    catch
-    {
-        Write-Output "Error: dotnet-install: $str"
+    catch {
+        Write-Output "dotnet-install: Error: $str"
     }
 }
 
 function Say-Verbose($str) {
-    try
-    {
+    try {
         Write-Verbose "dotnet-install: $str"
     }
-    catch
-    {
+    catch {
         # Some platforms cannot utilize Write-Verbose (Azure Functions, for instance). Fall back to Write-Output
         Write-Output "dotnet-install: $str"
     }
