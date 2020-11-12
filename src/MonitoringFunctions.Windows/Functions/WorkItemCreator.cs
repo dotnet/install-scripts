@@ -11,6 +11,7 @@ using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
+using MonitoringFunctions.Common;
 using MonitoringFunctions.Incidents;
 using MonitoringFunctions.Models;
 using Newtonsoft.Json;
@@ -29,6 +30,7 @@ namespace MonitoringFunctions.Windows.Functions
         private const string IncidentAreaPath = "DevDiv\\NET Tools\\install-scripts-incidents";
         private static readonly string? _devdivAdoPAT = Environment.GetEnvironmentVariable("devdiv-ado-pat");
         private static readonly Uri _devdivCollectionUri = new Uri("https://devdiv.visualstudio.com/DefaultCollection/");
+        private static readonly string? TeamsWebhookUrl = Environment.GetEnvironmentVariable("teams-webhook-url");
         private static readonly IncidentSerializer IncidentSerializer = new IncidentSerializer();
 
         [FunctionName("WorkItemCreator")]
@@ -64,6 +66,27 @@ namespace MonitoringFunctions.Windows.Functions
             string alertMessage = data.Message ?? "Alert triggered";
             int alertingMonitorCount = data.MatchingAlerts?.Length ?? 0;
             List<WorkItem> createdWorkItems = new List<WorkItem>();
+            TeamsConnector? teamsConnector = null;
+
+            if (data.Tags != null
+                && data.Tags.ContainsKey("notifyTeams")
+                && bool.TryParse(data.Tags["notifyTeams"], out bool notifyTeams)
+                && notifyTeams)
+            {
+                if (string.IsNullOrWhiteSpace(TeamsWebhookUrl))
+                {
+                    log.LogError("Teams notifications were requested, but no webhook url was provided."
+                        + " No notifications will be sent.");
+                }
+                else
+                {
+                    teamsConnector = new TeamsConnector(TeamsWebhookUrl);
+                }
+            }
+            else
+            {
+                log.LogInformation("Teams notifications will not be sent, because the request doesn't have 'notifyTeams' tag or the value isn't true.");
+            }
 
             for (int i = 0; i < alertingMonitorCount; i++)
             {
@@ -101,6 +124,18 @@ namespace MonitoringFunctions.Windows.Functions
 
                 log.LogInformation(successMessage);
                 createdWorkItems.Add(workItem);
+
+                if (teamsConnector != null)
+                {
+                    try
+                    {
+                        await teamsConnector.SendIncidentCard("There is a new issue with the install scripts.", title, workItemUrl);
+                    }
+                    catch (Exception e)
+                    {
+                        log.LogError($"An exception occured while sending a Teams notification: {e}");
+                    }
+                }
             }
 
             return new OkObjectResult($"{createdWorkItems.Count} work items were created with IDs {string.Join(", ", createdWorkItems.Select(w => w.Id))}");
