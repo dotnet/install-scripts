@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Copyright (c) Microsoft. All rights reserved.
+
+using System;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -6,13 +8,15 @@ using System.Threading.Tasks;
 
 namespace MonitoringFunctions.Common
 {
+    /// <summary>
+    /// Represents a connector for MS Teams.
+    /// </summary>
     internal sealed class TeamsConnector
     {
-        private static readonly HttpClient _httpClient = new HttpClient();
-
+        private static readonly HttpClient HttpClient = new HttpClient();
+        private const string IncidentCardFormat = "{{\"@context\":\"https://schema.org/extensions\",\"@type\":\"MessageCard\",\"themeColor\":\"FF5555\",\"title\":\"{0}\",\"text\":\"{1}\",\"potentialAction\":[{{\"@type\":\"OpenUri\",\"name\":\"Go To Work Item\",\"targets\":[{{\"os\":\"default\",\"uri\":\"{2}\"}}]}}]}}";
+        
         private string _webhookUrl;
-
-        private const string _incidentCardFormat = "{{\"@context\":\"https://schema.org/extensions\",\"@type\":\"MessageCard\",\"themeColor\":\"FF5555\",\"title\":\"{0}\",\"text\":\"{1}\",\"potentialAction\":[{{\"@type\":\"OpenUri\",\"name\":\"Go To Work Item\",\"targets\":[{{\"os\":\"default\",\"uri\":\"{2}\"}}]}}]}}";
 
         /// <summary>
         /// Creates a new instance of type <see cref="TeamsConnector"/>.
@@ -41,10 +45,10 @@ namespace MonitoringFunctions.Common
         /// <remarks>It is safe to call this method on the same object simultaneously from multiple threads.</remarks>
         public async Task SendIncidentCard(string title, string description, string workItemUrl, CancellationToken cancellationToken = default)
         {
-            string payload = string.Format(_incidentCardFormat, title, description, workItemUrl);
+            string payload = string.Format(IncidentCardFormat, title, description, workItemUrl);
             StringContent payloadContent = new StringContent(payload, Encoding.UTF8);
 
-            HttpResponseMessage response = await _httpClient.PostAsync(_webhookUrl, payloadContent, cancellationToken);
+            HttpResponseMessage response = await HttpClient.PostAsync(_webhookUrl, payloadContent, cancellationToken);
 
             if(!response.IsSuccessStatusCode)
             {
