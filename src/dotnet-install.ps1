@@ -177,8 +177,7 @@ function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [int]$MaxAttempts = 3, [in
 
     while ($true) {
         try {
-            & $ScriptBlock
-            return
+            return & $ScriptBlock
         }
         catch {
             $Attempts++
