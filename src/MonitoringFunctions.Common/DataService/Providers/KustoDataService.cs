@@ -54,6 +54,11 @@ namespace MonitoringFunctions
             await _httpRequestLogsTable.InsertRowAsync(logEntry, cancellationToken).ConfigureAwait(false);
         }
 
+        public async Task ReportUrlAccessAsync(HttpRequestLogEntry httpRequestLogEntry, CancellationToken cancellationToken = default)
+        {
+            await _httpRequestLogsTable.InsertRowAsync(httpRequestLogEntry, cancellationToken).ConfigureAwait(false);
+        }
+
         /// <summary>
         /// Reports the details of a script execution to kusto.
         /// </summary>

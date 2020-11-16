@@ -1,7 +1,9 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
+using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -26,21 +28,35 @@ namespace MonitoringFunctions
         /// <param name="monitorName">Name of this monitor to be included in the logs and in the data sent to Kusto.</param>
         /// <param name="url">Url that this method will attempt to access.</param>
         /// <returns>A task, tracking the initiated async operation. Errors should be reported through exceptions.</returns>
-        internal static async Task CheckAndReportUrlAccessAsync(ILogger log, string monitorName, string url, IDataService dataService,
+        internal static async Task CheckAndReportUrlAccessAsync(ILogger log,
+            string monitorName,
+            string url,
+            IDataService dataService,
             CancellationToken cancellationToken = default)
         {
-            HttpResponseMessage response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-
-            await dataService.ReportUrlAccessAsync(monitorName, response, cancellationToken).ConfigureAwait(false);
-
-            if (response.IsSuccessStatusCode)
+            _ = log ?? throw new ArgumentNullException(paramName: nameof(log));
+            _ = string.IsNullOrWhiteSpace(monitorName) ? throw new ArgumentNullException(paramName: nameof(monitorName)) : monitorName;
+            _ = string.IsNullOrWhiteSpace(url) ? throw new ArgumentNullException(paramName: nameof(url)) : url;
+            _ = dataService ?? throw new ArgumentNullException(paramName: nameof(dataService));
+            try
             {
-                log.LogInformation($"Monitor '{monitorName}' has succeeded accessing the url {url}");
+                using HttpResponseMessage response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                HttpRequestLogEntry entry = CreateHttpRequestLogEntry(monitorName, response.StatusCode, response.RequestMessage.RequestUri.AbsoluteUri);
+                await dataService.ReportUrlAccessAsync(entry, cancellationToken).ConfigureAwait(false);
+                if (response.IsSuccessStatusCode)
+                {
+                    log.LogInformation($"Monitor '{monitorName}' succeeded accessing url {url}.");
+                    return;
+                }
+                string error = $"Monitor '{monitorName}' failed accessing url {url} with error code {response.StatusCode}.";
+                log.LogError(error);
+                throw new Exception(error);
             }
-            else
+            catch (Exception e)
             {
-                log.LogError($"Monitor '{monitorName}' has failed accessing the url {url} with error code {response.StatusCode}");
-                throw new Exception($"Download failed with status code {response.StatusCode}. Monitor: {monitorName}");
+                await dataService.ReportUrlAccessAsync(CreateHttpRequestLogEntry(monitorName, HttpStatusCode.InternalServerError, url), cancellationToken).ConfigureAwait(false);
+                log.LogError($"Monitor '{monitorName}' failed accessing url {url}.  Reason {e.Message}.");
+                throw e;
             }
         }
 
@@ -85,6 +101,18 @@ namespace MonitoringFunctions
 
             // Validate URL accessibility
             await HelperMethods.CheckAndReportUrlAccessAsync(log, monitorName, dryRunResults.PrimaryUrl, dataService);
+        }
+
+
+        private static HttpRequestLogEntry CreateHttpRequestLogEntry(string monitorName, HttpStatusCode httpStatus, string url)
+        {
+            return new HttpRequestLogEntry()
+            {
+                MonitorName = monitorName,
+                EventTime = DateTime.UtcNow,
+                RequestedUrl = url,
+                HttpResponseCode = (int)httpStatus
+            };
         }
     }
 }

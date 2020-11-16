@@ -1,5 +1,6 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
+using MonitoringFunctions.Models;
 using System;
 using System.Net.Http;
 using System.Threading;
@@ -16,6 +17,14 @@ namespace MonitoringFunctions
         /// <param name="httpResponse">Http response data to be stored.</param>
         /// <returns>A task, tracking the initiated async operation. Errors should be reported through exceptions.</returns>
         Task ReportUrlAccessAsync(string monitorName, HttpResponseMessage httpResponse, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Stores the details of the <see cref="HttpRequestLogEntry"/> in the underlying data store.
+        /// </summary>
+        /// <param name="httpRequestLogEntry"><see cref="HttpRequestLogEntry"/> to be stored.</param>
+        /// <param name="cancellationToken">Optional <see cref="CancellationToken"/> instance.</param>
+        /// <returns>A task, tracking the initiated async operation. Errors should be reported through exceptions.</returns>
+        Task ReportUrlAccessAsync(HttpRequestLogEntry httpRequestLogEntry, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Stores the details of the <see cref="HttpResponseMessage"/> in the underlying data store.
