@@ -120,24 +120,42 @@ $VersionRegEx="/\d+\.\d+[^/]+/"
 $OverrideNonVersionedFiles = !$SkipNonVersionedFiles
 
 function Say($str) {
-    try
-    {
+    try {
         Write-Host "dotnet-install: $str"
     }
-    catch
-    {
+    catch {
         # Some platforms cannot utilize Write-Host (Azure Functions, for instance). Fall back to Write-Output
         Write-Output "dotnet-install: $str"
     }
 }
 
+function Say-Warning($str) {
+    try {
+        Write-Warning "dotnet-install: $str"
+    }
+    catch {
+        # Some platforms cannot utilize Write-Warning (Azure Functions, for instance). Fall back to Write-Output
+        Write-Output "dotnet-install: Warning: $str"
+    }
+}
+
+# Writes a line with error style settings.
+# Use this function to show a human-readable comment along with an exception.
+function Say-Error($str) {
+    try {
+        # Write-Error is quite oververbose for the purpose of the function, let's write one line with error style settings.
+        $Host.UI.WriteErrorLine("dotnet-install: $str")
+    }
+    catch {
+        Write-Output "dotnet-install: Error: $str"
+    }
+}
+
 function Say-Verbose($str) {
-    try
-    {
+    try {
         Write-Verbose "dotnet-install: $str"
     }
-    catch
-    {
+    catch {
         # Some platforms cannot utilize Write-Verbose (Azure Functions, for instance). Fall back to Write-Output
         Write-Output "dotnet-install: $str"
     }
@@ -154,7 +172,7 @@ function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [int]$MaxAttempts = 3, [in
 
     while ($true) {
         try {
-            return $ScriptBlock.Invoke()
+            return & $ScriptBlock
         }
         catch {
             $Attempts++
@@ -268,7 +286,8 @@ function GetHTTPResponse([Uri] $Uri)
             # Default timeout for HttpClient is 100s.  For a 50 MB download this assumes 500 KB/s average, any less will time out
             # 20 minutes allows it to work over much slower connections.
             $HttpClient.Timeout = New-TimeSpan -Minutes 20
-            $Response = $HttpClient.GetAsync("${Uri}${FeedCredential}").Result
+            $Task = $HttpClient.GetAsync("${Uri}${FeedCredential}").ConfigureAwait("false");
+            $Response = $Task.GetAwaiter().GetResult();
             if (($Response -eq $null) -or (-not ($Response.IsSuccessStatusCode))) {
                  # The feed credential is potentially sensitive info. Do not log FeedCredential to console output.
                 $ErrorMsg = "Failed to download $Uri."
@@ -279,7 +298,7 @@ function GetHTTPResponse([Uri] $Uri)
                 throw $ErrorMsg
             }
 
-             return $Response
+            return $Response
         }
         finally {
              if ($HttpClient -ne $null) {
@@ -313,7 +332,8 @@ function Get-Latest-Version-Info([string]$AzureFeed, [string]$Channel) {
         $Response = GetHTTPResponse -Uri $VersionFileUrl
     }
     catch {
-        throw "Could not resolve version information."
+        Say-Error "Could not resolve version information."
+        throw
     }
     $StringContent = $Response.Content.ReadAsStringAsync().Result
 
@@ -339,7 +359,8 @@ function Parse-Jsonfile-For-Version([string]$JSonFile) {
         $JSonContent = Get-Content($JSonFile) -Raw | ConvertFrom-Json | Select-Object -expand "sdk" -ErrorAction SilentlyContinue
     }
     catch {
-        throw "Json file unreadable: '$JSonFile'"
+        Say-Error "Json file unreadable: '$JSonFile'"
+        throw
     }
     if ($JSonContent) {
         try {
@@ -352,7 +373,8 @@ function Parse-Jsonfile-For-Version([string]$JSonFile) {
             }
         }
         catch {
-            throw "Unable to parse the SDK node in '$JSonFile'"
+            Say-Error "Unable to parse the SDK node in '$JSonFile'"
+            throw
         }
     }
     else {
@@ -621,7 +643,7 @@ function SafeRemoveFile($Path) {
     }
     catch
     {
-        Say "Failed to remove the temporary file: `"$Path`", remove it manually."
+        Say-Warning "Failed to remove the temporary file: `"$Path`", remove it manually."
     }
 }
 
@@ -721,8 +743,7 @@ New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
 $installDrive = $((Get-Item $InstallRoot).PSDrive.Name);
 $diskInfo = Get-PSDrive -Name $installDrive
 if ($diskInfo.Free / 1MB -le 100) {
-    Say "There is not enough disk space on drive ${installDrive}:"
-    return
+    throw "There is not enough disk space on drive ${installDrive}:"
 }
 
 $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
