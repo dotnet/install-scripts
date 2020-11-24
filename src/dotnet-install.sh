@@ -748,7 +748,10 @@ downloadcurl() {
     if [ "$failed" = true ]; then
         local response=$(get_http_header_curl $remote_path_with_credential)
         http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
-        download_error_msg="Curl download $remote_path failed. Returning HTTP status code: $http_code."
+        download_error_msg="Curl download $remote_path failed."
+        if  [[ $http_code != 2* ]]; then
+            download_error_msg+=" Returned HTTP status code: $http_code."
+        fi
         say_verbose "$download_error_msg"
         return 1
     fi
@@ -773,7 +776,10 @@ downloadwget() {
     if [ "$failed" = true ]; then
         local response=$(get_http_header_wget $remote_path_with_credential)
         http_code=$( echo "$response" | awk '/^  HTTP/{print $2}' | tail -1 )
-        download_error_msg="Wget download $remote_path failed. Returning HTTP status code: $http_code."
+        download_error_msg="Wget download $remote_path failed."
+        if  [[ $http_code != 2* ]]; then
+            download_error_msg+=" Returned HTTP status code: $http_code."
+        fi
         say_verbose "$download_error_msg"
         return 1
     fi
@@ -848,10 +854,21 @@ install_dotnet() {
     # the download function will fill variables $http_code and $download_error_msg in case of failure.
     http_code=""; download_error_msg=""
     download "$download_link" "$zip_path" 2>&1 || download_failed=true
+    primary_path_http_code="$http_code"; primary_path_download_error_msg="$download_error_msg"
 
     #  if the download fails, download the legacy_download_link
     if [ "$download_failed" = true ]; then
-        say "Cannot download: $download_link"
+        case $primary_path_http_code in
+        404)
+            say "The primary path $download_link is not available."
+            ;;
+        2*)
+            say "Cannot download via the primary path $download_link."
+            ;;
+        *)
+            say "Cannot download via the primary path $download_link. Returned HTTP status code: $primary_path_http_code."
+            ;;
+        esac
         rm -f "$zip_path" 2>&1 && say_verbose "Temporary zip file $zip_path was removed"
         if [ "$valid_legacy_download_link" = true ]; then
             download_failed=false
@@ -863,17 +880,37 @@ install_dotnet() {
             # the download function will fill variables $http_code and $download_error_msg in case of failure.
             http_code=""; download_error_msg=""
             download "$download_link" "$zip_path" 2>&1 || download_failed=true
-
+            legacy_path_http_code="$http_code";  legacy_path_download_error_msg="$download_error_msg"
             if [ "$download_failed" = true ]; then
-                say "Cannot download: $download_link"
+                case $legacy_path_http_code in
+                404)
+                    say "The legacy path $download_link is not available."
+                    ;;
+                2*)
+                    say "Cannot download via the legacy path $download_link."
+                    ;;
+                *)
+                    say "Cannot download via the legacy path $download_link. Returned HTTP status code: $legacy_path_http_code."
+                    ;;
+                esac
                 rm -f "$zip_path" 2>&1 && say_verbose "Temporary zip file $zip_path was removed"
             fi
         fi
     fi
 
     if [ "$download_failed" = true ]; then
-        say_err "Could not find/download: \`$asset_name\` with version = $specific_version"
-        say_err "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
+        if [[ "$primary_path_http_code" = "404" && "$legacy_path_http_code" = "404" ]]; then
+            say_err "Could not find \`$asset_name\` with version = $specific_version"
+            say_err "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
+        else
+            say_err "Could not download: \`$asset_name\` with version = $specific_version:"
+            if [ "$primary_path_http_code" != "404" ]; then
+                say_err "$primary_path_download_error_msg"
+            fi
+            if [ "$legacy_path_http_code" != "404" ]; then
+                say_err "$legacy_path_download_error_msg"
+            fi
+        fi
         return 1
     fi
 
