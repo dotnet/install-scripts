@@ -1,9 +1,7 @@
 ﻿// Copyright (c) Microsoft. All rights reserved.
 
 using System;
-using System.Net;
 using System.Net.Http;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -21,12 +19,14 @@ namespace MonitoringFunctions
         private static readonly HttpClient _httpClient = new HttpClient();
 
         /// <summary>
-        /// Tests if the contents of the given url can be accessed from current environment.
-        /// Saves results to Kusto.
+        /// Tests if the contents of the given url can be accessed from the current environment.
+        /// Reports results to given data service.
         /// </summary>
         /// <param name="log"><see cref="ILogger"/> that is used to report log information.</param>
         /// <param name="monitorName">Name of this monitor to be included in the logs and in the data sent to Kusto.</param>
         /// <param name="url">Url that this method will attempt to access.</param>
+        /// <param name="dataService">Data service to be used when reporting the results.</param>
+        /// <param name="cancellationToken">Token to cancel the asynchronous operation.</param>
         /// <returns>A task, tracking the initiated async operation. Errors should be reported through exceptions.</returns>
         internal static async Task CheckAndReportUrlAccessAsync(ILogger log,
             string monitorName,
@@ -38,25 +38,48 @@ namespace MonitoringFunctions
             _ = string.IsNullOrWhiteSpace(monitorName) ? throw new ArgumentNullException(paramName: nameof(monitorName)) : monitorName;
             _ = string.IsNullOrWhiteSpace(url) ? throw new ArgumentNullException(paramName: nameof(url)) : url;
             _ = dataService ?? throw new ArgumentNullException(paramName: nameof(dataService));
+
+            HttpRequestLogEntry logEntry = new HttpRequestLogEntry()
+            {
+                MonitorName = monitorName,
+                EventTime = DateTime.UtcNow,
+                RequestedUrl = url
+            };
+            HttpResponseMessage? response = null;
             try
             {
-                using HttpResponseMessage response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-                HttpRequestLogEntry entry = CreateHttpRequestLogEntry(monitorName, response.StatusCode, response.RequestMessage.RequestUri.AbsoluteUri);
-                await dataService.ReportUrlAccessAsync(entry, cancellationToken).ConfigureAwait(false);
-                if (response.IsSuccessStatusCode)
-                {
-                    log.LogInformation($"Monitor '{monitorName}' succeeded accessing url {url}.");
-                    return;
-                }
-                string error = $"Monitor '{monitorName}' failed accessing url {url} with error code {response.StatusCode}.";
-                log.LogError(error);
-                throw new Exception(error);
+                response = await _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+                logEntry.HttpResponseCode = (int)response.StatusCode;
+                await dataService.ReportUrlAccessAsync(logEntry, cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception e)
+            catch (Exception httpException)
             {
-                await dataService.ReportUrlAccessAsync(CreateHttpRequestLogEntry(monitorName, HttpStatusCode.InternalServerError, url), cancellationToken).ConfigureAwait(false);
-                log.LogError($"Monitor '{monitorName}' failed accessing url {url}.  Reason {e.Message}.");
-                throw e;
+                if (response == null)
+                {
+                    // HttpClient failed to return a response, instead threw. The error should be in the exception.
+                    logEntry.Error = httpException.Message;
+
+                    try
+                    {
+                        await dataService.ReportUrlAccessAsync(logEntry, cancellationToken);
+                    }
+                    catch (Exception dataServiceException)
+                    {
+                        // Reporting to database has failed. Let's report into Azure Functions so that we can somehow track this.
+                        log.LogError(httpException, $"Failed to access url {url} from monitor {monitorName}");
+                        // There was an error with the data store and this should also be logged.
+                        log.LogError(dataServiceException, "Failed to report an unsuccessful http request.");
+                    }
+                }
+                else
+                {
+                    // Http request completed, but reporting to data service has failed.
+                    log.LogError($"Failed to report an http response code {response.StatusCode} for url {url}.");
+                }
+            }
+            finally
+            {
+                response?.Dispose();
             }
         }
 
@@ -101,18 +124,6 @@ namespace MonitoringFunctions
 
             // Validate URL accessibility
             await HelperMethods.CheckAndReportUrlAccessAsync(log, monitorName, dryRunResults.PrimaryUrl, dataService);
-        }
-
-
-        private static HttpRequestLogEntry CreateHttpRequestLogEntry(string monitorName, HttpStatusCode httpStatus, string url)
-        {
-            return new HttpRequestLogEntry()
-            {
-                MonitorName = monitorName,
-                EventTime = DateTime.UtcNow,
-                RequestedUrl = url,
-                HttpResponseCode = (int)httpStatus
-            };
         }
     }
 }
