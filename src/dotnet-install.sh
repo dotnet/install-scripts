@@ -684,6 +684,24 @@ extract_dotnet_package() {
     fi
 }
 
+get_http_header_curl() {
+    eval $invocation
+    local remote_path="$1"
+    remote_path_with_credential="${remote_path}${feed_credential}"
+    curl_options="-I -sSL --retry 5 --retry-delay 2 --connect-timeout 15 "
+    curl $curl_options "$remote_path_with_credential" || return 1
+    return 0
+}
+
+get_http_header_wget() {
+    eval $invocation
+    local remote_path="$1"
+    remote_path_with_credential="${remote_path}${feed_credential}"
+    wget_options="-q -S --spider --tries 5 --waitretry 2 --connect-timeout 15 "
+    wget $wget_options "$remote_path_with_credential" 2>&1 || return 1
+    return 0
+}
+
 # args:
 # remote_path - $1
 # [out_path] - $2 - stdout if not provided
@@ -713,44 +731,50 @@ download() {
     return 0
 }
 
+# Note, function writes to global variables $http_code and $download_error_msg
 downloadcurl() {
     eval $invocation
     local remote_path="$1"
     local out_path="${2:-}"
-
     # Append feed_credential as late as possible before calling curl to avoid logging feed_credential
-    remote_path="${remote_path}${feed_credential}"
-
+    local remote_path_with_credential="${remote_path}${feed_credential}"
     local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
     local failed=false
     if [ -z "$out_path" ]; then
-        curl $curl_options "$remote_path" || failed=true
+        curl $curl_options "$remote_path_with_credential" || failed=true
     else
-        curl $curl_options -o "$out_path" "$remote_path" || failed=true
+        curl $curl_options -o "$out_path" "$remote_path_with_credential" || failed=true
     fi
     if [ "$failed" = true ]; then
-        say_verbose "Curl download failed"
+        local response=$(get_http_header_curl $remote_path_with_credential)
+        http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
+        download_error_msg="Curl download $remote_path failed. Returning HTTP status code: $http_code."
+        say_verbose "$download_error_msg"
         return 1
     fi
     return 0
 }
 
+
+# Note, function writes to global variables $http_code and $download_error_msg
 downloadwget() {
     eval $invocation
     local remote_path="$1"
     local out_path="${2:-}"
-
     # Append feed_credential as late as possible before calling wget to avoid logging feed_credential
-    remote_path="${remote_path}${feed_credential}"
+    local remote_path_with_credential="${remote_path}${feed_credential}"
     local wget_options="--tries 20 --waitretry 2 --connect-timeout 15 "
     local failed=false
     if [ -z "$out_path" ]; then
-        wget -q $wget_options -O - "$remote_path" || failed=true
+        wget -q $wget_options -O - "$remote_path_with_credential" || failed=true
     else
-        wget $wget_options -O "$out_path" "$remote_path" || failed=true
+        wget $wget_options -O "$out_path" "$remote_path_with_credential" || failed=true
     fi
     if [ "$failed" = true ]; then
-        say_verbose "Wget download failed"
+        local response=$(get_http_header_wget $remote_path_with_credential)
+        http_code=$( echo "$response" | awk '/^  HTTP/{print $2}' | tail -1 )
+        download_error_msg="Wget download $remote_path failed. Returning HTTP status code: $http_code."
+        say_verbose "$download_error_msg"
         return 1
     fi
     return 0
@@ -816,10 +840,13 @@ install_dotnet() {
     zip_path="$(mktemp "$temporary_file_template")"
     say_verbose "Zip path: $zip_path"
 
-    say "Downloading link: $download_link"
 
     # Failures are normal in the non-legacy case for ultimately legacy downloads.
     # Do not output to stderr, since output to stderr is considered an error.
+    say "Downloading link: $download_link"
+
+    # the download function will fill variables $http_code and $download_error_msg in case of failure.
+    http_code=""; download_error_msg=""
     download "$download_link" "$zip_path" 2>&1 || download_failed=true
 
     #  if the download fails, download the legacy_download_link
@@ -832,6 +859,9 @@ install_dotnet() {
             zip_path="$(mktemp "$temporary_file_template")"
             say_verbose "Legacy zip path: $zip_path"
             say "Downloading legacy link: $download_link"
+
+            # the download function will fill variables $http_code and $download_error_msg in case of failure.
+            http_code=""; download_error_msg=""
             download "$download_link" "$zip_path" 2>&1 || download_failed=true
 
             if [ "$download_failed" = true ]; then
