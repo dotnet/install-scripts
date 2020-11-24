@@ -682,6 +682,7 @@ extract_dotnet_package() {
         say_err "Extraction failed"
         return 1
     fi
+    return 0
 }
 
 get_http_header_curl() {
@@ -915,7 +916,7 @@ install_dotnet() {
     fi
 
     say "Extracting zip from $download_link"
-    extract_dotnet_package "$zip_path" "$install_root"
+    extract_dotnet_package "$zip_path" "$install_root" || return 1
 
     #  Check if the SDK version is installed; if not, fail the installation.
     # if the version contains "RTM" or "servicing"; check if a 'release-type' SDK version is installed.
