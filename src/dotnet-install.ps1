@@ -288,27 +288,30 @@ function GetHTTPResponse([Uri] $Uri)
             $HttpClient.Timeout = New-TimeSpan -Minutes 20
             $Task = $HttpClient.GetAsync("${Uri}${FeedCredential}").ConfigureAwait("false");
             $Response = $Task.GetAwaiter().GetResult();
-            if (($Response -eq $null) -or (-not ($Response.IsSuccessStatusCode))) {
+
+            if (($null -eq $Response) -or (-not ($Response.IsSuccessStatusCode))) {
                 # The feed credential is potentially sensitive info. Do not log FeedCredential to console output.
-                $ErrorMsg = ""
-                if ($Response -ne $null) {
-                    $ErrorMsg += "$Response"
+                $DownloadException = [System.Exception] "Unable to download $Uri."
+
+                if ($null -ne $Response) {
+                    $DownloadException.Data["StatusCode"] = [int] $Response.StatusCode
+                    $DownloadException.Data["ErrorMessage"] = "Unable to download $Uri. Returned HTTP status code: " + $DownloadException.Data["StatusCode"]
                 }
-                throw $ErrorMsg
+
+                throw $DownloadException
             }
 
             return $Response
-
         }
-        catch {
-            $ErrorMsg = "Failed to download $Uri.`r`n"
+        catch [System.Net.Http.HttpRequestException] {
+            $DownloadException = [System.Exception] "Unable to download $Uri."
 
             # Pick up the exception message and inner exceptions' messages if they exist
             $CurrentException = $PSItem.Exception
-            $ErrorMsg += $CurrentException.Message + "`r`n"
+            $ErrorMsg = $CurrentException.Message + "`r`n"
             while ($CurrentException.InnerException) {
               $CurrentException = $CurrentException.InnerException
-              $ErrorMsg += "  " + $CurrentException.Message + "`r`n"
+              $ErrorMsg += $CurrentException.Message + "`r`n"
             }
 
             # Check if there is an issue concerning TLS.
@@ -316,7 +319,8 @@ function GetHTTPResponse([Uri] $Uri)
                 $ErrorMsg += "Ensure that TLS 1.2 or higher is enabled to use this script.`r`n"
             }
 
-            throw "$ErrorMsg"
+            $DownloadException.Data["ErrorMessage"] = $ErrorMsg
+            throw $DownloadException
         }
         finally {
              if ($HttpClient -ne $null) {
@@ -768,19 +772,31 @@ $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO
 Say-Verbose "Zip path: $ZipPath"
 
 $DownloadFailed = $false
-$DownloadFailedWithNon404Error = $false
-$DownloadFailedMsg = ""
-Say "Downloading link: $DownloadLink"
+
+$PrimaryDownloadStatusCode = 0
+$LegacyDownloadStatusCode = 0
+
+$PrimaryDownloadFailedMsg = ""
+$LegacyDownloadFailedMsg = ""
+
+Say "Downloading primary link $DownloadLink"
 try {
     DownloadFile -Source $DownloadLink -OutPath $ZipPath
 }
 catch {
-    if (($PSItem.Exception -like "*StatusCode: 404*")) {
-        Say "The primary path $DownloadLink is not available."
+    if ($PSItem.Exception.Data.Contains("StatusCode")) {
+        $PrimaryDownloadStatusCode = $PSItem.Exception.Data["StatusCode"]
+    }
+    if ($PSItem.Exception.Data.Contains("ErrorMessage")) {
+        $PrimaryDownloadFailedMsg = $PSItem.Exception.Data["ErrorMessage"]
     } else {
-        Say "Cannot download via the primary path $DownloadLink."
-        $DownloadFailedWithNon404Error = $true
-        $DownloadFailedMsg += $PSItem.Exception.Message + "`n"
+        $PrimaryDownloadFailedMsg = $PSItem.Exception.Message
+    }
+
+    if ($PrimaryDownloadStatusCode -eq 404) {
+        Say "The link $DownloadLink is not available."
+    } else {
+        Say $PrimaryDownloadFailedMsg
     }
 
     SafeRemoveFile -Path $ZipPath
@@ -789,17 +805,24 @@ catch {
         $DownloadLink = $LegacyDownloadLink
         $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
         Say-Verbose "Legacy zip path: $ZipPath"
-        Say "Downloading legacy link: $DownloadLink"
+        Say "Downloading legacy link $DownloadLink"
         try {
             DownloadFile -Source $DownloadLink -OutPath $ZipPath
         }
         catch {
-            if (($PSItem.Exception -like "*StatusCode: 404*")) {
-                Say "The legacy path $DownloadLink is not available."
+            if ($PSItem.Exception.Data.Contains("StatusCode")) {
+                $LegacyDownloadStatusCode = $PSItem.Exception.Data["StatusCode"]
+            }
+            if ($PSItem.Exception.Data.Contains("ErrorMessage")) {
+                $LegacyDownloadFailedMsg = $PSItem.Exception.Data["ErrorMessage"]
             } else {
-                Say "Cannot download via the legacy path $DownloadLink."
-                $DownloadFailedWithNon404Error = $true
-                $DownloadFailedMsg += $PSItem.Exception.Message + "`n"
+                $LegacyDownloadFailedMsg = $PSItem.Exception.Message
+            }
+
+            if ($LegacyDownloadStatusCode -eq 404) {
+                Say "The link $DownloadLink is not available."
+            } else {
+                Say $LegacyDownloadFailedMsg
             }
 
             SafeRemoveFile -Path $ZipPath
@@ -812,11 +835,17 @@ catch {
 }
 
 if ($DownloadFailed) {
-    if ($DownloadFailedWithNon404Error) {
-        Say-Error "$DownloadFailedMsg"
-        throw "Could not download `"$assetName`" with version = $SpecificVersion"
-    } else {
+    if (($PrimaryDownloadStatusCode -eq "404") -and ((-not $LegacyDownloadLink) -or ($LegacyDownloadStatusCode -eq "404"))) {
         throw "Could not find `"$assetName`" with version = $SpecificVersion`nRefer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
+    } else {
+        # 404-NotFound is an expected response if it goes from only one of the links, do not show that error.
+        if ($PrimaryDownloadStatusCode -ne "404") {
+            Say-Error $PrimaryDownloadFailedMsg
+        }
+        if (($LegacyDownloadLink) -and ($LegacyDownloadStatusCode -ne "404")) {
+            Say-Error $LegacyDownloadFailedMsg
+        }
+        throw "Could not download `"$assetName`" with version = $SpecificVersion"
     }
 }
 
