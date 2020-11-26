@@ -787,8 +787,8 @@ Extract-Dotnet-Package -ZipPath $ZipPath -OutPath $InstallRoot
 #  Check if the SDK version is installed; if not, fail the installation.
 $isAssetInstalled = $false
 
-# if the version contains "RTM" or "servicing"; check if a 'release-type' SDK version is installed.
-if ($SpecificVersion -Match "rtm" -or $SpecificVersion -Match "servicing") {
+# if the version contains "RTM", "servicing" or "preview"; check if a 'release-type' SDK version is installed.
+if ($SpecificVersion -Match "rtm" -or $SpecificVersion -Match "servicing" -or $SpecificVersion -Match "preview") {
     $ReleaseVersion = $SpecificVersion.Split("-")[0]
     Say-Verbose "Checking installation: version = $ReleaseVersion"
     $isAssetInstalled = Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $ReleaseVersion

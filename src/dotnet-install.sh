@@ -851,8 +851,8 @@ install_dotnet() {
     extract_dotnet_package "$zip_path" "$install_root"
 
     #  Check if the SDK version is installed; if not, fail the installation.
-    # if the version contains "RTM" or "servicing"; check if a 'release-type' SDK version is installed.
-    if [[ $specific_version == *"rtm"* || $specific_version == *"servicing"* ]]; then
+    # if the version contains "RTM", "servicing" or "preview"; check if a 'release-type' SDK version is installed.
+    if [[ $specific_version == *"rtm"* || $specific_version == *"servicing"* || $specific_version == *"preview"* ]]; then
         IFS='-'
         read -ra verArr <<< "$specific_version"
         release_version="${verArr[0]}"
