@@ -4,7 +4,6 @@ using Kusto.Data;
 using MonitoringFunctions.DataService.Kusto;
 using MonitoringFunctions.Models;
 using System;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -36,32 +35,18 @@ namespace MonitoringFunctions
         }
 
         /// <summary>
-        /// Reports the details of the <see cref="HttpResponseMessage"/> to kusto.
+        /// Stores the details of the <see cref="HttpRequestLogEntry"/> in the underlying kusto database.
         /// </summary>
-        /// <param name="monitorName">Name of the monitor generating this data entry.</param>
-        /// <param name="httpResponse">Response to be reported.</param>
-        /// <returns>A task, tracking this async operation.</returns>
-        public async Task ReportUrlAccessAsync(string monitorName, HttpResponseMessage httpResponse, CancellationToken cancellationToken = default)
+        /// <inheritdoc/>
+        public async Task ReportUrlAccessAsync(HttpRequestLogEntry httpRequestLogEntry, CancellationToken cancellationToken = default)
         {
-            HttpRequestLogEntry logEntry = new HttpRequestLogEntry()
-            {
-                MonitorName = monitorName,
-                EventTime = DateTime.UtcNow,
-                RequestedUrl = httpResponse.RequestMessage.RequestUri.AbsoluteUri,
-                HttpResponseCode = (int)httpResponse.StatusCode
-            };
-
-            await _httpRequestLogsTable.InsertRowAsync(logEntry, cancellationToken).ConfigureAwait(false);
+            await _httpRequestLogsTable.InsertRowAsync(httpRequestLogEntry, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Reports the details of a script execution to kusto.
+        /// Stores the details of an install-script execution in the underlying kusto database.
         /// </summary>
-        /// <param name="monitorName">Name of the monitor generating this data entry.</param>
-        /// <param name="scriptName">Name of the script that was executed.</param>
-        /// <param name="commandLineArgs">Command line arguments passed to the script at the moment of execution.</param>
-        /// <param name="error">Errors that occured during the execution, if any.</param>
-        /// <returns>A task, tracking this async operation.</returns>
+        /// <inheritdoc/>
         public async Task ReportScriptExecutionAsync(string monitorName, string scriptName, string commandLineArgs, string error, CancellationToken cancellationToken = default)
         {
             ScriptExecutionLogEntry logEntry = new ScriptExecutionLogEntry()
