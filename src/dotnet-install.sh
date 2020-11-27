@@ -711,6 +711,26 @@ extract_dotnet_package() {
     return 0
 }
 
+get_http_header()
+{
+    eval $invocation
+    local remote_path="$1"
+    local failed=false
+    local response
+    if machine_has "curl"; then
+        get_http_header_curl $remote_path || failed=true
+    elif machine_has "wget"; then
+        get_http_header_wget $remote_path || failed=true
+    else
+        failed=true
+    fi
+    if [ "$failed" = true ]; then
+        say_verbose "Failed to get HTTP header: $remote_path"
+        return 1
+    fi
+    return 0
+}
+
 get_http_header_curl() {
     eval $invocation
     local remote_path="$1"
@@ -834,15 +854,110 @@ downloadwget() {
     return 0
 }
 
+get_download_link_from_aka_ms() {    
+    eval $invocation
+
+    #detect OS
+    osname="$(get_current_os_name)" || return 1
+    say_verbose "OS to use: '$osname'" 
+
+    #choose the product
+    if [[ "$runtime" == "dotnet" ]]; then
+        product="dotnet-runtime"
+    elif [[ "$runtime" == "aspnetcore" ]]; then
+        product="aspnetcore-runtime"
+    elif [ -z "$runtime" ]; then
+        product="dotnet-sdk"
+    else
+        #impossible combination
+        return 1
+    fi
+    say_verbose "Product to use: '$product'" 
+
+    #quality is not supported for LTS or current channel
+    if [[ ! -z "$quality"  && ("$channel" == "LTS" || "$channel" == "Current") ]]; then
+        quality=""
+        say "Specifying quality for current or LTS channel is not supported, the quality will skipped"
+    fi
+
+    #TODO: check if any other restricions for channel should be applied
+
+    say_verbose "Retrieving primary named payload URL from aka.ms for channel '$channel', quality '$quality' product '$product', os '$osname', architecture '$normalized_architecture'" 
+
+    #construct aka.ms link
+    aka_ms_link="https://aka.ms/dotnet/$channel" 
+    if [[ ! -z "$quality" ]]; then
+        aka_ms_link="$aka_ms_link/$quality"
+    fi
+    aka_ms_link="$aka_ms_link/$product-$osname-$normalized_architecture.tar.gz"
+    say_verbose "Constructed aka.ms link: $aka_ms_link"
+
+    #get HTTP response
+    response="$(get_http_header "$aka_ms_link")"
+
+    say_verbose "Received response: $response"
+    http_code=$( echo "$response" | awk '$1 ~ /^HTTP/ {print $2}' | head -1 )
+
+    #if HTTP code is 301 (Moved Permanently), the redirect link exists
+    if [[ "$http_code" == "301" ]]; then
+        aka_ms_download_link=$( echo "$response" | awk '$1 ~ /^Location/{print $2}' | head -1 | tr -d '\r')
+        if [[ -z "$aka_ms_download_link" ]]; then
+            say_verbose "The aka.ms link is not valid: failed to get redirect location"
+            return 1
+        fi
+        say_verbose "The redirect location retrieved: $aka_ms_download_link"
+        return 0
+    else
+        say_verbose "The aka.ms link is not valid: received HTTP code: $http_code"
+        return 1
+    fi
+}
+
 calculate_vars() {
     eval $invocation
     valid_legacy_download_link=true
 
     normalized_architecture="$(get_normalized_architecture_from_architecture "$architecture")"
     say_verbose "normalized_architecture=$normalized_architecture"
-
     normalized_os="$(get_normalized_os "$user_defined_os")"
     say_verbose "normalized_os=$normalized_os"
+
+    #try to get download location from aka.ms link
+    #not applicable when exact version is specified via command or json file
+    if [[ -z "$json_file" && "$version" == "Latest" ]]; then
+
+            valid_aka_ms_link=true;
+            get_download_link_from_aka_ms || valid_aka_ms_link=false
+            
+            if [ "$valid_aka_ms_link" == false ]; then
+                say_verbose "The aka.ms link is not valid: falling back to old approach"
+
+            else
+                say_verbose "Retrieved primary named payload URL from aka.ms link: $aka_ms_download_link"
+                download_link=$aka_ms_download_link
+
+                say_verbose "Attempting legacy download location will be skipped"
+                valid_legacy_download_link=false
+
+                #get version from the path
+                IFS='/'
+                read -ra pathElems <<< "$download_link"
+                count=${#pathElems[@]}
+                specific_version="${pathElems[count-2]}"
+                unset IFS;
+                say_verbose "Version: $specific_version"
+
+                #TODO implement checking product specific version
+                # option 1: extract from file name
+                # option 2: read productversion.txt
+                product_specific_version=specific_version
+  
+                install_root="$(resolve_installation_path "$install_dir")"
+                say_verbose "InstallRoot: $install_root"
+                return 
+            fi
+    fi
+    #TODO: check if we should fall back to old approach if quality is specified or exit with error
 
     specific_version="$(get_specific_version_from_version "$azure_feed" "$channel" "$normalized_architecture" "$version" "$json_file")"
     specific_product_version="$(get_specific_product_version "$azure_feed" "$specific_version")"
@@ -1011,6 +1126,7 @@ feed_credential=""
 verbose=false
 runtime=""
 runtime_id=""
+quality=""
 override_non_versioned_files=true
 non_dynamic_parameters=""
 user_defined_os=""
@@ -1026,6 +1142,10 @@ do
         -v|--version|-[Vv]ersion)
             shift
             version="$1"
+            ;;
+        -q|--quality|-[Qq]uality)
+            shift
+            quality="$1"
             ;;
         -i|--install-dir|-[Ii]nstall[Dd]ir)
             shift
@@ -1125,6 +1245,11 @@ do
             echo "          - latest - most latest build on specific channel"
             echo "          - 3-part version in a format A.B.C - represents specific version of build"
             echo "              examples: 2.0.0-preview2-006120; 1.1.0"
+            echo "  -q,--quality <quality>         Download specific quality for the version, Defaults to \`$quality\`."
+            echo "      -Quality"
+            echo "          Possible values: daily, signed, validated, preview, GA"
+            echo "          Works only with combination with channel. Not applicable for current and LTS channels." 
+            echo "          Applicable for 5.0+ releases."
             echo "  -i,--install-dir <DIR>             Install under specified location (see Install Location below)"
             echo "      -InstallDir"
             echo "  --architecture <ARCHITECTURE>      Architecture of dotnet binaries to be installed, Defaults to \`$architecture\`."
