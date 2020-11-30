@@ -900,13 +900,16 @@ install_dotnet() {
             say_err "Could not find \`$asset_name\` with version = $specific_version"
             say_err "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
         else
-            say_err "Could not download: \`$asset_name\` with version = $specific_version:"
+            say_err "Could not download: \`$asset_name\` with version = $specific_version"
             # 404-NotFound is an expected response if it goes from only one of the links, do not show that error.
+            # If primary path is available (not 404-NotFound) then show the primary error else show the legacy error.
             if [ "$primary_path_http_code" != "404" ]; then
                 say_err "$primary_path_download_error_msg"
+                return 1
             fi
             if [[ "$valid_legacy_download_link" = true  && "$legacy_path_http_code" != "404" ]]; then
                 say_err "$legacy_path_download_error_msg"
+                return 1
             fi
         fi
         return 1

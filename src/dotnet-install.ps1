@@ -796,7 +796,7 @@ catch {
     if ($PrimaryDownloadStatusCode -eq 404) {
         Say "The link $DownloadLink is not available."
     } else {
-        Say $PrimaryDownloadFailedMsg
+        Say $PSItem.Exception.Message
     }
 
     SafeRemoveFile -Path $ZipPath
@@ -822,7 +822,7 @@ catch {
             if ($LegacyDownloadStatusCode -eq 404) {
                 Say "The link $DownloadLink is not available."
             } else {
-                Say $LegacyDownloadFailedMsg
+                Say $PSItem.Exception.Message
             }
 
             SafeRemoveFile -Path $ZipPath
@@ -839,11 +839,12 @@ if ($DownloadFailed) {
         throw "Could not find `"$assetName`" with version = $SpecificVersion`nRefer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
     } else {
         # 404-NotFound is an expected response if it goes from only one of the links, do not show that error.
+        # If primary path is available (not 404-NotFound) then show the primary error else show the legacy error.
         if ($PrimaryDownloadStatusCode -ne "404") {
-            Say-Error $PrimaryDownloadFailedMsg
+            throw "Could not download `"$assetName`" with version = $SpecificVersion`r`n$PrimaryDownloadFailedMsg"
         }
         if (($LegacyDownloadLink) -and ($LegacyDownloadStatusCode -ne "404")) {
-            Say-Error $LegacyDownloadFailedMsg
+            throw "Could not download `"$assetName`" with version = $SpecificVersion`r`n$LegacyDownloadFailedMsg"
         }
         throw "Could not download `"$assetName`" with version = $SpecificVersion"
     }
