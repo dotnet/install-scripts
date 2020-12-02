@@ -861,7 +861,7 @@ install_dotnet() {
     if [ "$download_failed" = true ]; then
         case $primary_path_http_code in
         404)
-            say "The link $download_link is not available."
+            say "The resource at $download_link is not available."
             ;;
         *)
             say "$primary_path_download_error_msg"
@@ -884,7 +884,7 @@ install_dotnet() {
             if [ "$download_failed" = true ]; then
                 case $legacy_path_http_code in
                 404)
-                    say "The link $download_link is not available."
+                    say "The resource at $download_link is not available."
                     ;;
                 *)
                     say "$legacy_path_download_error_msg"

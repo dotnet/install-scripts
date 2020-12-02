@@ -787,6 +787,7 @@ catch {
     if ($PSItem.Exception.Data.Contains("StatusCode")) {
         $PrimaryDownloadStatusCode = $PSItem.Exception.Data["StatusCode"]
     }
+
     if ($PSItem.Exception.Data.Contains("ErrorMessage")) {
         $PrimaryDownloadFailedMsg = $PSItem.Exception.Data["ErrorMessage"]
     } else {
@@ -794,7 +795,7 @@ catch {
     }
 
     if ($PrimaryDownloadStatusCode -eq 404) {
-        Say "The link $DownloadLink is not available."
+        Say "The resource at $DownloadLink is not available."
     } else {
         Say $PSItem.Exception.Message
     }
@@ -813,6 +814,7 @@ catch {
             if ($PSItem.Exception.Data.Contains("StatusCode")) {
                 $LegacyDownloadStatusCode = $PSItem.Exception.Data["StatusCode"]
             }
+
             if ($PSItem.Exception.Data.Contains("ErrorMessage")) {
                 $LegacyDownloadFailedMsg = $PSItem.Exception.Data["ErrorMessage"]
             } else {
@@ -820,7 +822,7 @@ catch {
             }
 
             if ($LegacyDownloadStatusCode -eq 404) {
-                Say "The link $DownloadLink is not available."
+                Say "The resource at $DownloadLink is not available."
             } else {
                 Say $PSItem.Exception.Message
             }
@@ -835,15 +837,15 @@ catch {
 }
 
 if ($DownloadFailed) {
-    if (($PrimaryDownloadStatusCode -eq "404") -and ((-not $LegacyDownloadLink) -or ($LegacyDownloadStatusCode -eq "404"))) {
+    if (($PrimaryDownloadStatusCode -eq 404) -and ((-not $LegacyDownloadLink) -or ($LegacyDownloadStatusCode -eq 404))) {
         throw "Could not find `"$assetName`" with version = $SpecificVersion`nRefer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
     } else {
         # 404-NotFound is an expected response if it goes from only one of the links, do not show that error.
         # If primary path is available (not 404-NotFound) then show the primary error else show the legacy error.
-        if ($PrimaryDownloadStatusCode -ne "404") {
+        if ($PrimaryDownloadStatusCode -ne 404) {
             throw "Could not download `"$assetName`" with version = $SpecificVersion`r`n$PrimaryDownloadFailedMsg"
         }
-        if (($LegacyDownloadLink) -and ($LegacyDownloadStatusCode -ne "404")) {
+        if (($LegacyDownloadLink) -and ($LegacyDownloadStatusCode -ne 404)) {
             throw "Could not download `"$assetName`" with version = $SpecificVersion`r`n$LegacyDownloadFailedMsg"
         }
         throw "Could not download `"$assetName`" with version = $SpecificVersion"
