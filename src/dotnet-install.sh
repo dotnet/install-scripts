@@ -183,6 +183,9 @@ get_current_os_name() {
         elif is_musl_based_distro; then
             echo "linux-musl"
             return 0
+        elif [ "$linux_platform_name" = "linux-musl" ]; then
+            echo "linux-musl"
+            return 0
         else
             echo "linux"
             return 0
