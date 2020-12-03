@@ -682,6 +682,25 @@ extract_dotnet_package() {
         say_err "Extraction failed"
         return 1
     fi
+    return 0
+}
+
+get_http_header_curl() {
+    eval $invocation
+    local remote_path="$1"
+    remote_path_with_credential="${remote_path}${feed_credential}"
+    curl_options="-I -sSL --retry 5 --retry-delay 2 --connect-timeout 15 "
+    curl $curl_options "$remote_path_with_credential" || return 1
+    return 0
+}
+
+get_http_header_wget() {
+    eval $invocation
+    local remote_path="$1"
+    remote_path_with_credential="${remote_path}${feed_credential}"
+    wget_options="-q -S --spider --tries 5 --waitretry 2 --connect-timeout 15 "
+    wget $wget_options "$remote_path_with_credential" 2>&1 || return 1
+    return 0
 }
 
 # args:
@@ -713,44 +732,56 @@ download() {
     return 0
 }
 
+# Updates global variables $http_code and $download_error_msg
 downloadcurl() {
     eval $invocation
     local remote_path="$1"
     local out_path="${2:-}"
-
     # Append feed_credential as late as possible before calling curl to avoid logging feed_credential
-    remote_path="${remote_path}${feed_credential}"
-
+    local remote_path_with_credential="${remote_path}${feed_credential}"
     local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
     local failed=false
     if [ -z "$out_path" ]; then
-        curl $curl_options "$remote_path" || failed=true
+        curl $curl_options "$remote_path_with_credential" || failed=true
     else
-        curl $curl_options -o "$out_path" "$remote_path" || failed=true
+        curl $curl_options -o "$out_path" "$remote_path_with_credential" || failed=true
     fi
     if [ "$failed" = true ]; then
-        say_verbose "Curl download failed"
+        local response=$(get_http_header_curl $remote_path_with_credential)
+        http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
+        download_error_msg="Unable to download $remote_path."
+        if  [[ $http_code != 2* ]]; then
+            download_error_msg+=" Returned HTTP status code: $http_code."
+        fi
+        say_verbose "$download_error_msg"
         return 1
     fi
     return 0
 }
 
+
+# Updates global variables $http_code and $download_error_msg
 downloadwget() {
     eval $invocation
     local remote_path="$1"
     local out_path="${2:-}"
-
     # Append feed_credential as late as possible before calling wget to avoid logging feed_credential
-    remote_path="${remote_path}${feed_credential}"
+    local remote_path_with_credential="${remote_path}${feed_credential}"
     local wget_options="--tries 20 --waitretry 2 --connect-timeout 15 "
     local failed=false
     if [ -z "$out_path" ]; then
-        wget -q $wget_options -O - "$remote_path" || failed=true
+        wget -q $wget_options -O - "$remote_path_with_credential" || failed=true
     else
-        wget $wget_options -O "$out_path" "$remote_path" || failed=true
+        wget $wget_options -O "$out_path" "$remote_path_with_credential" || failed=true
     fi
     if [ "$failed" = true ]; then
-        say_verbose "Wget download failed"
+        local response=$(get_http_header_wget $remote_path_with_credential)
+        http_code=$( echo "$response" | awk '/^  HTTP/{print $2}' | tail -1 )
+        download_error_msg="Unable to download $remote_path."
+        if  [[ $http_code != 2* ]]; then
+            download_error_msg+=" Returned HTTP status code: $http_code."
+        fi
+        say_verbose "$download_error_msg"
         return 1
     fi
     return 0
@@ -816,39 +847,76 @@ install_dotnet() {
     zip_path="$(mktemp "$temporary_file_template")"
     say_verbose "Zip path: $zip_path"
 
-    say "Downloading link: $download_link"
 
     # Failures are normal in the non-legacy case for ultimately legacy downloads.
     # Do not output to stderr, since output to stderr is considered an error.
+    say "Downloading primary link $download_link"
+
+    # The download function will set variables $http_code and $download_error_msg in case of failure.
+    http_code=""; download_error_msg=""
     download "$download_link" "$zip_path" 2>&1 || download_failed=true
+    primary_path_http_code="$http_code"; primary_path_download_error_msg="$download_error_msg"
 
     #  if the download fails, download the legacy_download_link
     if [ "$download_failed" = true ]; then
-        say "Cannot download: $download_link"
+        case $primary_path_http_code in
+        404)
+            say "The resource at $download_link is not available."
+            ;;
+        *)
+            say "$primary_path_download_error_msg"
+            ;;
+        esac
         rm -f "$zip_path" 2>&1 && say_verbose "Temporary zip file $zip_path was removed"
         if [ "$valid_legacy_download_link" = true ]; then
             download_failed=false
             download_link="$legacy_download_link"
             zip_path="$(mktemp "$temporary_file_template")"
             say_verbose "Legacy zip path: $zip_path"
-            say "Downloading legacy link: $download_link"
+
+            say "Downloading legacy link $download_link"
+
+            # The download function will set variables $http_code and $download_error_msg in case of failure.
+            http_code=""; download_error_msg=""
             download "$download_link" "$zip_path" 2>&1 || download_failed=true
+            legacy_path_http_code="$http_code";  legacy_path_download_error_msg="$download_error_msg"
 
             if [ "$download_failed" = true ]; then
-                say "Cannot download: $download_link"
+                case $legacy_path_http_code in
+                404)
+                    say "The resource at $download_link is not available."
+                    ;;
+                *)
+                    say "$legacy_path_download_error_msg"
+                    ;;
+                esac
                 rm -f "$zip_path" 2>&1 && say_verbose "Temporary zip file $zip_path was removed"
             fi
         fi
     fi
 
     if [ "$download_failed" = true ]; then
-        say_err "Could not find/download: \`$asset_name\` with version = $specific_version"
-        say_err "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
+        if [[ "$primary_path_http_code" = "404" && ( "$valid_legacy_download_link" = false || "$legacy_path_http_code" = "404") ]]; then
+            say_err "Could not find \`$asset_name\` with version = $specific_version"
+            say_err "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
+        else
+            say_err "Could not download: \`$asset_name\` with version = $specific_version"
+            # 404-NotFound is an expected response if it goes from only one of the links, do not show that error.
+            # If primary path is available (not 404-NotFound) then show the primary error else show the legacy error.
+            if [ "$primary_path_http_code" != "404" ]; then
+                say_err "$primary_path_download_error_msg"
+                return 1
+            fi
+            if [[ "$valid_legacy_download_link" = true  && "$legacy_path_http_code" != "404" ]]; then
+                say_err "$legacy_path_download_error_msg"
+                return 1
+            fi
+        fi
         return 1
     fi
 
     say "Extracting zip from $download_link"
-    extract_dotnet_package "$zip_path" "$install_root"
+    extract_dotnet_package "$zip_path" "$install_root" || return 1
 
     #  Check if the SDK version is installed; if not, fail the installation.
     # if the version contains "RTM" or "servicing"; check if a 'release-type' SDK version is installed.
