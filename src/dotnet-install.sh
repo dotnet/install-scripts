@@ -40,7 +40,7 @@ if [ -t 1 ] && command -v tput > /dev/null; then
 fi
 
 say_warning() {
-    printf "%b\n" "${yellow:-}dotnet_install: Warning: $1${normal:-}"
+    printf "%b\n" "${yellow:-}dotnet_install: Warning: $1${normal:-}" >&3
 }
 
 say_err() {
@@ -344,6 +344,30 @@ get_normalized_architecture_from_architecture() {
     return 1
 }
 
+# args:
+# user_defined_os - $1
+get_normalized_os() {
+    eval $invocation
+
+    local osname="$(to_lowercase "$1")"
+    if [ ! -z "$osname" ]; then
+        case "$osname" in
+            osx | freebsd | rhel.6 | linux-musl | linux)
+                echo "$osname"
+                return 0
+                ;;
+            *)
+                say_warning "'$user_defined_os' is not a valid platform. The platform will be evaluated based on machine configuration."
+                osname="$(get_current_os_name)" || return 1
+                ;;
+        esac
+    else
+        osname="$(get_current_os_name)" || return 1
+    fi
+    echo "$osname"
+    return 0
+}
+
 # The version text returned from the feeds is a 1-line or 2-line string:
 # For the SDK and the dotnet runtime (2 lines):
 # Line 1: # commit_hash
@@ -488,6 +512,7 @@ get_specific_version_from_version() {
 # channel - $2
 # normalized_architecture - $3
 # specific_version - $4
+# normalized_os - $5
 construct_download_link() {
     eval $invocation
 
@@ -496,10 +521,8 @@ construct_download_link() {
     local normalized_architecture="$3"
     local specific_version="${4//[$'\t\r\n']}"
     local specific_product_version="$(get_specific_product_version "$1" "$4")"
-
-    local osname
-    osname="$(get_current_os_name)" || return 1
-
+    local osname="$5"
+    
     local download_link=null
     if [[ "$runtime" == "dotnet" ]]; then
         download_link="$azure_feed/Runtime/$specific_version/dotnet-runtime-$specific_product_version-$osname-$normalized_architecture.tar.gz"
@@ -797,6 +820,9 @@ calculate_vars() {
     normalized_architecture="$(get_normalized_architecture_from_architecture "$architecture")"
     say_verbose "normalized_architecture=$normalized_architecture"
 
+    normalized_os="$(get_normalized_os "$user_defined_os")"
+    say_verbose "normalized_os=$normalized_os"
+
     specific_version="$(get_specific_version_from_version "$azure_feed" "$channel" "$normalized_architecture" "$version" "$json_file")"
     specific_product_version="$(get_specific_product_version "$azure_feed" "$specific_version")"
     say_verbose "specific_version=$specific_version"
@@ -805,7 +831,7 @@ calculate_vars() {
         return 1
     fi
 
-    download_link="$(construct_download_link "$azure_feed" "$channel" "$normalized_architecture" "$specific_version")"
+    download_link="$(construct_download_link "$azure_feed" "$channel" "$normalized_architecture" "$specific_version" "$normalized_os")"
     say_verbose "Constructed primary named payload URL: $download_link"
 
     legacy_download_link="$(construct_legacy_download_link "$azure_feed" "$channel" "$normalized_architecture" "$specific_version")" || valid_legacy_download_link=false
@@ -966,6 +992,7 @@ runtime=""
 runtime_id=""
 override_non_versioned_files=true
 non_dynamic_parameters=""
+user_defined_os=""
 
 while [ $# -ne 0 ]
 do
@@ -986,6 +1013,10 @@ do
         --arch|--architecture|-[Aa]rch|-[Aa]rchitecture)
             shift
             architecture="$1"
+            ;;
+        --os|-[Oo][SS])
+            shift
+            user_defined_os="$1"
             ;;
         --shared-runtime|-[Ss]hared[Rr]untime)
             say_warning "The --shared-runtime flag is obsolete and may be removed in a future version of this script. The recommended usage is to specify '--runtime dotnet'."
@@ -1038,6 +1069,7 @@ do
             shift
             runtime_id="$1"
             non_dynamic_parameters+=" $name "\""$1"\"""
+            say_warning "Use of --runtime-id is obsolete and should be limited to legacy versions only. To override architecture, use --architecture option instead. To override OS, use --os option instead."
             ;;
         --jsonfile|-[Jj][Ss]on[Ff]ile)
             shift
@@ -1077,6 +1109,11 @@ do
             echo "  --architecture <ARCHITECTURE>      Architecture of dotnet binaries to be installed, Defaults to \`$architecture\`."
             echo "      --arch,-Architecture,-Arch"
             echo "          Possible values: x64, arm, and arm64"
+            echo "  --os <system>                    Specifies operating system to be used when selecting the installer."
+            echo "          Overrides the OS determination approach used by the script. Supported values: osx, linux, linux-musl, freebsd, rhel.6."  
+            echo "          In case any other value is provided, the platform will be determined by the script based on machine configuration."       
+            echo "          Not supported for legacy links. Use --runtime-id to specify platform for legacy links."
+            echo "          Refer to: https://aka.ms/dotnet-os-lifecycle for more information."                 
             echo "  --runtime <RUNTIME>                Installs a shared runtime only, without the SDK."
             echo "      -Runtime"
             echo "          Possible values:"
@@ -1093,14 +1130,15 @@ do
             echo "  --no-cdn,-NoCdn                    Disable downloading from the Azure CDN, and use the uncached feed directly."
             echo "  --jsonfile <JSONFILE>              Determines the SDK version from a user specified global.json file."
             echo "                                     Note: global.json must have a value for 'SDK:Version'"
-            echo "  --runtime-id                       Installs the .NET Tools for the given platform (use linux-x64 for portable linux)."
-            echo "      -RuntimeId"
             echo "  -?,--?,-h,--help,-Help             Shows this help message"
             echo ""
             echo "Obsolete parameters:"
             echo "  --shared-runtime                   The recommended alternative is '--runtime dotnet'."
             echo "                                     This parameter is obsolete and may be removed in a future version of this script."
             echo "                                     Installs just the shared runtime bits, not the entire SDK."
+            echo "  --runtime-id                       Installs the .NET Tools for the given platform (use linux-x64 for portable linux)."
+            echo "      -RuntimeId"                    The parameter is obsolete and may be removed in a future version of this script. Should be used for legacy links only.
+            echo "                                     For primary links to override OS or/and architecture, use --os and --architecture option instead." 
             echo ""
             echo "Install Location:"
             echo "  Location is chosen in following order:"
@@ -1137,7 +1175,7 @@ if [ "$dry_run" = true ]; then
     if [ "$valid_legacy_download_link" = true ]; then
         say "Legacy named payload URL: $legacy_download_link"
     fi
-    repeatable_command="./$script_name --version "\""$specific_version"\"" --install-dir "\""$install_root"\"" --architecture "\""$normalized_architecture"\"""
+    repeatable_command="./$script_name --version "\""$specific_version"\"" --install-dir "\""$install_root"\"" --architecture "\""$normalized_architecture"\"" --os "\""$normalized_os"\""" 
     if [[ "$runtime" == "dotnet" ]]; then
         repeatable_command+=" --runtime "\""dotnet"\"""
     elif [[ "$runtime" == "aspnetcore" ]]; then
