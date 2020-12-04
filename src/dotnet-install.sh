@@ -877,11 +877,10 @@ get_download_link_from_aka_ms() {
     #quality is not supported for LTS or current channel
     if [[ ! -z "$quality"  && ("$channel" == "LTS" || "$channel" == "Current") ]]; then
         quality=""
-        say "Specifying quality for current or LTS channel is not supported, the quality will skipped"
+        say_warning "Specifying quality for current or LTS channel is not supported, the quality will skipped"
     fi
 
     #TODO: check if any other restricions for channel should be applied
-
     say_verbose "Retrieving primary named payload URL from aka.ms for channel '$channel', quality '$quality' product '$product', os '$osname', architecture '$normalized_architecture'" 
 
     #construct aka.ms link
