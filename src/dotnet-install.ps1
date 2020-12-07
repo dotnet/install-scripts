@@ -439,7 +439,7 @@ function Get-Download-Link([string]$AzureFeed, [string]$SpecificVersion, [string
     elseif ($Runtime -eq "windowsdesktop") {
         if ($SpecificVersion -match '^(\d+)\.(.*)$')
         {
-            $majorVersion = [int]$Matches[1];
+            $majorVersion = [int]$Matches[1]
             if ($majorVersion -lt 5)
             {
                 $PayloadURL = "$AzureFeed/Runtime/$SpecificVersion/windowsdesktop-runtime-$SpecificProductVersion-win-$CLIArchitecture.zip"
@@ -496,7 +496,7 @@ function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion) {
     elseif ($Runtime -eq "windowsdesktop") {
         if ($SpecificVersion -match '^(\d+)\.(.*)')
         {
-            $majorVersion = [int]$Matches[1];
+            $majorVersion = [int]$Matches[1]
             if ($majorVersion -lt 5)
             {
                 $ProductVersionTxtURL = "$AzureFeed/Runtime/$SpecificVersion/productVersion.txt"
