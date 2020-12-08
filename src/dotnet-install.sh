@@ -357,8 +357,8 @@ get_normalized_os() {
                 return 0
                 ;;
             *)
-                say_warning "'$user_defined_os' is not a valid platform. The platform will be evaluated based on machine configuration."
-                osname="$(get_current_os_name)" || return 1
+                say_err "'$user_defined_os' is not a supported value for --os option, supported values are: osx, linux, linux-musl, freebsd, rhel.6. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues."
+                return 1
                 ;;
         esac
     else
@@ -1069,7 +1069,7 @@ do
             shift
             runtime_id="$1"
             non_dynamic_parameters+=" $name "\""$1"\"""
-            say_warning "Use of --runtime-id is obsolete and should be limited to legacy versions only. To override architecture, use --architecture option instead. To override OS, use --os option instead."
+            say_warning "Use of --runtime-id is obsolete and should be limited to the versions below 2.1. To override architecture, use --architecture option instead. To override OS, use --os option instead."
             ;;
         --jsonfile|-[Jj][Ss]on[Ff]ile)
             shift
@@ -1137,7 +1137,7 @@ do
             echo "                                     This parameter is obsolete and may be removed in a future version of this script."
             echo "                                     Installs just the shared runtime bits, not the entire SDK."
             echo "  --runtime-id                       Installs the .NET Tools for the given platform (use linux-x64 for portable linux)."
-            echo "      -RuntimeId"                    The parameter is obsolete and may be removed in a future version of this script. Should be used for legacy links only.
+            echo "      -RuntimeId"                    The parameter is obsolete and may be removed in a future version of this script. Should be used only for versions below 2.1.
             echo "                                     For primary links to override OS or/and architecture, use --os and --architecture option instead." 
             echo ""
             echo "Install Location:"
