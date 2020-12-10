@@ -368,6 +368,70 @@ get_normalized_os() {
     return 0
 }
 
+# args:
+# quality - $1
+get_normalized_quality() {
+    eval $invocation
+
+    local quality="$(to_lowercase "$1")"
+    if [ ! -z "$quality" ]; then
+        case "$quality" in
+            daily | signed | validated | preview)
+                echo "$quality"
+                return 0
+                ;;
+            ga)
+                #ga quality is available without specifying quality, so normalizing it to empty
+                return 0
+                ;;
+            *)
+                say_err "'$quality' is not a supported value for --quality option, supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues."
+                return 1
+                ;;
+        esac
+    fi
+    return 0
+}
+
+# args:
+# channel - $1
+get_normalized_channel() {
+    eval $invocation
+
+    local channel="$(to_lowercase "$1")"
+    if [ ! -z "$channel" ]; then
+        case "$channel" in
+            lts)
+                echo "LTS"
+                return 0
+                ;;
+            *)
+                echo "$channel"
+                return 0
+                ;;
+        esac
+    fi
+
+    return 0
+}
+
+# args:
+# runtime - $1
+get_normalized_product() {
+    eval $invocation
+
+    local runtime="$(to_lowercase "$1")"
+    if [[ "$runtime" == "dotnet" ]]; then
+        product="dotnet-runtime"
+    elif [[ "$runtime" == "aspnetcore" ]]; then
+        product="aspnetcore-runtime"
+    elif [ -z "$runtime" ]; then
+        product="dotnet-sdk"
+    fi
+    echo "$product"
+    return 0
+}
+
 # The version text returned from the feeds is a 1-line or 2-line string:
 # For the SDK and the dotnet runtime (2 lines):
 # Line 1: # commit_hash
@@ -541,24 +605,35 @@ construct_download_link() {
 # args:
 # azure_feed - $1
 # specific_version - $2
+# download link - $3 (optional)
 get_specific_product_version() {
     # If we find a 'productVersion.txt' at the root of any folder, we'll use its contents
     # to resolve the version of what's in the folder, superseding the specified version.
+    # if 'productVersion.txt' is missing but download link is already available, product version will be taken from download link
     eval $invocation
 
     local azure_feed="$1"
     local specific_version="${2//[$'\t\r\n']}"
+    local package_download_link=""
+    if [ $# -gt 2  ]; then
+        local package_download_link="$3"
+    fi
     local specific_product_version=$specific_version
 
     local download_link=null
-    if [[ "$runtime" == "dotnet" ]]; then
-        download_link="$azure_feed/Runtime/$specific_version/productVersion.txt${feed_credential}"
-    elif [[ "$runtime" == "aspnetcore" ]]; then
-        download_link="$azure_feed/aspnetcore/Runtime/$specific_version/productVersion.txt${feed_credential}"
-    elif [ -z "$runtime" ]; then
-        download_link="$azure_feed/Sdk/$specific_version/productVersion.txt${feed_credential}"
+
+    if [ -z "$package_download_link"]; then
+        if [[ "$runtime" == "dotnet" ]]; then
+            download_link="$azure_feed/Runtime/$specific_version/productVersion.txt${feed_credential}"
+        elif [[ "$runtime" == "aspnetcore" ]]; then
+            download_link="$azure_feed/aspnetcore/Runtime/$specific_version/productVersion.txt${feed_credential}"
+        elif [ -z "$runtime" ]; then
+            download_link="$azure_feed/Sdk/$specific_version/productVersion.txt${feed_credential}"
+        else
+            return 1
+        fi
     else
-        return 1
+        download_link="${package_download_link%/*}/productVersion.txt${feed_credential}" 
     fi
 
     if machine_has "curl"
@@ -566,18 +641,54 @@ get_specific_product_version() {
         specific_product_version=$(curl -s --fail "$download_link")
         if [ $? -ne 0 ]
         then
-            specific_product_version=$specific_version
+            if [ ! -z "$package_download_link" ]; then
+                specific_product_version="$(get_product_specific_version_from_download_link "$package_download_link" "$specific_version")"
+            else 
+                specific_product_version=$specific_version
+            fi
         fi
     elif machine_has "wget"
     then
         specific_product_version=$(wget -qO- "$download_link")
         if [ $? -ne 0 ]
         then
-            specific_product_version=$specific_version
+            if [ ! -z "$package_download_link" ]; then
+                specific_product_version="$(get_product_specific_version_from_download_link "$package_download_link" "$specific_version")"
+            else 
+                specific_product_version=$specific_version
+            fi
         fi
     fi
     specific_product_version="${specific_product_version//[$'\t\r\n']}"
+    echo "$specific_product_version"
+    return 0
+}
 
+# args:
+# download link - $1
+# specific version - $2
+get_product_specific_version_from_download_link()
+{
+    eval $invocation
+
+    local download_link="$1"
+    local specific_version="$2"
+    local specific_product_version="" 
+
+    #get filename
+    filename="${download_link##*/}"
+
+    #product specific version follows the product name
+    #dotnet-sdk-3.1.404-linux-x64.tar.gz: product version is 3.1.400
+    IFS='-'
+    read -ra filename_elems <<< "$filename"
+    count=${#filename_elems[@]}
+    if ["$count" -gt 2]; then
+        specific_product_version="${filename_elems[2]}"
+    else
+        specific_product_version=$specific_version
+    fi
+    unset IFS;
     echo "$specific_product_version"
     return 0
 }
@@ -857,38 +968,20 @@ downloadwget() {
 get_download_link_from_aka_ms() {    
     eval $invocation
 
-    #detect OS
-    osname="$(get_current_os_name)" || return 1
-    say_verbose "OS to use: '$osname'" 
-
-    #choose the product
-    if [[ "$runtime" == "dotnet" ]]; then
-        product="dotnet-runtime"
-    elif [[ "$runtime" == "aspnetcore" ]]; then
-        product="aspnetcore-runtime"
-    elif [ -z "$runtime" ]; then
-        product="dotnet-sdk"
-    else
-        #impossible combination
-        return 1
-    fi
-    say_verbose "Product to use: '$product'" 
-
     #quality is not supported for LTS or current channel
-    if [[ ! -z "$quality"  && ("$channel" == "LTS" || "$channel" == "Current") ]]; then
-        quality=""
+    if [[ ! -z "$normalized_quality"  && ("$normalized_channel" == "LTS" || "$normalized_channel" == "current") ]]; then
+        normalized_quality=""
         say_warning "Specifying quality for current or LTS channel is not supported, the quality will skipped"
     fi
 
-    #TODO: check if any other restricions for channel should be applied
-    say_verbose "Retrieving primary named payload URL from aka.ms for channel '$channel', quality '$quality' product '$product', os '$osname', architecture '$normalized_architecture'" 
+    say_verbose "Retrieving primary named payload URL from aka.ms for channel '$normalized_channel', quality '$normalized_quality' product '$normalized_product', os '$normalized_os', architecture '$normalized_architecture'" 
 
     #construct aka.ms link
-    aka_ms_link="https://aka.ms/dotnet/$channel" 
-    if [[ ! -z "$quality" ]]; then
-        aka_ms_link="$aka_ms_link/$quality"
+    aka_ms_link="https://aka.ms/dotnet/$normalized_channel" 
+    if [[ ! -z "$normalized_quality" ]]; then
+        aka_ms_link="$aka_ms_link/$normalized_quality"
     fi
-    aka_ms_link="$aka_ms_link/$product-$osname-$normalized_architecture.tar.gz"
+    aka_ms_link="$aka_ms_link/$normalized_product-$normalized_os-$normalized_architecture.tar.gz"
     say_verbose "Constructed aka.ms link: $aka_ms_link"
 
     #get HTTP response
@@ -916,21 +1009,34 @@ calculate_vars() {
     eval $invocation
     valid_legacy_download_link=true
 
+    #normalize input variables
     normalized_architecture="$(get_normalized_architecture_from_architecture "$architecture")"
     say_verbose "normalized_architecture=$normalized_architecture"
     normalized_os="$(get_normalized_os "$user_defined_os")"
     say_verbose "normalized_os=$normalized_os"
+    normalized_quality="$(get_normalized_quality "$quality")"
+    say_verbose "normalized_os=$normalized_os"
+    normalized_channel="$(get_normalized_channel "$channel")"
+    say_verbose "normalized_channel=$normalized_channel"
+    normalized_product="$(get_normalized_product "$runtime")"
+    say_verbose "normalized_product=$normalized_product"
 
     #try to get download location from aka.ms link
     #not applicable when exact version is specified via command or json file
-    if [[ -z "$json_file" && "$version" == "Latest" ]]; then
+    normalized_version="$(to_lowercase "$version")"
+    if [[ -z "$json_file" && "$normalized_version" == "latest" ]]; then
 
             valid_aka_ms_link=true;
             get_download_link_from_aka_ms || valid_aka_ms_link=false
             
             if [ "$valid_aka_ms_link" == false ]; then
+                # if quality is specified - exit with error - there is no fallback approach
+                if [ ! -z "$normalized_quality" ]; then
+                    say_err "Failed to download the latest version in channel '$normalized_channel' with '$normalized_quality' quality for '$normalized_product', os '$normalized_os', architecture '$normalized_architecture'."
+                    say_err "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support."
+                    return 1
+                fi
                 say_verbose "The aka.ms link is not valid: falling back to old approach"
-
             else
                 say_verbose "Retrieved primary named payload URL from aka.ms link: $aka_ms_download_link"
                 download_link=$aka_ms_download_link
@@ -946,17 +1052,15 @@ calculate_vars() {
                 unset IFS;
                 say_verbose "Version: $specific_version"
 
-                #TODO implement checking product specific version
-                # option 1: extract from file name
-                # option 2: read productversion.txt
-                product_specific_version=specific_version
+                #Retrieve product specific version
+                specific_product_version="$(get_specific_product_version "$azure_feed" "$specific_version" "$download_link")"
+                say_verbose "Product specific version: $specific_product_version"
   
                 install_root="$(resolve_installation_path "$install_dir")"
                 say_verbose "InstallRoot: $install_root"
                 return 
             fi
     fi
-    #TODO: check if we should fall back to old approach if quality is specified or exit with error
 
     specific_version="$(get_specific_version_from_version "$azure_feed" "$channel" "$normalized_architecture" "$version" "$json_file")"
     specific_product_version="$(get_specific_product_version "$azure_feed" "$specific_version")"
@@ -1244,7 +1348,7 @@ do
             echo "          - latest - most latest build on specific channel"
             echo "          - 3-part version in a format A.B.C - represents specific version of build"
             echo "              examples: 2.0.0-preview2-006120; 1.1.0"
-            echo "  -q,--quality <quality>         Download specific quality for the version, Defaults to \`$quality\`."
+            echo "  -q,--quality <quality>         Download specific quality for the version."
             echo "      -Quality"
             echo "          Possible values: daily, signed, validated, preview, GA"
             echo "          Works only with combination with channel. Not applicable for current and LTS channels." 
@@ -1321,6 +1425,11 @@ if [ "$dry_run" = true ]; then
         say "Legacy named payload URL: $legacy_download_link"
     fi
     repeatable_command="./$script_name --version "\""$specific_version"\"" --install-dir "\""$install_root"\"" --architecture "\""$normalized_architecture"\"" --os "\""$normalized_os"\"""
+    
+    if [ ! -z "$normalized_quality" ]; then
+        repeatable_command+=" --quality "\""$normalized_quality"\"""
+    fi
+
     if [[ "$runtime" == "dotnet" ]]; then
         repeatable_command+=" --runtime "\""dotnet"\"""
     elif [[ "$runtime" == "aspnetcore" ]]; then
