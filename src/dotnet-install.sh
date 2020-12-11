@@ -622,7 +622,7 @@ get_specific_product_version() {
 
     local download_link=null
 
-    if [ -z "$package_download_link"]; then
+    if [ -z "$package_download_link" ]; then
         if [[ "$runtime" == "dotnet" ]]; then
             download_link="$azure_feed/Runtime/$specific_version/productVersion.txt${feed_credential}"
         elif [[ "$runtime" == "aspnetcore" ]]; then
@@ -641,22 +641,14 @@ get_specific_product_version() {
         specific_product_version=$(curl -s --fail "$download_link")
         if [ $? -ne 0 ]
         then
-            if [ ! -z "$package_download_link" ]; then
-                specific_product_version="$(get_product_specific_version_from_download_link "$package_download_link" "$specific_version")"
-            else 
-                specific_product_version=$specific_version
-            fi
+            specific_product_version="$(get_product_specific_version_from_download_link "$package_download_link" "$specific_version")"
         fi
     elif machine_has "wget"
     then
         specific_product_version=$(wget -qO- "$download_link")
         if [ $? -ne 0 ]
         then
-            if [ ! -z "$package_download_link" ]; then
-                specific_product_version="$(get_product_specific_version_from_download_link "$package_download_link" "$specific_version")"
-            else 
-                specific_product_version=$specific_version
-            fi
+            specific_product_version="$(get_product_specific_version_from_download_link "$package_download_link" "$specific_version")"
         fi
     fi
     specific_product_version="${specific_product_version//[$'\t\r\n']}"
@@ -675,11 +667,16 @@ get_product_specific_version_from_download_link()
     local specific_version="$2"
     local specific_product_version="" 
 
+    if [ ! -z "$download_link" ]; then
+        echo "$specific_version"
+        return 0
+    fi
+
     #get filename
     filename="${download_link##*/}"
 
     #product specific version follows the product name
-    #dotnet-sdk-3.1.404-linux-x64.tar.gz: product version is 3.1.400
+    #for filename 'dotnet-sdk-3.1.404-linux-x64.tar.gz': the product version is 3.1.400
     IFS='-'
     read -ra filename_elems <<< "$filename"
     count=${#filename_elems[@]}
@@ -836,7 +833,7 @@ get_http_header()
         failed=true
     fi
     if [ "$failed" = true ]; then
-        say_verbose "Failed to get HTTP header: $remote_path"
+        say_verbose "Failed to get HTTP header: '$remote_path'."
         return 1
     fi
     return 0
@@ -971,10 +968,10 @@ get_download_link_from_aka_ms() {
     #quality is not supported for LTS or current channel
     if [[ ! -z "$normalized_quality"  && ("$normalized_channel" == "LTS" || "$normalized_channel" == "current") ]]; then
         normalized_quality=""
-        say_warning "Specifying quality for current or LTS channel is not supported, the quality will skipped"
+        say_warning "Specifying quality for current or LTS channel is not supported, the quality will skipped."
     fi
 
-    say_verbose "Retrieving primary named payload URL from aka.ms for channel '$normalized_channel', quality '$normalized_quality' product '$normalized_product', os '$normalized_os', architecture '$normalized_architecture'" 
+    say_verbose "Retrieving primary payload URL from aka.ms for channel: '$normalized_channel', quality: '$normalized_quality', product: '$normalized_product', os: '$normalized_os', architecture: '$normalized_architecture'." 
 
     #construct aka.ms link
     aka_ms_link="https://aka.ms/dotnet/$normalized_channel" 
@@ -982,7 +979,7 @@ get_download_link_from_aka_ms() {
         aka_ms_link="$aka_ms_link/$normalized_quality"
     fi
     aka_ms_link="$aka_ms_link/$normalized_product-$normalized_os-$normalized_architecture.tar.gz"
-    say_verbose "Constructed aka.ms link: $aka_ms_link"
+    say_verbose "Constructed aka.ms link: '$aka_ms_link'."
 
     #get HTTP response
     response="$(get_http_header "$aka_ms_link")"
@@ -994,13 +991,13 @@ get_download_link_from_aka_ms() {
     if [[ "$http_code" == "301" ]]; then
         aka_ms_download_link=$( echo "$response" | awk '$1 ~ /^Location/{print $2}' | head -1 | tr -d '\r')
         if [[ -z "$aka_ms_download_link" ]]; then
-            say_verbose "The aka.ms link is not valid: failed to get redirect location"
+            say_verbose "The aka.ms link '$aka_ms_link' is not valid: failed to get redirect location."
             return 1
         fi
-        say_verbose "The redirect location retrieved: $aka_ms_download_link"
+        say_verbose "The redirect location retrieved: '$aka_ms_download_link'."
         return 0
     else
-        say_verbose "The aka.ms link is not valid: received HTTP code: $http_code"
+        say_verbose "The aka.ms link '$aka_ms_link' is not valid: received HTTP code: $http_code."
         return 1
     fi
 }
@@ -1011,15 +1008,15 @@ calculate_vars() {
 
     #normalize input variables
     normalized_architecture="$(get_normalized_architecture_from_architecture "$architecture")"
-    say_verbose "normalized_architecture=$normalized_architecture"
+    say_verbose "Normalized architecture: '$normalized_architecture'."
     normalized_os="$(get_normalized_os "$user_defined_os")"
-    say_verbose "normalized_os=$normalized_os"
+    say_verbose "Normalized OS: '$normalized_os'."
     normalized_quality="$(get_normalized_quality "$quality")"
-    say_verbose "normalized_os=$normalized_os"
+    say_verbose "Normalized quality: '$normalized_quality'."
     normalized_channel="$(get_normalized_channel "$channel")"
-    say_verbose "normalized_channel=$normalized_channel"
+    say_verbose "Normalized channel: '$normalized_channel'."
     normalized_product="$(get_normalized_product "$runtime")"
-    say_verbose "normalized_product=$normalized_product"
+    say_verbose "Normalized product: '$normalized_product'."
 
     #try to get download location from aka.ms link
     #not applicable when exact version is specified via command or json file
@@ -1032,16 +1029,16 @@ calculate_vars() {
             if [ "$valid_aka_ms_link" == false ]; then
                 # if quality is specified - exit with error - there is no fallback approach
                 if [ ! -z "$normalized_quality" ]; then
-                    say_err "Failed to download the latest version in channel '$normalized_channel' with '$normalized_quality' quality for '$normalized_product', os '$normalized_os', architecture '$normalized_architecture'."
+                    say_err "Failed to locate the latest version in the channel '$normalized_channel' with '$normalized_quality' quality for '$normalized_product', os: '$normalized_os', architecture: '$normalized_architecture'."
                     say_err "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support."
                     return 1
                 fi
-                say_verbose "The aka.ms link is not valid: falling back to old approach"
+                say_verbose "Falling back to latest.version file approach."
             else
-                say_verbose "Retrieved primary named payload URL from aka.ms link: $aka_ms_download_link"
+                say_verbose "Retrieved primary payload URL from aka.ms link: '$aka_ms_download_link'."
                 download_link=$aka_ms_download_link
 
-                say_verbose "Attempting legacy download location will be skipped"
+                say_verbose "Attempting legacy download location will be skipped."
                 valid_legacy_download_link=false
 
                 #get version from the path
@@ -1050,14 +1047,14 @@ calculate_vars() {
                 count=${#pathElems[@]}
                 specific_version="${pathElems[count-2]}"
                 unset IFS;
-                say_verbose "Version: $specific_version"
+                say_verbose "Version: '$specific_version'."
 
                 #Retrieve product specific version
                 specific_product_version="$(get_specific_product_version "$azure_feed" "$specific_version" "$download_link")"
-                say_verbose "Product specific version: $specific_product_version"
+                say_verbose "Product specific version: '$specific_product_version'."
   
                 install_root="$(resolve_installation_path "$install_dir")"
-                say_verbose "InstallRoot: $install_root"
+                say_verbose "InstallRoot: '$install_root'."
                 return 
             fi
     fi
@@ -1339,20 +1336,25 @@ do
             echo "          - LTS - most current supported release"
             echo "          - 2-part version in a format A.B - represents a specific release"
             echo "              examples: 2.0; 1.0"
+            echo "          - 3-part version in a format A.B.Cxx - represents a specific SDK release"
+            echo "              examples: 5.0.1xx, 5.0.2xx."
+            echo "              Supported since 5.0 release"
             echo "          - Branch name"
             echo "              examples: release/2.0.0; Master"
-            echo "          Note: The version parameter overrides the channel parameter."
+            echo "          Note: The version parameter overrides the channel parameter when the version other than `latest` is used."
             echo "  -v,--version <VERSION>         Use specific VERSION, Defaults to \`$version\`."
             echo "      -Version"
             echo "          Possible values:"
             echo "          - latest - most latest build on specific channel"
             echo "          - 3-part version in a format A.B.C - represents specific version of build"
             echo "              examples: 2.0.0-preview2-006120; 1.1.0"
-            echo "  -q,--quality <quality>         Download specific quality for the version."
+            echo "  -q,--quality <quality>         Download the latest build of specified quality in the channel."
             echo "      -Quality"
-            echo "          Possible values: daily, signed, validated, preview, GA"
-            echo "          Works only with combination with channel. Not applicable for current and LTS channels." 
-            echo "          Applicable for 5.0+ releases."
+            echo "          The possible values are: daily, signed, validated, preview, GA."
+            echo "          Works only in combination in with channel. Not applicable for current and LTS channels and will be skipped if those channels are used." 
+            echo "          For SDK use channel in A.B.Cxx format. Using quality for SDK together with channel in A.B format is not supported." 
+            echo "          Supported since 5.0 release." 
+            echo "          Note: The version parameter overrides the channel parameter when the version other than `latest` is used, and therefore overrides the quality."
             echo "  -i,--install-dir <DIR>             Install under specified location (see Install Location below)"
             echo "      -InstallDir"
             echo "  --architecture <ARCHITECTURE>      Architecture of dotnet binaries to be installed, Defaults to \`$architecture\`."

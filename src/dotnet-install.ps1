@@ -16,14 +16,18 @@
     - LTS - most current supported release
     - 2-part version in a format A.B - represents a specific release
           examples: 2.0, 1.0
+    - 3-part version in a format A.B.Cxx - represents a specific SDK release
+          examples: 5.0.1xx, 5.0.2xx
+          Supported since 5.0 release
     - Branch name
           example: release/2.0.0
-    Note: The version parameter overrides the channel parameter.
+    Note: The version parameter overrides the channel parameter when the version other than 'latest' is used.
 .PARAMETER Quality
-    Download specific quality for the version."
-    Possible values: daily, signed, validated, preview, GA"
-    Works only with combination with channel. Not applicable for current and LTS channels." 
-    Applicable for 5.0+ releases."      
+    Download the latest build of specified quality in the channel. The possible values are: daily, signed, validated, preview, GA.
+    Works only in combination in with channel. Not applicable for current and LTS channels and will be skipped if those channels are used. 
+    For SDK use channel in A.B.Cxx format: using quality together with channel in A.B format is not supported.
+    Supported since 5.0 release.
+    Note: The version parameter overrides the channel parameter when the version other than 'latest' is used, and therefore overrides the quality.     
 .PARAMETER Version
     Default: latest
     Represents a build version on specific channel. Possible values:
@@ -586,26 +590,16 @@ function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion, [stri
             {
                 Say "Using alternate version $productVersion found in $ProductVersionTxtURL"
             }
-
             return $productVersion
         }
         else {
-            if ( -not [string]::IsNullOrEmpty($PackageDownloadLink)) {
-                $productVersion = Get-ProductVersionFromDownloadLink($PackageDownloadLink, $SpecificVersion);
-            }
-            else {
-                Say-Verbose "Got StatusCode $($productVersionResponse.StatusCode) trying to get productVersion.txt at $productVersionTxtUrl, so using default value of $SpecificVersion"
-                $productVersion = $SpecificVersion
-            }
+            Say-Verbose "Got StatusCode $($productVersionResponse.StatusCode) when trying to get productVersion.txt at $productVersionTxtUrl."
+            $productVersion = Get-ProductVersionFromDownloadLink $PackageDownloadLink $SpecificVersion
         }
-    } catch {
-        if ( -not [string]::IsNullOrEmpty($PackageDownloadLink)) {
-            $productVersion = Get-ProductVersionFromDownloadLink($PackageDownloadLink, $SpecificVersion);
-        }
-        else {
-            Say-Verbose "Could not read productVersion.txt at $productVersionTxtUrl, so using default value of $SpecificVersion (Exception: '$($_.Exception.Message)' )"
-            $productVersion = $SpecificVersion
-        }
+    } 
+    catch {
+        Say-Verbose "Could not read productVersion.txt at $productVersionTxtUrl (Exception: '$($_.Exception.Message)'. )"
+        $productVersion = Get-ProductVersionFromDownloadLink $PackageDownloadLink $SpecificVersion
     }
 
     return $productVersion
@@ -614,14 +608,24 @@ function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion, [stri
 function Get-ProductVersionFromDownloadLink([string]$PackageDownloadLink, [string]$SpecificVersion)
 {
     Say-Invocation $MyInvocation
-    $filename = $PackageDownloadLink.Substring($PackageDownloadLink.LastIndexOf("/") + 1)
 
+    if ([string]::IsNullOrEmpty($PackageDownloadLink))
+    {
+        Say-Verbose "Using the default value '$SpecificVersion' as the product version."
+        return $SpecificVersion
+    }
+
+    #product specific version follows the product name
+    #for filename 'dotnet-sdk-3.1.404-win-x64.zip': the product version is 3.1.400
+    $filename = $PackageDownloadLink.Substring($PackageDownloadLink.LastIndexOf("/") + 1)
     $filenameParts = $filename.Split('-')
     if ($filenameParts.Length -gt 2)
     {
         $productVersion = $filenameParts[2]
+        Say-Verbose "Extracted product version '$productVersion' from download link '$PackageDownloadLink'."
     }
     else {
+        Say-Verbose "Using the default value '$SpecificVersion' as the product version."
         $productVersion = $SpecificVersion
     }
     return $productVersion 
@@ -803,9 +807,9 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
     #quality is not supported for LTS or current channel
     if ([string]::IsNullOrEmpty($Quality)  -and ($Channel -eq "LTS" -or $Channel -eq "current") ) {
         $Quality = ""
-        Say-Warning "Specifying quality for current or LTS channel is not supported, the quality will skipped"
+        Say-Warning "Specifying quality for current or LTS channel is not supported, the quality will skipped."
     }
-    Say-Verbose "Retrieving primary named payload URL from aka.ms for channel '$Channel', quality '$Quality' product '$Product', os 'win', architecture '$Architecture'" 
+    Say-Verbose "Retrieving primary payload URL from aka.ms link for channel: '$Channel', quality: '$Quality' product: '$Product', os: 'win', architecture: '$Architecture'." 
    
     #construct aka.ms link
     $akaMsLink = "https://aka.ms/dotnet/$Channel" 
@@ -814,28 +818,36 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
     }
 
     $akaMsLink +="/$Product-win-$Architecture.zip"
-    Say-Verbose  "Constructed aka.ms link: $akaMsLink"
+    Say-Verbose  "Constructed aka.ms link: '$akaMsLink'."
 
     #get HTTP response
     $Response= GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true
-    Say-Verbose "Received response: $Response"
+    Say-Verbose "Received response:`n$Response"
 
     if ([string]::IsNullOrEmpty($Response)) {
-        Say-Verbose "The aka.ms link is not valid: failed to get redirect location"
+        Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resourse is not available."
         return $null
     }
 
     #if HTTP code is 301 (Moved Permanently), the redirect link exists
     if  ($Response.StatusCode -eq 301 )
     {
-        $akaMsDownloadLink = $Response.Headers.GetValues("Location")[0]
-        if ([string]::IsNullOrEmpty($akaMsDownloadLink)) {
-            Say-Verbose"The aka.ms link is not valid: failed to get redirect location"
+        try {
+            $akaMsDownloadLink = $Response.Headers.GetValues("Location")[0]
+            if ([string]::IsNullOrEmpty($akaMsDownloadLink)) {
+                Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location."
+                return $null
+            }
+            Say-Verbose "The redirect location retrieved: '$akaMsDownloadLink'."
+            return $akaMsDownloadLink
+        }
+        catch {
+            Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location."
             return $null
         }
-        Say-Verbose "The redirect location retrieved: $akaMsDownloadLink"
-        return $akaMsDownloadLink
     }
+    Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resourse is not available."
+    return $null
 }
 
 Say "Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:"
@@ -845,44 +857,45 @@ Say "To set up a development environment or to run apps, use installers rather t
 
 $CLIArchitecture = Get-CLIArchitecture-From-Architecture $Architecture
 $NormalizedQuality = Get-NormalizedQuality $Quality
-Say-Verbose "Normalized quality = $NormalizedQuality"
+Say-Verbose "Normalized quality: '$NormalizedQuality'"
 $NormalizedChannel = Get-NormalizedChannel $Channel
-Say-Verbose "Normalized channel=$NormalizedChannel"
+Say-Verbose "Normalized channel: '$NormalizedChannel'"
 $NormalizedProduct = Get-NormalizedProduct $Runtime
-Say-Verbose "Normalized product=$NormalizedProduct"
+Say-Verbose "Normalized product: '$NormalizedProduct'"
 
 #try to get download location from aka.ms link
 #not applicable when exact version is specified via command or json file
-
 if ([string]::IsNullOrEmpty($JSonFile) -and ($Version.ToLower() -eq "latest")) {
     $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Product $NormalizedProduct -Architecture $CLIArchitecture
+   
     if ([string]::IsNullOrEmpty($AkaMsDownloadLink)){
         if (-not [string]::IsNullOrEmpty($NormalizedQuality)) {
-            Say-Error "Failed to download the latest version in channel '$NormalizedChannel' with '$NormalizedQuality' quality for '$NormalizedProduct', os 'win', architecture '$CLIArchitecture'."
+            # if quality is specified - exit with error - there is no fallback approach
+            Say-Error "Failed to locate the latest version in channel '$NormalizedChannel' with '$NormalizedQuality' quality for '$NormalizedProduct', os: 'win', architecture: '$CLIArchitecture'."
             Say-Error "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support."
-            throw "Download failure"
+            throw "aka.ms link resolution failure"
         }
-        Say-Verbose "The aka.ms link is not valid: falling back to old approach"
-        $SpecificVersion = Get-Specific-Version-From-Version -AzureFeed $AzureFeed -Channel $Channel -Version $Version -JSonFile $JSonFile
-        $DownloadLink, $EffectiveVersion = Get-Download-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
-        $LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
+        Say-Verbose "Falling back to latest.version file approach."
+        $DownloadLink = $null
     }
     else {
-        Say-Verbose "Retrieved primary named payload URL from aka.ms link: $AkaMsDownloadLink"
+        Say-Verbose "Retrieved primary named payload URL from aka.ms link: '$AkaMsDownloadLink'."
         $DownloadLink = $AkaMsDownloadLink
-        Say-Verbose  "Attempting legacy download location will be skipped"
+        Say-Verbose  "Attempting legacy download location will be skipped."
         $LegacyDownloadLink = $null
 
         #get version from the path
-        $SpecificVersion = $DownloadLink.Split('/')[$DownloadLink.Split('/').Length - 2]
-        Say-Verbose "Version: $SpecificVersion"
+        $pathParts = $DownloadLink.Split('/')
+        $SpecificVersion = $pathParts[$pathParts.Length - 2]
+        Say-Verbose "Version: '$SpecificVersion'."
 
-        #retrieve effective version
+        #retrieve effective (product) version
         $EffectiveVersion = Get-Product-Version -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -PackageDownloadLink $DownloadLink
-        Say-Verbose "Effective version: $EffectiveVersion"
+        Say-Verbose "Product version: '$EffectiveVersion'."
     }
 }
-else {
+
+if ([string]::IsNullOrEmpty($DownloadLink)) {
     $SpecificVersion = Get-Specific-Version-From-Version -AzureFeed $AzureFeed -Channel $Channel -Version $Version -JSonFile $JSonFile
     $DownloadLink, $EffectiveVersion = Get-Download-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
     $LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
