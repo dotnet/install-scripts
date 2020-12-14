@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("2.2", "dotnet")]
         [InlineData("3.0", "dotnet")]
         [InlineData("3.1", "dotnet")]
-        // [InlineData("5.0", "dotnet")] - Broken
+        [InlineData("5.0", "dotnet")]
         [InlineData("Current", "dotnet")]
         [InlineData("LTS", "dotnet")]
         [InlineData("master", "dotnet")]
@@ -110,6 +110,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("Current", "aspnetcore")]
         [InlineData("LTS", "aspnetcore")]
         [InlineData("master", "aspnetcore")]
+        [InlineData("2.2", "aspnetcore")]
+        [InlineData("3.0", "aspnetcore")]
+        [InlineData("3.1", "aspnetcore")]
+        [InlineData("5.0", "aspnetcore")]
         [InlineData("release/2.1", "aspnetcore")]
         [InlineData("release/2.2", "aspnetcore")]
         // [InlineData("release/3.0", "aspnetcore")] - Broken
@@ -140,7 +144,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("2.1")]
         [InlineData("3.0")]
         [InlineData("3.1")]
-        // [InlineData("5.0")] - Broken
+        [InlineData("5.0")]
         [InlineData("Current")]
         [InlineData("LTS")]
         [InlineData("master")]
