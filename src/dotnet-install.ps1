@@ -862,6 +862,7 @@ $NormalizedChannel = Get-NormalizedChannel $Channel
 Say-Verbose "Normalized channel: '$NormalizedChannel'"
 $NormalizedProduct = Get-NormalizedProduct $Runtime
 Say-Verbose "Normalized product: '$NormalizedProduct'"
+$DownloadLink = $null
 
 #try to get download location from aka.ms link
 #not applicable when exact version is specified via command or json file
@@ -876,7 +877,6 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version.ToLower() -eq "latest")) {
             throw "aka.ms link resolution failure"
         }
         Say-Verbose "Falling back to latest.version file approach."
-        $DownloadLink = $null
     }
     else {
         Say-Verbose "Retrieved primary named payload URL from aka.ms link: '$AkaMsDownloadLink'."
