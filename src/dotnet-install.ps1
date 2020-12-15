@@ -805,7 +805,7 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
     Say-Invocation $MyInvocation 
 
     #quality is not supported for LTS or current channel
-    if ([string]::IsNullOrEmpty($Quality)  -and ($Channel -eq "LTS" -or $Channel -eq "current") ) {
+    if (![string]::IsNullOrEmpty($Quality)  -and ($Channel -eq "LTS" -or $Channel -eq "current") ) {
         $Quality = ""
         Say-Warning "Specifying quality for current or LTS channel is not supported, the quality will skipped."
     }
