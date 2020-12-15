@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
-    public class AkaMsLinksTests
+    public class AkaMsLinksTests : TestBase
     {
         /// <summary>
         /// Test verifies E2E the aka.ms resolution for SDK
@@ -360,43 +360,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdOutContaining("Retrieving primary payload URL from aka.ms link for channel");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
-        }
-
-
-        private static Command CreateInstallCommand(IEnumerable<string> args)
-        {
-            string path;
-            string finalArgs;
-
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                path = "powershell.exe";
-                finalArgs = "-ExecutionPolicy Bypass -NoProfile -NoLogo -Command \"" +
-                    Path.Combine(GetRepoRoot(), "src", "dotnet-install.ps1") + " " + ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(args) + "\"";
-            }
-            else
-            {
-                path = Path.Combine(GetRepoRoot(), "src", "dotnet-install.sh");
-                finalArgs = ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(args);
-            }
-
-            return Command.Create(new CommandSpec(path, finalArgs, CommandResolutionStrategy.None));
-        }
-
-        private static string GetRepoRoot()
-        {
-            string directory = AppContext.BaseDirectory;
-
-            while (!Directory.Exists(Path.Combine(directory, ".git")) && directory != null)
-            {
-                directory = Directory.GetParent(directory)?.FullName;
-            }
-
-            if (directory == null)
-            {
-                return null;
-            }
-            return directory;
         }
     }
 }
