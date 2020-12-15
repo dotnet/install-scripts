@@ -872,7 +872,7 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version.ToLower() -eq "latest")) {
     if ([string]::IsNullOrEmpty($AkaMsDownloadLink)){
         if (-not [string]::IsNullOrEmpty($NormalizedQuality)) {
             # if quality is specified - exit with error - there is no fallback approach
-            Say-Error "Failed to locate the latest version in channel '$NormalizedChannel' with '$NormalizedQuality' quality for '$NormalizedProduct', os: 'win', architecture: '$CLIArchitecture'."
+            Say-Error "Failed to locate the latest version in the channel '$NormalizedChannel' with '$NormalizedQuality' quality for '$NormalizedProduct', os: 'win', architecture: '$CLIArchitecture'."
             Say-Error "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support."
             throw "aka.ms link resolution failure"
         }

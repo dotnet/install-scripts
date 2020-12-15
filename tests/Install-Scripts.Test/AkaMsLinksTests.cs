@@ -326,7 +326,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().Fail();
-            commandResult.Should().HaveStdErrContaining("Failed to locate the latest version in channel");
+            commandResult.Should().HaveStdErrContaining("Failed to locate the latest version in the channel");
 
         }
 
