@@ -938,7 +938,7 @@ install_dotnet() {
     fi
 
     # Version verification failed. More likely something is wrong either with the downloaded content or with the verification algorithm.
-    say_err "Failed to verify the version of installed \`$asset_name\`, installation source: $download_link, installation location: $install_root. Report the bug at https://github.com/dotnet/install-scripts/issues."
+    say_err "Failed to verify the version of installed \`$asset_name\`.\nInstallation source: $download_link.\nInstallation location: $install_root.\nReport the bug at https://github.com/dotnet/install-scripts/issues."
     say_err "\`$asset_name\` with version = $specific_product_version failed to install with an unknown error."
     return 1
 }
