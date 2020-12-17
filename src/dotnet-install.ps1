@@ -871,7 +871,9 @@ if (!$isAssetInstalled) {
     $isAssetInstalled = Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $SpecificVersion
 }
 
+# Version verification failed. More likely something is wrong either with the downloaded content or with the verification algorithm.
 if (!$isAssetInstalled) {
+    Say-Error "Failed to verify the version of installed `"$assetName`".`nInstallation source: $DownloadLink.`nInstallation location: $InstallRoot.`nReport the bug at https://github.com/dotnet/install-scripts/issues."
     throw "`"$assetName`" with version = $SpecificVersion failed to install with an unknown error."
 }
 
