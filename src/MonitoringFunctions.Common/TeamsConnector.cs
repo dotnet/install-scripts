@@ -46,9 +46,9 @@ namespace MonitoringFunctions.Common
         public async Task SendIncidentCard(string title, string description, string workItemUrl, CancellationToken cancellationToken = default)
         {
             string payload = string.Format(IncidentCardFormat, title, description, workItemUrl);
-            StringContent payloadContent = new StringContent(payload, Encoding.UTF8);
+            using StringContent payloadContent = new StringContent(payload, Encoding.UTF8);
 
-            HttpResponseMessage response = await HttpClient.PostAsync(_webhookUrl, payloadContent, cancellationToken);
+            using HttpResponseMessage response = await HttpClient.PostAsync(_webhookUrl, payloadContent, cancellationToken);
 
             if(!response.IsSuccessStatusCode)
             {
