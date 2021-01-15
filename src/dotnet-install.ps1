@@ -437,21 +437,15 @@ function Get-Download-Link([string]$AzureFeed, [string]$SpecificVersion, [string
         $PayloadURL = "$AzureFeed/aspnetcore/Runtime/$SpecificVersion/aspnetcore-runtime-$SpecificProductVersion-win-$CLIArchitecture.zip"
     }
     elseif ($Runtime -eq "windowsdesktop") {
+        # The windows desktop runtime is part of the core runtime layout prior to 5.0
+        $PayloadURL = "$AzureFeed/Runtime/$SpecificVersion/windowsdesktop-runtime-$SpecificProductVersion-win-$CLIArchitecture.zip"
         if ($SpecificVersion -match '^(\d+)\.(.*)$')
         {
             $majorVersion = [int]$Matches[1]
-            if ($majorVersion -lt 5)
-            {
-                $PayloadURL = "$AzureFeed/Runtime/$SpecificVersion/windowsdesktop-runtime-$SpecificProductVersion-win-$CLIArchitecture.zip"
-            }
-            else
+            if ($majorVersion -ge 5)
             {
                 $PayloadURL = "$AzureFeed/WindowsDesktop/$SpecificVersion/windowsdesktop-runtime-$SpecificProductVersion-win-$CLIArchitecture.zip"
             }
-        }
-        else
-        {
-            $PayloadURL = "$AzureFeed/Runtime/$SpecificVersion/windowsdesktop-runtime-$SpecificProductVersion-win-$CLIArchitecture.zip"
         }
     }
     elseif (-not $Runtime) {
@@ -494,21 +488,15 @@ function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion) {
         $ProductVersionTxtURL = "$AzureFeed/aspnetcore/Runtime/$SpecificVersion/productVersion.txt"
     }
     elseif ($Runtime -eq "windowsdesktop") {
+        # The windows desktop runtime is part of the core runtime layout prior to 5.0
+        $ProductVersionTxtURL = "$AzureFeed/Runtime/$SpecificVersion/productVersion.txt"
         if ($SpecificVersion -match '^(\d+)\.(.*)')
         {
             $majorVersion = [int]$Matches[1]
-            if ($majorVersion -lt 5)
-            {
-                $ProductVersionTxtURL = "$AzureFeed/Runtime/$SpecificVersion/productVersion.txt"
-            }
-            else
+            if ($majorVersion -ge 5)
             {
                 $ProductVersionTxtURL = "$AzureFeed/WindowsDesktop/$SpecificVersion/productVersion.txt"
             }
-        }
-        else
-        {
-            $ProductVersionTxtURL = "$AzureFeed/Runtime/$SpecificVersion/productVersion.txt"
         }
     }
     elseif (-not $Runtime) {
