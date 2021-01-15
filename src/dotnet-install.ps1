@@ -234,11 +234,11 @@ function Get-NormalizedQuality([string]$Quality) {
         return ""
     }
 
-    switch ($Quality.ToLower()) {
-        { ($_ -eq "daily") -or ($_ -eq "signed") -or ($_ -eq "validated") -or ($_ -eq "preview")} { return $Quality.ToLower() }
+    switch ($Quality) {
+        { @("daily", "signed", "validated", "preview") -contains $_ } { return $Quality.ToLower() }
         #ga quality is available without specifying quality, so normalizing it to empty
         { $_ -eq "ga" } { return "" }
-        default { throw "'$Quality' is not a supported value for --quality option, supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues." }
+        default { throw "'$Quality' is not a supported value for -Quality option, supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues." }
     }
 }
 
@@ -249,8 +249,9 @@ function Get-NormalizedChannel([string]$Channel) {
         return ""
     }
 
-    switch ($Channel.ToLower()) {
+    switch ($Channel) {
         { $_ -eq "lts" } { return "LTS" }
+        { $_ -eq "current" } { return "current" }
         default { return $Channel.ToLower() }
     }
 }
@@ -258,19 +259,13 @@ function Get-NormalizedChannel([string]$Channel) {
 function Get-NormalizedProduct([string]$Runtime) {
     Say-Invocation $MyInvocation
 
-    if ($Runtime.ToLower() -eq "dotnet") {
-        $Product = "dotnet-runtime"
+    switch ($Runtime) {
+        { $_ -eq "dotnet" } { return "dotnet-runtime" }
+        { $_ -eq "aspnetcore" } { return "aspnetcore-runtime" }
+        { $_ -eq "windowsdesktop" } { return "windowsdesktop-runtime" }
+        { [string]::IsNullOrEmpty($_) } { return "dotnet-sdk" }
+        default { throw "'$Runtime' is not a supported value for -Runtime option, supported values are: dotnet, aspnetcore, windowsdesktop. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues." }
     }
-    elseif ($Runtime.ToLower() -eq "aspnetcore") {
-        $Product = "aspnetcore-runtime"
-    }
-    elseif ($Runtime.ToLower() -eq "windowsdesktop") {
-        $Product = "windowsdesktop-runtime"
-    }
-    elseif ([string]::IsNullOrEmpty($runtime)) {
-        $Product = "dotnet-sdk"
-    }
-    return $Product
 }
 
 
@@ -805,7 +800,7 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
     Say-Invocation $MyInvocation 
 
     #quality is not supported for LTS or current channel
-    if (![string]::IsNullOrEmpty($Quality)  -and ($Channel -eq "LTS" -or $Channel -eq "current") ) {
+    if (![string]::IsNullOrEmpty($Quality) -and (@("LTS", "current") -contains $Channel)) {
         $Quality = ""
         Say-Warning "Specifying quality for current or LTS channel is not supported, the quality will skipped."
     }
