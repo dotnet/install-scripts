@@ -21,13 +21,13 @@
           Supported since 5.0 release
     - Branch name
           example: release/2.0.0
-    Note: The version parameter overrides the channel parameter when the version other than 'latest' is used.
+    Note: The version parameter overrides the channel parameter when any version other than 'latest' is used.
 .PARAMETER Quality
     Download the latest build of specified quality in the channel. The possible values are: daily, signed, validated, preview, GA.
-    Works only in combination in with channel. Not applicable for current and LTS channels and will be skipped if those channels are used. 
+    Works only in combination with channel. Not applicable for current and LTS channels and will be ignored if those channels are used. 
     For SDK use channel in A.B.Cxx format: using quality together with channel in A.B format is not supported.
     Supported since 5.0 release.
-    Note: The version parameter overrides the channel parameter when the version other than 'latest' is used, and therefore overrides the quality.     
+    Note: The version parameter overrides the channel parameter when any version other than 'latest' is used, and therefore overrides the quality.     
 .PARAMETER Version
     Default: latest
     Represents a build version on specific channel. Possible values:
@@ -90,13 +90,11 @@
 [cmdletbinding()]
 param(
    [string]$Channel="LTS",
-   [ValidateSet("daily", "signed", "validated", "preview", "ga", IgnoreCase = $true)]
    [string]$Quality,
    [string]$Version="Latest",
    [string]$JSonFile,
    [string]$InstallDir="<auto>",
    [string]$Architecture="<auto>",
-   [ValidateSet("dotnet", "aspnetcore", "windowsdesktop", IgnoreCase = $false)]
    [string]$Runtime,
    [Obsolete("This parameter may be removed in a future version of this script. The recommended alternative is '-Runtime dotnet'.")]
    [switch]$SharedRuntime,
@@ -216,7 +214,7 @@ function Get-Machine-Architecture() {
 function Get-CLIArchitecture-From-Architecture([string]$Architecture) {
     Say-Invocation $MyInvocation
 
-    switch ($Architecture.ToLower()) {
+    switch ($Architecture.ToLowerInvariant()) {
         { $_ -eq "<auto>" } { return Get-CLIArchitecture-From-Architecture $(Get-Machine-Architecture) }
         { ($_ -eq "amd64") -or ($_ -eq "x64") } { return "x64" }
         { $_ -eq "x86" } { return "x86" }
@@ -235,10 +233,10 @@ function Get-NormalizedQuality([string]$Quality) {
     }
 
     switch ($Quality) {
-        { @("daily", "signed", "validated", "preview") -contains $_ } { return $Quality.ToLower() }
+        { @("daily", "signed", "validated", "preview") -contains $_ } { return $Quality.ToLowerInvariant() }
         #ga quality is available without specifying quality, so normalizing it to empty
         { $_ -eq "ga" } { return "" }
-        default { throw "'$Quality' is not a supported value for -Quality option, supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues." }
+        default { throw "'$Quality' is not a supported value for -Quality option. Supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues." }
     }
 }
 
@@ -252,7 +250,7 @@ function Get-NormalizedChannel([string]$Channel) {
     switch ($Channel) {
         { $_ -eq "lts" } { return "LTS" }
         { $_ -eq "current" } { return "current" }
-        default { return $Channel.ToLower() }
+        default { return $Channel.ToLowerInvariant() }
     }
 }
 
@@ -474,7 +472,7 @@ function Get-Specific-Version-From-Version([string]$AzureFeed, [string]$Channel,
     Say-Invocation $MyInvocation
 
     if (-not $JSonFile) {
-        if ($Version.ToLower() -eq "latest") {
+        if ($Version.ToLowerInvariant() -eq "latest") {
             $LatestVersionInfo = Get-Latest-Version-Info -AzureFeed $AzureFeed -Channel $Channel
             return $LatestVersionInfo.Version
         }
@@ -802,7 +800,7 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
     #quality is not supported for LTS or current channel
     if (![string]::IsNullOrEmpty($Quality) -and (@("LTS", "current") -contains $Channel)) {
         $Quality = ""
-        Say-Warning "Specifying quality for current or LTS channel is not supported, the quality will skipped."
+        Say-Warning "Specifying quality for current or LTS channel is not supported, the quality will be ignored."
     }
     Say-Verbose "Retrieving primary payload URL from aka.ms link for channel: '$Channel', quality: '$Quality' product: '$Product', os: 'win', architecture: '$Architecture'." 
    
@@ -820,7 +818,7 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
     Say-Verbose "Received response:`n$Response"
 
     if ([string]::IsNullOrEmpty($Response)) {
-        Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resourse is not available."
+        Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resource is not available."
         return $null
     }
 
@@ -861,7 +859,7 @@ $DownloadLink = $null
 
 #try to get download location from aka.ms link
 #not applicable when exact version is specified via command or json file
-if ([string]::IsNullOrEmpty($JSonFile) -and ($Version.ToLower() -eq "latest")) {
+if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
     $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Product $NormalizedProduct -Architecture $CLIArchitecture
    
     if ([string]::IsNullOrEmpty($AkaMsDownloadLink)){
@@ -876,13 +874,18 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version.ToLower() -eq "latest")) {
     else {
         Say-Verbose "Retrieved primary named payload URL from aka.ms link: '$AkaMsDownloadLink'."
         $DownloadLink = $AkaMsDownloadLink
-        Say-Verbose  "Attempting legacy download location will be skipped."
+        Say-Verbose  "Downloading using legacy url will not be attempted."
         $LegacyDownloadLink = $null
 
         #get version from the path
         $pathParts = $DownloadLink.Split('/')
-        $SpecificVersion = $pathParts[$pathParts.Length - 2]
-        Say-Verbose "Version: '$SpecificVersion'."
+        if ($pathParts.Length -ge 2) { 
+            $SpecificVersion = $pathParts[$pathParts.Length - 2]
+            Say-Verbose "Version: '$SpecificVersion'."
+        }
+        else {
+            Say-Error "Failed to extract the version from download link '$DownloadLink'."
+        }
 
         #retrieve effective (product) version
         $EffectiveVersion = Get-Product-Version -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -PackageDownloadLink $DownloadLink

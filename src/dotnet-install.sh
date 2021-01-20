@@ -385,7 +385,7 @@ get_normalized_quality() {
                 return 0
                 ;;
             *)
-                say_err "'$quality' is not a supported value for --quality option, supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues."
+                say_err "'$quality' is not a supported value for --quality option. Supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues."
                 return 1
                 ;;
         esac
@@ -676,7 +676,7 @@ get_product_specific_version_from_download_link()
     filename="${download_link##*/}"
 
     #product specific version follows the product name
-    #for filename 'dotnet-sdk-3.1.404-linux-x64.tar.gz': the product version is 3.1.400
+    #for filename 'dotnet-sdk-3.1.404-linux-x64.tar.gz': the product version is 3.1.404
     IFS='-'
     read -ra filename_elems <<< "$filename"
     count=${#filename_elems[@]}
@@ -819,6 +819,8 @@ extract_dotnet_package() {
     return 0
 }
 
+# args:
+# remote_path - $1
 get_http_header()
 {
     eval $invocation
@@ -839,6 +841,8 @@ get_http_header()
     return 0
 }
 
+# args:
+# remote_path - $1
 get_http_header_curl() {
     eval $invocation
     local remote_path="$1"
@@ -848,6 +852,8 @@ get_http_header_curl() {
     return 0
 }
 
+# args:
+# remote_path - $1
 get_http_header_wget() {
     eval $invocation
     local remote_path="$1"
@@ -968,7 +974,7 @@ get_download_link_from_aka_ms() {
     #quality is not supported for LTS or current channel
     if [[ ! -z "$normalized_quality"  && ("$normalized_channel" == "LTS" || "$normalized_channel" == "current") ]]; then
         normalized_quality=""
-        say_warning "Specifying quality for current or LTS channel is not supported, the quality will skipped."
+        say_warning "Specifying quality for current or LTS channel is not supported, the quality will be ignored."
     fi
 
     say_verbose "Retrieving primary payload URL from aka.ms for channel: '$normalized_channel', quality: '$normalized_quality', product: '$normalized_product', os: '$normalized_os', architecture: '$normalized_architecture'." 
@@ -1038,7 +1044,7 @@ calculate_vars() {
                 say_verbose "Retrieved primary payload URL from aka.ms link: '$aka_ms_download_link'."
                 download_link=$aka_ms_download_link
 
-                say_verbose "Attempting legacy download location will be skipped."
+                say_verbose "Downloading using legacy url will not be attempted."
                 valid_legacy_download_link=false
 
                 #get version from the path
@@ -1341,7 +1347,7 @@ do
             echo "              Supported since 5.0 release"
             echo "          - Branch name"
             echo "              examples: release/2.0.0; Master"
-            echo "          Note: The version parameter overrides the channel parameter when the version other than `latest` is used."
+            echo "          Note: The version parameter overrides the channel parameter when any version other than `latest` is used."
             echo "  -v,--version <VERSION>         Use specific VERSION, Defaults to \`$version\`."
             echo "      -Version"
             echo "          Possible values:"
@@ -1351,10 +1357,10 @@ do
             echo "  -q,--quality <quality>         Download the latest build of specified quality in the channel."
             echo "      -Quality"
             echo "          The possible values are: daily, signed, validated, preview, GA."
-            echo "          Works only in combination in with channel. Not applicable for current and LTS channels and will be skipped if those channels are used." 
+            echo "          Works only in combination with channel. Not applicable for current and LTS channels and will be ignored if those channels are used." 
             echo "          For SDK use channel in A.B.Cxx format. Using quality for SDK together with channel in A.B format is not supported." 
             echo "          Supported since 5.0 release." 
-            echo "          Note: The version parameter overrides the channel parameter when the version other than `latest` is used, and therefore overrides the quality."
+            echo "          Note: The version parameter overrides the channel parameter when any version other than `latest` is used, and therefore overrides the quality."
             echo "  -i,--install-dir <DIR>             Install under specified location (see Install Location below)"
             echo "      -InstallDir"
             echo "  --architecture <ARCHITECTURE>      Architecture of dotnet binaries to be installed, Defaults to \`$architecture\`."
