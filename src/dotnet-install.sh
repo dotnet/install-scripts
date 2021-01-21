@@ -303,7 +303,7 @@ get_machine_architecture() {
             echo "arm"
             return 0
             ;;
-        aarch64)
+        aarch64|arm64)
             echo "arm64"
             return 0
             ;;
