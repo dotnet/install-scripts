@@ -39,10 +39,11 @@ namespace MonitoringFunctions.Windows.Functions
             ILogger log)
         {
             // Function run shouldn't take longer than 3 minutes.
-            TimeSpan maxExecutionDuration = new TimeSpan(0, minutes: 3, 0);
+            TimeSpan maxExecutionDuration = TimeSpan.FromMinutes(3);
             CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(maxExecutionDuration);
             CancellationToken cancellationToken = cancellationTokenSource.Token;
 
+            using StreamReader requestStream = new StreamReader(req.Body);
             string requestBody = await requestStream.ReadToEndAsync().ConfigureAwait(false);
 
             if (string.IsNullOrWhiteSpace(requestBody))
