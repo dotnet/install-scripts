@@ -43,7 +43,7 @@ namespace MonitoringFunctions.Common
         /// <returns>Task that tracks the completion of the operation.
         /// Errors are communicated through exceptions.</returns>
         /// <remarks>It is safe to call this method on the same object simultaneously from multiple threads.</remarks>
-        public async Task SendIncidentCard(string title, string description, string workItemUrl, CancellationToken cancellationToken = default)
+        public async Task SendIncidentCardAsync(string title, string description, string workItemUrl, CancellationToken cancellationToken = default)
         {
             string payload = string.Format(IncidentCardFormat, title, description, workItemUrl);
             using StringContent payloadContent = new StringContent(payload, Encoding.UTF8);
@@ -52,7 +52,9 @@ namespace MonitoringFunctions.Common
 
             if(!response.IsSuccessStatusCode)
             {
-                throw new Exception($"Sending incident card has failed with http status code {response.StatusCode}.");
+                string responseContent = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Sending incident card has failed with http status code {response.StatusCode}."
+                    + " Response content: " + responseContent);
             }
         }
     }

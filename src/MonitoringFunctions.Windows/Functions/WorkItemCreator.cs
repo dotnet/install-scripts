@@ -38,7 +38,11 @@ namespace MonitoringFunctions.Windows.Functions
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
-            using StreamReader requestStream = new StreamReader(req.Body);
+            // Function run shouldn't take longer than 3 minutes.
+            TimeSpan maxExecutionDuration = new TimeSpan(0, minutes: 3, 0);
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(maxExecutionDuration);
+            CancellationToken cancellationToken = cancellationTokenSource.Token;
+
             string requestBody = await requestStream.ReadToEndAsync().ConfigureAwait(false);
 
             if (string.IsNullOrWhiteSpace(requestBody))
@@ -106,8 +110,11 @@ namespace MonitoringFunctions.Windows.Functions
 
                 string title = $"#{match.Value.Tags["monitor_name"]}# {alertMessage}";
 
-                bool workItemExists = await ActiveWorkItemExists(workItemClient, devdivProject, title, IncidentAreaPath)
-                    .ConfigureAwait(false);
+                bool workItemExists = await ActiveWorkItemExists(workItemClient,
+                    devdivProject, 
+                    title, 
+                    IncidentAreaPath, 
+                    cancellationToken).ConfigureAwait(false);
 
                 if (workItemExists)
                 {
@@ -117,7 +124,13 @@ namespace MonitoringFunctions.Windows.Functions
 
                 string description = IncidentSerializer.GetIncidentDescription(match.Value.Tags["monitor_name"], data, log);
                 log.LogInformation($"Incident description body: {description}");
-                WorkItem workItem = await CreateAdoTask(workItemClient, devdivProject, IncidentAreaPath, title, description).ConfigureAwait(false);
+                WorkItem workItem = await CreateAdoTask(workItemClient,
+                    devdivProject, 
+                    IncidentAreaPath, 
+                    title, 
+                    description,
+                    tags: null,
+                    cancellationToken).ConfigureAwait(false);
 
                 string workItemUrl = (workItem.Links?.Links?["html"] as ReferenceLink)?.Href ?? "<url-not-found>";
                 string successMessage = $"Work item with ID {workItem.Id} was created at address {workItemUrl}";
@@ -129,7 +142,10 @@ namespace MonitoringFunctions.Windows.Functions
                 {
                     try
                     {
-                        await teamsConnector.SendIncidentCard("There is a new issue with the install scripts.", title, workItemUrl);
+                        await teamsConnector.SendIncidentCardAsync("There is a new issue with the install scripts.",
+                            title, 
+                            workItemUrl,
+                            cancellationToken).ConfigureAwait(false);
                     }
                     catch (Exception e)
                     {
