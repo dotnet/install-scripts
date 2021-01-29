@@ -753,15 +753,17 @@ download() {
         elif machine_has "wget"; then
             downloadwget "$remote_path" "$out_path" || failed=true
         else
-            failed = true
+            unset http_code
+            download_error_msg="Missing dependency: neither curl nor wget was found."
+            break
         fi
 
         if [ "$failed" = false ] || [ $attempts -ge 3 ] || { [ ! -z $http_code ] && [ $http_code = "404" ]; }; then
             break
         fi
 
-
-        say "Trying for the $((attempts+1))rd time in $((attempts*10)) seconds."
+        say "Download attempt #$attempts has failed: $http_code $download_error_msg"
+        say "Attempt #$((attempts+1)) will start in $((attempts*10)) seconds."
         sleep $((attempts*20))
     done
 
