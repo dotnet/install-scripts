@@ -755,6 +755,7 @@ download() {
         else
             unset http_code
             download_error_msg="Missing dependency: neither curl nor wget was found."
+            failed=true
             break
         fi
 
@@ -1188,6 +1189,11 @@ say "- The SDK installation doesn't need to persist across multiple CI runs."
 say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.\n"
 
 check_min_reqs
+if [ $? -ne 0 ]
+then
+    exit 1
+fi
+
 calculate_vars
 script_name=$(basename "$0")
 
