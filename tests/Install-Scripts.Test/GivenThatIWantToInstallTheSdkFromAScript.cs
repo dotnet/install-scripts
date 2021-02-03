@@ -109,6 +109,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         // [InlineData("release/5.0", "dotnet")] - Broken
         [InlineData("Current", "aspnetcore")]
         [InlineData("LTS", "aspnetcore")]
+        //[InlineData("1.0", "aspnetcore")] - Broken
+        //[InlineData("1.1", "aspnetcore")] - Broken
+        //[InlineData("2.0", "aspnetcore")] - Broken
+        [InlineData("2.2", "aspnetcore")]
+        [InlineData("3.0", "aspnetcore")]
+        [InlineData("3.1", "aspnetcore")]
+        [InlineData("5.0", "aspnetcore")]
         [InlineData("master", "aspnetcore")]
         [InlineData("2.2", "aspnetcore")]
         [InlineData("3.0", "aspnetcore")]
@@ -116,11 +123,22 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("5.0", "aspnetcore")]
         [InlineData("release/2.1", "aspnetcore")]
         [InlineData("release/2.2", "aspnetcore")]
-        // [InlineData("release/3.0", "aspnetcore")] - Broken
-        // [InlineData("release/3.1", "aspnetcore")] - Broken
-        // [InlineData("release/5.0", "aspnetcore")] - Broken
+        //[InlineData("release/3.0", "aspnetcore")] - Broken
+        //[InlineData("release/3.1", "aspnetcore")] - Broken
+        //[InlineData("release/5.0", "aspnetcore")] - Broken 
+        [InlineData("Current", "windowsdesktop")]
+        [InlineData("LTS", "windowsdesktop")]
+        [InlineData("3.0", "windowsdesktop")]
+        [InlineData("3.1", "windowsdesktop")]
+        [InlineData("5.0", "windowsdesktop")]
+        [InlineData("master", "windowsdesktop")]
         public void WhenChannelResolvesToASpecificRuntimeVersion(string channel, string runtimeType)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtimeType == "windowsdesktop")
+            {
+                //do not run windowsdesktop test on Linux environment
+                return;
+            }
             var args = new string[] { "-dryrun", "-channel", channel, "-runtime", runtimeType };
 
             var commandResult = CreateInstallCommand(args)
@@ -192,6 +210,26 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             //  Channel should be translated to a specific SDK version
             commandResult.Should().HaveStdOutContainingIgnoreCase("-version");
         }
+
+        [Theory]
+        [InlineData("5.0.1", "WindowsDesktop")]
+        [InlineData("3.1.10", "Runtime")]
+        public void CanResolveCorrectLocationBasedOnVersion(string version, string location)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                //do not run windowsdesktop test on Linux environment
+                return;
+            }
+            string expectedLinkLog = $"Constructed primary named payload URL: {Environment.NewLine}https://dotnetcli.azureedge.net/dotnet/{location}/{version}";
+            var args = new string[] { "-version", version, "-runtime", "windowsdesktop", "-verbose", "-dryrun"};
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().Pass().And.HaveStdOutContaining(expectedLinkLog);
+        } 
 
         private static Command CreateInstallCommand(IEnumerable<string> args)
         {
