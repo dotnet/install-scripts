@@ -11,7 +11,7 @@ using FluentAssertions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
-    public class GivenThatIWantToInstallTheSdkFromAScript
+    public class GivenThatIWantToGetTheSdkLinksFromAScript
     {
         [Theory]
         [InlineData("InstallationScriptTests.json")]
