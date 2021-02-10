@@ -763,7 +763,7 @@ download() {
 
         say "Download attempt #$attempts has failed: $http_code $download_error_msg"
         say "Attempt #$((attempts+1)) will start in $((attempts*10)) seconds."
-        sleep $((attempts*20))
+        sleep $((attempts*10))
     done
 
 
