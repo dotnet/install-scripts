@@ -779,7 +779,7 @@ if ($isAssetInstalled) {
 
 New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
 
-$installDrive = $((Get-Item $InstallRoot).PSDrive.Name);
+$installDrive = $((Get-Item $InstallRoot -Force).PSDrive.Name);
 $diskInfo = Get-PSDrive -Name $installDrive
 if ($diskInfo.Free / 1MB -le 100) {
     throw "There is not enough disk space on drive ${installDrive}:"
