@@ -24,7 +24,7 @@ exec 3>&1
 # See if stdout is a terminal
 if [ -t 1 ] && command -v tput > /dev/null; then
     # see if it supports colors
-    ncolors=$(tput colors)
+    ncolors=$(tput colors || echo 0)
     if [ -n "$ncolors" ] && [ $ncolors -ge 8 ]; then
         bold="$(tput bold       || echo)"
         normal="$(tput sgr0     || echo)"
