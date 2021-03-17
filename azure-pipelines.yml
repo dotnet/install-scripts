@@ -1,10 +1,8 @@
 trigger:
   - main
-  - master
 
 pr:
   - main
-  - master
 
 variables:
 - ${{ if eq(variables._RunAsInternal, True) }}:
