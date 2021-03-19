@@ -17,7 +17,7 @@
     - 2-part version in a format A.B - represents a specific release
           examples: 2.0, 1.0
     - Branch name
-          examples: release/2.0.0, Master
+          example: release/2.0.0
     Note: The version parameter overrides the channel parameter.
 .PARAMETER Version
     Default: latest
