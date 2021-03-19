@@ -116,18 +116,17 @@ stages:
               includeRootFolder: false
               archiveFile: "$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip"
 
-          - task: AzureRmWebAppDeployment@4
+          - task: AzureFunctionApp@1
             condition: eq(variables['TestPublishing'], 'true')
             displayName: "Deploy Linux Functions to Test"
             inputs:
               ConnectionType: 'AzureRM'
-              # Name of the service connection that will give us access to Dotnet-Install-Monitoring resource group
-              # This is where the linux based test Azure Functions are allocated.
-              azureSubscription: 'InstallScripts_KeyVault'
+              azureSubscription: 'Dotnet-Install-Monitoring-Functions-RG'
               appType: 'functionAppLinux'
-              WebAppName: 'install-scripts-linux-test'
+              appName: 'install-scripts-linux-test'
               deployToSlotOrASE: true
-              ResourceGroupName: 'Dotnet-Install-Monitoring'
+              slotName: 'production'
+              ResourceGroupName: 'Dotnet-Install-Monitoring-Functions'
               Package: '$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip'
           - task: AzureRmWebAppDeployment@4
             condition: eq(variables['TestPublishing'], 'true')
@@ -143,18 +142,17 @@ stages:
               ResourceGroupName: 'Dotnet-Install-Monitoring'
               Package: '$(System.DefaultWorkingDirectory)/build_windows_$(Build.BuildId).zip'
 
-          - task: AzureRmWebAppDeployment@4
+          - task: AzureFunctionApp@1
             condition: eq(variables['TestPublishing'], 'false')
             displayName: "Deploy Linux Functions to Prod"
             inputs:
               ConnectionType: 'AzureRM'
-              # Name of the service connection that will give us access to Dotnet-Install-Monitoring-Visualization resource group
-              # This is where the linux based Azure Functions are allocated.
-              azureSubscription: 'InstallScripts_Visualization_RG'
-              appType: 'functionApp'
-              WebAppName: install-scripts-linux-prod
+              azureSubscription: 'Dotnet-Install-Monitoring-Functions-RG'
+              appType: 'functionAppLinux'
+              appName: 'install-scripts-linux-prod'
               deployToSlotOrASE: true
-              ResourceGroupName: 'Dotnet-Install-Monitoring-Visualization'
+              slotName: 'production'
+              ResourceGroupName: 'Dotnet-Install-Monitoring-Functions'
               Package: '$(System.DefaultWorkingDirectory)/build_linux_$(Build.BuildId).zip'
           - task: AzureRmWebAppDeployment@4
             condition: eq(variables['TestPublishing'], 'false')
