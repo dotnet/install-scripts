@@ -27,6 +27,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("3.0", "3\\.0\\..*"),
                 ("3.1", "3\\.1\\..*"),
                 ("5.0", "5\\.0\\..*"),
+                ("6.0-preview2", "6\\.0\\..*"),
                 ("Current", "5\\.0\\..*"),
                 ("LTS", "3\\.1\\..*"),
             };
@@ -42,6 +43,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("release/3.0", "3\\.0\\..*"),
                 ("release/3.1", "3\\.1\\..*"),
                 ("release/5.0", "5\\.0\\..*"),
+                ("release/6.0-preview2", "6\\.0\\..*"),
             };
 
         /// <summary>
@@ -56,6 +58,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("release/3.1.4xx", "3\\.1\\.4.*"),
                 ("release/5.0.1xx", "5\\.0\\.1.*"),
                 ("release/5.0.2xx", "5\\.0\\.2.*"),
+                ("release/6.0.1xx-preview2", "6\\.0\\.1.*"),
                 ("master", "6\\.0\\.1.*"),
             };
 
