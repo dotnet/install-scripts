@@ -410,6 +410,9 @@ function Get-Latest-Version-Info([string]$AzureFeed, [string]$Channel) {
     else {
         throw "Invalid value for `$Runtime"
     }
+
+    Say-Verbose "Constructed latest.version URL: $VersionFileUrl"
+
     try {
         $Response = GetHTTPResponse -Uri $VersionFileUrl
     }
@@ -794,7 +797,7 @@ function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot, [string]$BinFolde
     }
 }
 
-function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Product, [string]$Architecture) {    
+function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Product, [string]$Architecture) {
     Say-Invocation $MyInvocation 
 
     #quality is not supported for LTS or current channel
