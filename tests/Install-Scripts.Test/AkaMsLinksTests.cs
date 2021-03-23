@@ -128,6 +128,12 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("6.0", "windowsdesktop", "daily", @"https://aka.ms/dotnet/6.0/daily/windowsdesktop-runtime-")]
         public void Runtime_IntegrationTest(string channel, string runtime, string quality, string expectedLink)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime.Equals("windowsdesktop", StringComparison.OrdinalIgnoreCase))
+            {
+                // Do not run windowsdesktop tests on Linux environment.
+                return;
+            }
+
             string expectedLinkPattern = Regex.Escape(expectedLink);
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -237,9 +243,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("5.0", "windowsdesktop", "ga", @"https://aka.ms/dotnet/5.0/windowsdesktop-runtime-")]
         public void LinkCanBeCreatedForGivenRuntime(string channel, string runtime, string quality, string expectedLink)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop")
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime.Equals("windowsdesktop", StringComparison.OrdinalIgnoreCase))
             {
-                //do not run windowsdesktop test on Linux environment
+                // Do not run windowsdesktop tests on Linux environment.
                 return;
             }
 
@@ -282,9 +288,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("LTS", "windowsdesktop", "preview", @"https://aka.ms/dotnet/LTS/windowsdesktop-runtime-")]
         public void QualityIsSkippedForLTSAndCurrentChannel(string channel, string runtime, string quality, string expectedLink)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop")
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime.Equals("windowsdesktop", StringComparison.OrdinalIgnoreCase))
             {
-                //do not run windowsdesktop test on Linux environment
+                // Do not run windowsdesktop tests on Linux environment.
                 return;
             }
 
@@ -324,9 +330,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("Fake", "windowsdesktop", "validated")]
         public void NoFallbackIfQualityIsGiven(string channel, string runtime, string quality)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop")
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime.Equals("windowsdesktop", StringComparison.OrdinalIgnoreCase))
             {
-                //do not run windowsdesktop test on Linux environment
+                // Do not run windowsdesktop tests on Linux environment.
                 return;
             }
 

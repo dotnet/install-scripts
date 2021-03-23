@@ -618,41 +618,89 @@ get_specific_product_version() {
     if [ $# -gt 2  ]; then
         local package_download_link="$3"
     fi
-    local specific_product_version=$specific_version
+    local specific_product_version=null
+
+    local download_links=($(get_specific_product_version_url "$azure_feed" "$specific_version" true "$package_download_link")
+        $(get_specific_product_version_url "$azure_feed" "$specific_version" false "$package_download_link"))
+
+    for download_link in "${download_links[@]}"
+    do
+        say_verbose "Checking for the existence of $download_link"
+
+        if machine_has "curl"
+        then
+            specific_product_version=$(curl -s --fail "$download_link")
+            if [ $? -ne 0 ]; then
+                specific_product_version=null
+            else
+                break
+            fi
+        elif machine_has "wget"
+        then
+            specific_product_version=$(wget -qO- "$download_link")
+            if [ $? -ne 0 ]; then
+                specific_product_version=null
+            else
+                break
+            fi
+        fi
+    done
+    
+    if [ $specific_product_version = null ]; then
+        say_verbose "Failed to get the version using productVersion.txt file. Download link will be parsed instead."
+        specific_product_version="$(get_product_specific_version_from_download_link "$package_download_link" "$specific_version")"
+    fi
+
+    specific_product_version="${specific_product_version//[$'\t\r\n']}"
+    echo "$specific_product_version"
+    return 0
+}
+
+# args:
+# azure_feed - $1
+# specific_version - $2
+# is_flattened - $3
+# download link - $4 (optional)
+get_specific_product_version_url() {
+    eval $invocation
+
+    local azure_feed="$1"
+    local specific_version="$2"
+    local is_flattened="$3"
+    local package_download_link=""
+    if [ $# -gt 3  ]; then
+        local package_download_link="$4"
+    fi
+
+    local pvFileName="productVersion.txt"
+    if [ "$is_flattened" = true ]; then
+        if [ -z "$runtime" ]; then
+            pvFileName="sdk-productVersion.txt"
+        elif [[ "$runtime" == "dotnet" ]]; then
+            pvFileName="runtime-productVersion.txt"
+        else
+            pvFileName="$runtime-productVersion.txt"
+        fi
+    fi
 
     local download_link=null
 
     if [ -z "$package_download_link" ]; then
         if [[ "$runtime" == "dotnet" ]]; then
-            download_link="$azure_feed/Runtime/$specific_version/productVersion.txt${feed_credential}"
+            download_link="$azure_feed/Runtime/$specific_version/${pvFileName}${feed_credential}"
         elif [[ "$runtime" == "aspnetcore" ]]; then
-            download_link="$azure_feed/aspnetcore/Runtime/$specific_version/productVersion.txt${feed_credential}"
+            download_link="$azure_feed/aspnetcore/Runtime/$specific_version/${pvFileName}${feed_credential}"
         elif [ -z "$runtime" ]; then
-            download_link="$azure_feed/Sdk/$specific_version/productVersion.txt${feed_credential}"
+            download_link="$azure_feed/Sdk/$specific_version/${pvFileName}${feed_credential}"
         else
             return 1
         fi
     else
-        download_link="${package_download_link%/*}/productVersion.txt${feed_credential}" 
+        download_link="${package_download_link%/*}/${pvFileName}${feed_credential}" 
     fi
 
-    if machine_has "curl"
-    then
-        specific_product_version=$(curl -s --fail "$download_link")
-        if [ $? -ne 0 ]
-        then
-            specific_product_version="$(get_product_specific_version_from_download_link "$package_download_link" "$specific_version")"
-        fi
-    elif machine_has "wget"
-    then
-        specific_product_version=$(wget -qO- "$download_link")
-        if [ $? -ne 0 ]
-        then
-            specific_product_version="$(get_product_specific_version_from_download_link "$package_download_link" "$specific_version")"
-        fi
-    fi
-    specific_product_version="${specific_product_version//[$'\t\r\n']}"
-    echo "$specific_product_version"
+    say_verbose "Constructed productVersion link: $download_link"
+    echo "$download_link"
     return 0
 }
 
