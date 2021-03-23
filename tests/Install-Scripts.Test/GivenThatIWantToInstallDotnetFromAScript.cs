@@ -28,7 +28,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("3.0", "3\\.0\\..*", Quality.None),
                 ("3.1", "3\\.1\\..*", Quality.None),
                 ("5.0", "5\\.0\\..*", Quality.None),
-                ("6.0-preview2", "6\\.0\\..*", Quality.All),
                 ("6.0", "6\\.0\\..*", Quality.Daily),
                 ("Current", "5\\.0\\..*", Quality.None),
                 ("LTS", "3\\.1\\..*", Quality.None),
@@ -37,30 +36,32 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         /// <summary>
         /// All the branches in runtime repos to be tested
         /// </summary>
-        private static readonly IReadOnlyList<(string branch, string versionRegex)> _runtimeBranches =
-            new List<(string, string)>()
+        private static readonly IReadOnlyList<(string branch, string versionRegex, Quality quality)> _runtimeBranches =
+            new List<(string, string, Quality)>()
             {
-                ("release/2.1", "2\\.1\\..*"),
-                ("release/2.2", "2\\.2\\..*"),
-                ("release/3.0", "3\\.0\\..*"),
-                ("release/3.1", "3\\.1\\..*"),
-                ("release/5.0", "5\\.0\\..*"),
-                // branches are no longer supported starting 6.0
+                ("release/2.1", "2\\.1\\..*", Quality.None),
+                ("release/2.2", "2\\.2\\..*", Quality.None),
+                ("release/3.0", "3\\.0\\..*", Quality.None),
+                ("release/3.1", "3\\.1\\..*", Quality.None),
+                ("release/5.0", "5\\.0\\..*", Quality.None),
+                // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
+                ("6.0-preview2", "6\\.0\\..*", Quality.Daily | Quality.Signed),
             };
 
         /// <summary>
         /// All the branches in installer repo to be tested
         /// </summary>
-        private static readonly IReadOnlyList<(string branch, string versionRegex)> _sdkBranches =
-            new List<(string, string)>()
+        private static readonly IReadOnlyList<(string branch, string versionRegex, Quality quality)> _sdkBranches =
+            new List<(string, string, Quality)>()
             {
-                ("release/2.1.8xx", "2\\.1\\.8.*"),
-                ("release/2.2.4xx", "2\\.2\\.4.*"),
-                ("release/3.0.1xx", "3\\.0\\.1.*"),
-                ("release/3.1.4xx", "3\\.1\\.4.*"),
-                ("release/5.0.1xx", "5\\.0\\.1.*"),
-                ("release/5.0.2xx", "5\\.0\\.2.*"),
-                // branches are no longer supported starting 6.0
+                ("release/2.1.8xx", "2\\.1\\.8.*", Quality.None),
+                ("release/2.2.4xx", "2\\.2\\.4.*", Quality.None),
+                ("release/3.0.1xx", "3\\.0\\.1.*", Quality.None),
+                ("release/3.1.4xx", "3\\.1\\.4.*", Quality.None),
+                ("release/5.0.1xx", "5\\.0\\.1.*", Quality.None),
+                ("release/5.0.2xx", "5\\.0\\.2.*", Quality.None),
+                // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
+                ("6.0.1xx-preview2", "6\\.0\\.1.*", Quality.Daily | Quality.Signed),
             };
 
         public static IEnumerable<object?[]> InstallSdkFromChannelTestCases
@@ -70,12 +71,15 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 // Download SDK using branches as channels.
                 foreach (var sdkBranchInfo in _sdkBranches)
                 {
-                    yield return new object?[]
+                    foreach (string quality in GetQualityOptionsFromFlags(sdkBranchInfo.quality).DefaultIfEmpty())
                     {
-                        sdkBranchInfo.branch,
-                        /*Quality:*/ null,
-                        sdkBranchInfo.versionRegex,
-                    };
+                        yield return new object?[]
+                        {
+                            sdkBranchInfo.branch,
+                            quality,
+                            sdkBranchInfo.versionRegex,
+                        };
+                    }
                 }
 
                 // Download SDK from darc channels.
@@ -101,12 +105,15 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 // Download runtimes using branches as channels.
                 foreach (var runtimeBranchInfo in _runtimeBranches)
                 {
-                    yield return new object?[]
+                    foreach (string quality in GetQualityOptionsFromFlags(runtimeBranchInfo.quality).DefaultIfEmpty())
                     {
-                        runtimeBranchInfo.branch,
-                        /*Quality:*/ null,
-                        runtimeBranchInfo.versionRegex,
-                    };
+                        yield return new object?[]
+                        {
+                            runtimeBranchInfo.branch,
+                            quality,
+                            runtimeBranchInfo.versionRegex,
+                        };
+                    }
                 }
 
                 // Download runtimes using darc channels.

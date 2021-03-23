@@ -545,60 +545,84 @@ function Get-LegacyDownload-Link([string]$AzureFeed, [string]$SpecificVersion, [
 function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion, [string]$PackageDownloadLink) {
     Say-Invocation $MyInvocation
 
+    $ProductVersionTxtURLs = (Get-Product-Version-Url $AzureFeed $SpecificVersion $PackageDownloadLink $true),(Get-Product-Version-Url $AzureFeed $SpecificVersion $PackageDownloadLink $false)
+    
+    Foreach ($ProductVersionTxtURL in $ProductVersionTxtURLs) {
+        Say-Verbose "Checking for the existence of $ProductVersionTxtURL"
+
+        try {
+            $productVersionResponse = GetHTTPResponse($productVersionTxtUrl)
+
+            if ($productVersionResponse.StatusCode -eq 200) {
+                $productVersion = $productVersionResponse.Content.ReadAsStringAsync().Result.Trim()
+                if ($productVersion -ne $SpecificVersion)
+                {
+                    Say "Using alternate version $productVersion found in $ProductVersionTxtURL"
+                }
+                return $productVersion
+            }
+            else {
+                Say-Verbose "Got StatusCode $($productVersionResponse.StatusCode) when trying to get productVersion.txt at $productVersionTxtUrl."
+            }
+        } 
+        catch {
+            Say-Verbose "Could not read productVersion.txt at $productVersionTxtUrl (Exception: '$($_.Exception.Message)'. )"
+        }
+    }
+
+    $productVersion = Get-ProductVersionFromDownloadLink $PackageDownloadLink $SpecificVersion
+    return $productVersion
+}
+
+function Get-Product-Version-Url([string]$AzureFeed, [string]$SpecificVersion, [string]$PackageDownloadLink, [bool]$flattened) {
+    Say-Invocation $MyInvocation
+
+    $majorVersion=$null
+    if ($SpecificVersion -match '^(\d+)\.(.*)') {
+        $majorVersion = $Matches[1] -as[int]
+    }
+
+    $pvFileName='productVersion.txt'
+    if($flattened) {
+        if(-not $Runtime) {
+            $pvFileName='sdk-productVersion.txt'
+        }
+        elseif($Runtime -eq "dotnet") {
+            $pvFileName='runtime-productVersion.txt'
+        }
+        else {
+            $pvFileName="$Runtime-productVersion.txt"
+        }
+    }
+
     if ([string]::IsNullOrEmpty($PackageDownloadLink)) {
         if ($Runtime -eq "dotnet") {
-            $ProductVersionTxtURL = "$AzureFeed/Runtime/$SpecificVersion/productVersion.txt"
+            $ProductVersionTxtURL = "$AzureFeed/Runtime/$SpecificVersion/$pvFileName"
         }
         elseif ($Runtime -eq "aspnetcore") {
-            $ProductVersionTxtURL = "$AzureFeed/aspnetcore/Runtime/$SpecificVersion/productVersion.txt"
+            $ProductVersionTxtURL = "$AzureFeed/aspnetcore/Runtime/$SpecificVersion/$pvFileName"
         }
         elseif ($Runtime -eq "windowsdesktop") {
-        # The windows desktop runtime is part of the core runtime layout prior to 5.0
-            $ProductVersionTxtURL = "$AzureFeed/Runtime/$SpecificVersion/productVersion.txt"
-        if ($SpecificVersion -match '^(\d+)\.(.*)')
-        {
-            $majorVersion = [int]$Matches[1]
-            if ($majorVersion -ge 5)
-            {
-                $ProductVersionTxtURL = "$AzureFeed/WindowsDesktop/$SpecificVersion/productVersion.txt"
+            # The windows desktop runtime is part of the core runtime layout prior to 5.0
+            $ProductVersionTxtURL = "$AzureFeed/Runtime/$SpecificVersion/$pvFileName"
+            if ($majorVersion -ne $null -and $majorVersion -ge 5) {
+                $ProductVersionTxtURL = "$AzureFeed/WindowsDesktop/$SpecificVersion/$pvFileName"
             }
         }
-        }
         elseif (-not $Runtime) {
-            $ProductVersionTxtURL = "$AzureFeed/Sdk/$SpecificVersion/productVersion.txt"
+            $ProductVersionTxtURL = "$AzureFeed/Sdk/$SpecificVersion/$pvFileName"
         }
         else {
             throw "Invalid value '$Runtime' specified for `$Runtime"
         }
     }
     else {
-        $ProductVersionTxtURL = $PackageDownloadLink.Substring(0, $PackageDownloadLink.LastIndexOf("/"))  + "/productVersion.txt"
+        $ProductVersionTxtURL = $PackageDownloadLink.Substring(0, $PackageDownloadLink.LastIndexOf("/"))  + "/$pvFileName"
     }
 
-    Say-Verbose "Checking for existence of $ProductVersionTxtURL"
+    Say-Verbose "Constructed productVersion link: $ProductVersionTxtURL"
 
-    try {
-        $productVersionResponse = GetHTTPResponse($productVersionTxtUrl)
-
-        if ($productVersionResponse.StatusCode -eq 200) {
-            $productVersion = $productVersionResponse.Content.ReadAsStringAsync().Result.Trim()
-            if ($productVersion -ne $SpecificVersion)
-            {
-                Say "Using alternate version $productVersion found in $ProductVersionTxtURL"
-            }
-            return $productVersion
-        }
-        else {
-            Say-Verbose "Got StatusCode $($productVersionResponse.StatusCode) when trying to get productVersion.txt at $productVersionTxtUrl."
-            $productVersion = Get-ProductVersionFromDownloadLink $PackageDownloadLink $SpecificVersion
-        }
-    } 
-    catch {
-        Say-Verbose "Could not read productVersion.txt at $productVersionTxtUrl (Exception: '$($_.Exception.Message)'. )"
-        $productVersion = Get-ProductVersionFromDownloadLink $PackageDownloadLink $SpecificVersion
-    }
-
-    return $productVersion
+    return $ProductVersionTxtURL
 }
 
 function Get-ProductVersionFromDownloadLink([string]$PackageDownloadLink, [string]$SpecificVersion)
