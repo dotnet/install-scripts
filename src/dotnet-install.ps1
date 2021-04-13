@@ -545,7 +545,9 @@ function Get-LegacyDownload-Link([string]$AzureFeed, [string]$SpecificVersion, [
 function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion, [string]$PackageDownloadLink) {
     Say-Invocation $MyInvocation
 
-    $ProductVersionTxtURLs = (Get-Product-Version-Url $AzureFeed $SpecificVersion $PackageDownloadLink $true),(Get-Product-Version-Url $AzureFeed $SpecificVersion $PackageDownloadLink $false)
+    # Try to get the version number, using the productVersion.txt file located next to the installer file.
+    $ProductVersionTxtURLs = (Get-Product-Version-Url $AzureFeed $SpecificVersion $PackageDownloadLink -Flattened $true),
+                             (Get-Product-Version-Url $AzureFeed $SpecificVersion $PackageDownloadLink -Flattened $false)
     
     Foreach ($ProductVersionTxtURL in $ProductVersionTxtURLs) {
         Say-Verbose "Checking for the existence of $ProductVersionTxtURL"
@@ -570,11 +572,18 @@ function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion, [stri
         }
     }
 
+    # Getting the version number with productVersion.txt has failed. Try parsing the download link for a version number.
+    if ([string]::IsNullOrEmpty($PackageDownloadLink))
+    {
+        Say-Verbose "Using the default value '$SpecificVersion' as the product version."
+        return $SpecificVersion
+    }
+
     $productVersion = Get-ProductVersionFromDownloadLink $PackageDownloadLink $SpecificVersion
     return $productVersion
 }
 
-function Get-Product-Version-Url([string]$AzureFeed, [string]$SpecificVersion, [string]$PackageDownloadLink, [bool]$flattened) {
+function Get-Product-Version-Url([string]$AzureFeed, [string]$SpecificVersion, [string]$PackageDownloadLink, [bool]$Flattened) {
     Say-Invocation $MyInvocation
 
     $majorVersion=$null
@@ -583,7 +592,7 @@ function Get-Product-Version-Url([string]$AzureFeed, [string]$SpecificVersion, [
     }
 
     $pvFileName='productVersion.txt'
-    if($flattened) {
+    if($Flattened) {
         if(-not $Runtime) {
             $pvFileName='sdk-productVersion.txt'
         }
@@ -628,12 +637,6 @@ function Get-Product-Version-Url([string]$AzureFeed, [string]$SpecificVersion, [
 function Get-ProductVersionFromDownloadLink([string]$PackageDownloadLink, [string]$SpecificVersion)
 {
     Say-Invocation $MyInvocation
-
-    if ([string]::IsNullOrEmpty($PackageDownloadLink))
-    {
-        Say-Verbose "Using the default value '$SpecificVersion' as the product version."
-        return $SpecificVersion
-    }
 
     #product specific version follows the product name
     #for filename 'dotnet-sdk-3.1.404-win-x64.zip': the product version is 3.1.400

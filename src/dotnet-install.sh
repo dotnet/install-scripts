@@ -620,6 +620,7 @@ get_specific_product_version() {
     fi
     local specific_product_version=null
 
+    # Try to get the version number, using the productVersion.txt file located next to the installer file.
     local download_links=($(get_specific_product_version_url "$azure_feed" "$specific_version" true "$package_download_link")
         $(get_specific_product_version_url "$azure_feed" "$specific_version" false "$package_download_link"))
 
@@ -630,29 +631,24 @@ get_specific_product_version() {
         if machine_has "curl"
         then
             specific_product_version=$(curl -s --fail "$download_link")
-            if [ $? -ne 0 ]; then
-                specific_product_version=null
-            else
-                break
+            if [ $? = 0 ]; then
+                echo "${specific_product_version//[$'\t\r\n']}"
+                return 0
             fi
         elif machine_has "wget"
         then
             specific_product_version=$(wget -qO- "$download_link")
-            if [ $? -ne 0 ]; then
-                specific_product_version=null
-            else
-                break
+            if [ $? = 0 ]; then
+                echo "${specific_product_version//[$'\t\r\n']}"
+                return 0
             fi
         fi
     done
     
-    if [ $specific_product_version = null ]; then
-        say_verbose "Failed to get the version using productVersion.txt file. Download link will be parsed instead."
-        specific_product_version="$(get_product_specific_version_from_download_link "$package_download_link" "$specific_version")"
-    fi
-
-    specific_product_version="${specific_product_version//[$'\t\r\n']}"
-    echo "$specific_product_version"
+    # Getting the version number with productVersion.txt has failed. Try parsing the download link for a version number.
+    say_verbose "Failed to get the version using productVersion.txt file. Download link will be parsed instead."
+    specific_product_version="$(get_product_specific_version_from_download_link "$package_download_link" "$specific_version")"
+    echo "${specific_product_version//[$'\t\r\n']}"
     return 0
 }
 
