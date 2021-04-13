@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("release/2.1.8xx", "2\\.1\\.8.*", Quality.None),
                 ("release/2.2.4xx", "2\\.2\\.4.*", Quality.None),
                 ("release/3.0.1xx", "3\\.0\\.1.*", Quality.None),
-                ("release/3.1.4xx", "3\\.1\\.4.*", Quality.None),
+                // ("release/3.1.4xx", "3\\.1\\.4.*", Quality.None), Temporarily broken scenario
                 ("release/5.0.1xx", "5\\.0\\.1.*", Quality.None),
                 ("release/5.0.2xx", "5\\.0\\.2.*", Quality.None),
                 // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
@@ -209,7 +209,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingDotnetRuntime(string channel, string? quality, string versionRegex)
         {
-            if (channel == "release/5.0")
+            if (channel == "release/5.0" ||
+                channel == "5.0" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // Broken scenario
                 return;
@@ -287,10 +288,12 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             List<Regex> exclusions = new List<Regex>()
             {
-                new Regex(".*2\\..*"), // Runtime is not supported in this version.
-                new Regex(".*3\\.0.*"), // Runtime is not supported in this version.
-                new Regex("release/3.1"), // Broken scenario.
-                new Regex("release/5.0"), // Broken scenario.
+                new Regex(".*2\\..*"),     // Runtime is not supported in this version.
+                new Regex(".*3\\.0.*"),    // Runtime is not supported in this version.
+                new Regex("release/3.1"),  // Broken scenario.
+                new Regex("release/5.0"),  // Broken scenario.
+                new Regex("6.0"),          // Broken scenario.
+                new Regex("6.0-preview2"), // Broken scenario.
             };
 
             if (exclusions.Any(e => e.IsMatch(channel)))
