@@ -19,8 +19,6 @@
     - 3-part version in a format A.B.Cxx - represents a specific SDK release
           examples: 5.0.1xx, 5.0.2xx
           Supported since 5.0 release
-    - Branch name
-          example: release/2.0.0
     Note: The version parameter overrides the channel parameter when any version other than 'latest' is used.
 .PARAMETER Quality
     Download the latest build of specified quality in the channel. The possible values are: daily, signed, validated, preview, GA.
@@ -245,6 +243,10 @@ function Get-NormalizedChannel([string]$Channel) {
 
     if ([string]::IsNullOrEmpty($Channel)) {
         return ""
+    }
+
+    if ($Channel -eq "lts" -or $Channel -eq "current" -or $Channel.StartsWith('release/')) {
+        Say-Warning "Using branch name with -Channel option is no longer supported with newer releases. Use -Quality option with a channel in X.Y format instead."
     }
 
     switch ($Channel) {

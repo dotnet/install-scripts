@@ -399,6 +399,11 @@ get_normalized_channel() {
     eval $invocation
 
     local channel="$(to_lowercase "$1")"
+
+    if [[ $channel == release/* ]] || [[ $channel == 'lts' ]] || [[ $channel == 'current' ]] ; then
+        say_warning 'Using branch name with -Channel option is no longer supported with newer releases. Use -Quality option with a channel in X.Y format instead.';
+    fi
+
     if [ ! -z "$channel" ]; then
         case "$channel" in
             lts)
@@ -1389,8 +1394,6 @@ do
             echo "          - 3-part version in a format A.B.Cxx - represents a specific SDK release"
             echo "              examples: 5.0.1xx, 5.0.2xx."
             echo "              Supported since 5.0 release"
-            echo "          - Branch name"
-            echo "              examples: release/2.0.0; Master"
             echo "          Note: The version parameter overrides the channel parameter when any version other than `latest` is used."
             echo "  -v,--version <VERSION>         Use specific VERSION, Defaults to \`$version\`."
             echo "      -Version"
