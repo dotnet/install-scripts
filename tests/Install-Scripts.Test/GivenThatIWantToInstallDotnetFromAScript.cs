@@ -246,7 +246,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             if (channel == "release/3.0"
                 || channel == "release/3.1"
-                || channel == "release/5.0")
+                || channel == "release/5.0"
+                ||
+                channel == "5.0" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // These scenarios are broken.
                 return;
