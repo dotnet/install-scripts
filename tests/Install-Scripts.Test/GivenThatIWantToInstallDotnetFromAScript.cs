@@ -11,6 +11,7 @@ using Microsoft.NET.TestFramework.Assertions;
 using FluentAssertions;
 using System.Text.RegularExpressions;
 using System.Linq;
+using Install_Scripts.Test.Utils;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
@@ -19,44 +20,48 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         /// <summary>
         /// All the channels that will be tested.
         /// </summary>
-        private static readonly IReadOnlyList<(string channel, string versionRegex)> _channels =
-            new List<(string, string)>()
+        private static readonly IReadOnlyList<(string channel, string versionRegex, Quality quality)> _channels =
+            new List<(string, string, Quality)>()
             {
-                ("2.1", "2\\.1\\..*"),
-                ("2.2", "2\\.2\\..*"),
-                ("3.0", "3\\.0\\..*"),
-                ("3.1", "3\\.1\\..*"),
-                ("5.0", "5\\.0\\..*"),
-                ("Current", "5\\.0\\..*"),
-                ("LTS", "3\\.1\\..*"),
+                ("2.1", "2\\.1\\..*", Quality.None),
+                ("2.2", "2\\.2\\..*", Quality.None),
+                ("3.0", "3\\.0\\..*", Quality.None),
+                ("3.1", "3\\.1\\..*", Quality.None),
+                ("5.0", "5\\.0\\..*", Quality.None),
+                ("6.0", "6\\.0\\..*", Quality.Daily),
+                ("Current", "5\\.0\\..*", Quality.None),
+                ("LTS", "3\\.1\\..*", Quality.None),
             };
 
         /// <summary>
         /// All the branches in runtime repos to be tested
         /// </summary>
-        private static readonly IReadOnlyList<(string branch, string versionRegex)> _runtimeBranches =
-            new List<(string, string)>()
+        private static readonly IReadOnlyList<(string branch, string versionRegex, Quality quality)> _runtimeBranches =
+            new List<(string, string, Quality)>()
             {
-                ("release/2.1", "2\\.1\\..*"),
-                ("release/2.2", "2\\.2\\..*"),
-                ("release/3.0", "3\\.0\\..*"),
-                ("release/3.1", "3\\.1\\..*"),
-                ("release/5.0", "5\\.0\\..*"),
+                ("release/2.1", "2\\.1\\..*", Quality.None),
+                ("release/2.2", "2\\.2\\..*", Quality.None),
+                ("release/3.0", "3\\.0\\..*", Quality.None),
+                ("release/3.1", "3\\.1\\..*", Quality.None),
+                ("release/5.0", "5\\.0\\..*", Quality.None),
+                // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
+                ("6.0-preview2", "6\\.0\\..*", Quality.Daily | Quality.Signed),
             };
 
         /// <summary>
         /// All the branches in installer repo to be tested
         /// </summary>
-        private static readonly IReadOnlyList<(string branch, string versionRegex)> _sdkBranches =
-            new List<(string, string)>()
+        private static readonly IReadOnlyList<(string branch, string versionRegex, Quality quality)> _sdkBranches =
+            new List<(string, string, Quality)>()
             {
-                ("release/2.1.8xx", "2\\.1\\.8.*"),
-                ("release/2.2.4xx", "2\\.2\\.4.*"),
-                ("release/3.0.1xx", "3\\.0\\.1.*"),
-                ("release/3.1.4xx", "3\\.1\\.4.*"),
-                ("release/5.0.1xx", "5\\.0\\.1.*"),
-                ("release/5.0.2xx", "5\\.0\\.2.*"),
-                ("master", "6\\.0\\.1.*"),
+                ("release/2.1.8xx", "2\\.1\\.8.*", Quality.None),
+                ("release/2.2.4xx", "2\\.2\\.4.*", Quality.None),
+                ("release/3.0.1xx", "3\\.0\\.1.*", Quality.None),
+                // ("release/3.1.4xx", "3\\.1\\.4.*", Quality.None), Temporarily broken scenario
+                ("release/5.0.1xx", "5\\.0\\.1.*", Quality.None),
+                ("release/5.0.2xx", "5\\.0\\.2.*", Quality.None),
+                // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
+                ("6.0.1xx-preview2", "6\\.0\\.1.*", Quality.Daily | Quality.Signed),
             };
 
         public static IEnumerable<object?[]> InstallSdkFromChannelTestCases
@@ -66,21 +71,29 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 // Download SDK using branches as channels.
                 foreach (var sdkBranchInfo in _sdkBranches)
                 {
-                    yield return new object?[]
+                    foreach (string quality in GetQualityOptionsFromFlags(sdkBranchInfo.quality).DefaultIfEmpty())
                     {
-                        sdkBranchInfo.branch,
-                        sdkBranchInfo.versionRegex,
-                    };
+                        yield return new object?[]
+                        {
+                            sdkBranchInfo.branch,
+                            quality,
+                            sdkBranchInfo.versionRegex,
+                        };
+                    }
                 }
 
                 // Download SDK from darc channels.
                 foreach (var channelInfo in _channels)
                 {
-                    yield return new object?[]
+                    foreach(string quality in GetQualityOptionsFromFlags(channelInfo.quality).DefaultIfEmpty())
                     {
-                        channelInfo.channel,
-                        channelInfo.versionRegex,
-                    };
+                        yield return new object?[]
+                        {
+                            channelInfo.channel,
+                            quality,
+                            channelInfo.versionRegex,
+                        };
+                    }
                 }
             }
         }
@@ -92,21 +105,29 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 // Download runtimes using branches as channels.
                 foreach (var runtimeBranchInfo in _runtimeBranches)
                 {
-                    yield return new object?[]
+                    foreach (string quality in GetQualityOptionsFromFlags(runtimeBranchInfo.quality).DefaultIfEmpty())
                     {
-                        runtimeBranchInfo.branch,
-                        runtimeBranchInfo.versionRegex,
-                    };
+                        yield return new object?[]
+                        {
+                            runtimeBranchInfo.branch,
+                            quality,
+                            runtimeBranchInfo.versionRegex,
+                        };
+                    }
                 }
 
                 // Download runtimes using darc channels.
                 foreach (var channelInfo in _channels)
                 {
-                    yield return new object?[]
+                    foreach (string quality in GetQualityOptionsFromFlags(channelInfo.quality).DefaultIfEmpty())
                     {
-                        channelInfo.channel,
-                        channelInfo.versionRegex,
-                    };
+                        yield return new object?[]
+                        {
+                            channelInfo.channel,
+                            quality,
+                            channelInfo.versionRegex,
+                        };
+                    }
                 }
             }
         }
@@ -124,8 +145,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             _sdkInstallationDirectory = Path.Combine(
                 Path.GetTempPath(),
-                Path.GetRandomFileName(),
-                "InstallScript-Tests");
+                "InstallScript-Tests",
+                Path.GetRandomFileName());
 
             // In case there are any files from previous runs, clean them up.
             try
@@ -159,10 +180,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [MemberData(nameof(InstallSdkFromChannelTestCases))]
-        public void WhenInstallingTheSdk(string channel, string versionRegex)
+        public void WhenInstallingTheSdk(string channel, string? quality, string versionRegex)
         {
             // Run install script to download and install.
-            var args = GetInstallScriptArgs(channel, null, _sdkInstallationDirectory);
+            var args = GetInstallScriptArgs(channel, null, quality, _sdkInstallationDirectory);
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
@@ -186,16 +207,17 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
-        public void WhenInstallingDotnetRuntime(string channel, string versionRegex)
+        public void WhenInstallingDotnetRuntime(string channel, string? quality, string versionRegex)
         {
-            if (channel == "release/5.0")
+            if (channel == "release/5.0" ||
+                channel == "5.0" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // Broken scenario
                 return;
             }
 
             // Run install script to download and install.
-            var args = GetInstallScriptArgs(channel, "dotnet", _sdkInstallationDirectory);
+            var args = GetInstallScriptArgs(channel, "dotnet", quality, _sdkInstallationDirectory);
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
@@ -220,18 +242,20 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
-        public void WhenInstallingAspNetCoreRuntime(string channel, string versionRegex)
+        public void WhenInstallingAspNetCoreRuntime(string channel, string? quality, string versionRegex)
         {
             if (channel == "release/3.0"
                 || channel == "release/3.1"
-                || channel == "release/5.0")
+                || channel == "release/5.0"
+                ||
+                channel == "5.0" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // These scenarios are broken.
                 return;
             }
-            
+
             // Run install script to download and install.
-            var args = GetInstallScriptArgs(channel, "aspnetcore", _sdkInstallationDirectory);
+            var args = GetInstallScriptArgs(channel, "aspnetcore", quality, _sdkInstallationDirectory);
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
@@ -256,7 +280,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
-        public void WhenInstallingWindowsdesktopRuntime(string channel, string versionRegex)
+        public void WhenInstallingWindowsdesktopRuntime(string channel, string? quality, string versionRegex)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -266,10 +290,12 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             List<Regex> exclusions = new List<Regex>()
             {
-                new Regex(".*2\\..*"), // Runtime is not supported in this version.
-                new Regex(".*3\\.0.*"), // Runtime is not supported in this version.
-                new Regex("release/3.1"), // Broken scenario.
-                new Regex("release/5.0"), // Broken scenario.
+                new Regex(".*2\\..*"),     // Runtime is not supported in this version.
+                new Regex(".*3\\.0.*"),    // Runtime is not supported in this version.
+                new Regex("release/3.1"),  // Broken scenario.
+                new Regex("release/5.0"),  // Broken scenario.
+                new Regex("6.0"),          // Broken scenario.
+                new Regex("6.0-preview2"), // Broken scenario.
             };
 
             if (exclusions.Any(e => e.IsMatch(channel)))
@@ -279,7 +305,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             }
 
             // Run install script to download and install.
-            var args = GetInstallScriptArgs(channel, "windowsdesktop", _sdkInstallationDirectory);
+            var args = GetInstallScriptArgs(channel, "windowsdesktop", quality, _sdkInstallationDirectory);
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
@@ -292,7 +318,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Add the validation once the becomes available in the artifacts.
         }
 
-        private static IEnumerable<string> GetInstallScriptArgs(string? channel, string? runtime, string? installDir)
+        private static IEnumerable<string> GetInstallScriptArgs(string? channel, string? runtime, string? quality, string? installDir)
         {
             if (!string.IsNullOrWhiteSpace(channel))
             {
@@ -310,6 +336,12 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             {
                 yield return "-Runtime";
                 yield return runtime;
+            }
+
+            if (!string.IsNullOrWhiteSpace(quality))
+            {
+                yield return "-Quality";
+                yield return quality;
             }
         }
 
@@ -358,6 +390,31 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 return null;
             }
             return directory;
+        }
+
+        private static IEnumerable<string> GetQualityOptionsFromFlags(Quality flags)
+        {
+            ulong flagsValue = (ulong)flags;
+
+            if(flagsValue == 0)
+            {
+                yield break;
+            }
+
+            foreach (Quality quality in Enum.GetValues(typeof(Quality)))
+            {
+                ulong qualityValue = (ulong)quality;
+                if(qualityValue == 0 || (qualityValue & (qualityValue-1)) != 0)
+                {
+                    // No bits are set, or more than one bits are set
+                    continue;
+                }
+
+                if ((flagsValue & qualityValue) != 0)
+                {
+                    yield return quality.ToString();
+                }
+            }
         }
     }
 }

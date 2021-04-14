@@ -16,9 +16,16 @@
     - LTS - most current supported release
     - 2-part version in a format A.B - represents a specific release
           examples: 2.0, 1.0
-    - Branch name
-          example: release/2.0.0
-    Note: The version parameter overrides the channel parameter.
+    - 3-part version in a format A.B.Cxx - represents a specific SDK release
+          examples: 5.0.1xx, 5.0.2xx
+          Supported since 5.0 release
+    Note: The version parameter overrides the channel parameter when any version other than 'latest' is used.
+.PARAMETER Quality
+    Download the latest build of specified quality in the channel. The possible values are: daily, signed, validated, preview, GA.
+    Works only in combination with channel. Not applicable for current and LTS channels and will be ignored if those channels are used. 
+    For SDK use channel in A.B.Cxx format: using quality together with channel in A.B format is not supported.
+    Supported since 5.0 release.
+    Note: The version parameter overrides the channel parameter when any version other than 'latest' is used, and therefore overrides the quality.     
 .PARAMETER Version
     Default: latest
     Represents a build version on specific channel. Possible values:
@@ -81,11 +88,11 @@
 [cmdletbinding()]
 param(
    [string]$Channel="LTS",
+   [string]$Quality,
    [string]$Version="Latest",
    [string]$JSonFile,
    [string]$InstallDir="<auto>",
    [string]$Architecture="<auto>",
-   [ValidateSet("dotnet", "aspnetcore", "windowsdesktop", IgnoreCase = $false)]
    [string]$Runtime,
    [Obsolete("This parameter may be removed in a future version of this script. The recommended alternative is '-Runtime dotnet'.")]
    [switch]$SharedRuntime,
@@ -205,7 +212,7 @@ function Get-Machine-Architecture() {
 function Get-CLIArchitecture-From-Architecture([string]$Architecture) {
     Say-Invocation $MyInvocation
 
-    switch ($Architecture.ToLower()) {
+    switch ($Architecture.ToLowerInvariant()) {
         { $_ -eq "<auto>" } { return Get-CLIArchitecture-From-Architecture $(Get-Machine-Architecture) }
         { ($_ -eq "amd64") -or ($_ -eq "x64") } { return "x64" }
         { $_ -eq "x86" } { return "x86" }
@@ -214,6 +221,53 @@ function Get-CLIArchitecture-From-Architecture([string]$Architecture) {
         default { throw "Architecture '$Architecture' not supported. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues" }
     }
 }
+
+
+function Get-NormalizedQuality([string]$Quality) {
+    Say-Invocation $MyInvocation
+
+    if ([string]::IsNullOrEmpty($Quality)) {
+        return ""
+    }
+
+    switch ($Quality) {
+        { @("daily", "signed", "validated", "preview") -contains $_ } { return $Quality.ToLowerInvariant() }
+        #ga quality is available without specifying quality, so normalizing it to empty
+        { $_ -eq "ga" } { return "" }
+        default { throw "'$Quality' is not a supported value for -Quality option. Supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues." }
+    }
+}
+
+function Get-NormalizedChannel([string]$Channel) {
+    Say-Invocation $MyInvocation
+
+    if ([string]::IsNullOrEmpty($Channel)) {
+        return ""
+    }
+
+    if ($Channel -eq "lts" -or $Channel -eq "current" -or $Channel.StartsWith('release/')) {
+        Say-Warning "Using branch name with -Channel option is no longer supported with newer releases. Use -Quality option with a channel in X.Y format instead."
+    }
+
+    switch ($Channel) {
+        { $_ -eq "lts" } { return "LTS" }
+        { $_ -eq "current" } { return "current" }
+        default { return $Channel.ToLowerInvariant() }
+    }
+}
+
+function Get-NormalizedProduct([string]$Runtime) {
+    Say-Invocation $MyInvocation
+
+    switch ($Runtime) {
+        { $_ -eq "dotnet" } { return "dotnet-runtime" }
+        { $_ -eq "aspnetcore" } { return "aspnetcore-runtime" }
+        { $_ -eq "windowsdesktop" } { return "windowsdesktop-runtime" }
+        { [string]::IsNullOrEmpty($_) } { return "dotnet-sdk" }
+        default { throw "'$Runtime' is not a supported value for -Runtime option, supported values are: dotnet, aspnetcore, windowsdesktop. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues." }
+    }
+}
+
 
 # The version text returned from the feeds is a 1-line or 2-line string:
 # For the SDK and the dotnet runtime (2 lines):
@@ -243,7 +297,7 @@ function Load-Assembly([string] $Assembly) {
     }
 }
 
-function GetHTTPResponse([Uri] $Uri)
+function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect)
 {
     Invoke-With-Retry(
     {
@@ -270,26 +324,35 @@ function GetHTTPResponse([Uri] $Uri)
                 }
             }
 
+            $HttpClientHandler = New-Object System.Net.Http.HttpClientHandler
             if($ProxyAddress) {
-                $HttpClientHandler = New-Object System.Net.Http.HttpClientHandler
                 $HttpClientHandler.Proxy =  New-Object System.Net.WebProxy -Property @{
                     Address=$ProxyAddress;
                     UseDefaultCredentials=$ProxyUseDefaultCredentials;
                     BypassList = $ProxyBypassList;
                 }
-                $HttpClient = New-Object System.Net.Http.HttpClient -ArgumentList $HttpClientHandler
+            }       
+            if ($DisableRedirect)
+            {
+                $HttpClientHandler.AllowAutoRedirect = $false
             }
-            else {
+            $HttpClient = New-Object System.Net.Http.HttpClient -ArgumentList $HttpClientHandler
 
-                $HttpClient = New-Object System.Net.Http.HttpClient
-            }
             # Default timeout for HttpClient is 100s.  For a 50 MB download this assumes 500 KB/s average, any less will time out
             # 20 minutes allows it to work over much slower connections.
             $HttpClient.Timeout = New-TimeSpan -Minutes 20
-            $Task = $HttpClient.GetAsync("${Uri}${FeedCredential}").ConfigureAwait("false");
+
+            if ($HeaderOnly){
+                $completionOption = [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead
+            }
+            else {
+                $completionOption = [System.Net.Http.HttpCompletionOption]::ResponseContentRead
+            }
+
+            $Task = $HttpClient.GetAsync("${Uri}${FeedCredential}", $completionOption).ConfigureAwait("false");
             $Response = $Task.GetAwaiter().GetResult();
 
-            if (($null -eq $Response) -or (-not ($Response.IsSuccessStatusCode))) {
+            if (($null -eq $Response) -or ((-not $HeaderOnly) -and (-not ($Response.IsSuccessStatusCode)))) {
                 # The feed credential is potentially sensitive info. Do not log FeedCredential to console output.
                 $DownloadException = [System.Exception] "Unable to download $Uri."
 
@@ -349,6 +412,9 @@ function Get-Latest-Version-Info([string]$AzureFeed, [string]$Channel) {
     else {
         throw "Invalid value for `$Runtime"
     }
+
+    Say-Verbose "Constructed latest.version URL: $VersionFileUrl"
+
     try {
         $Response = GetHTTPResponse -Uri $VersionFileUrl
     }
@@ -411,7 +477,7 @@ function Get-Specific-Version-From-Version([string]$AzureFeed, [string]$Channel,
     Say-Invocation $MyInvocation
 
     if (-not $JSonFile) {
-        if ($Version.ToLower() -eq "latest") {
+        if ($Version.ToLowerInvariant() -eq "latest") {
             $LatestVersionInfo = Get-Latest-Version-Info -AzureFeed $AzureFeed -Channel $Channel
             return $LatestVersionInfo.Version
         }
@@ -478,58 +544,116 @@ function Get-LegacyDownload-Link([string]$AzureFeed, [string]$SpecificVersion, [
     return $PayloadURL
 }
 
-function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion) {
+function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion, [string]$PackageDownloadLink) {
     Say-Invocation $MyInvocation
 
-    if ($Runtime -eq "dotnet") {
-        $ProductVersionTxtURL = "$AzureFeed/Runtime/$SpecificVersion/productVersion.txt"
-    }
-    elseif ($Runtime -eq "aspnetcore") {
-        $ProductVersionTxtURL = "$AzureFeed/aspnetcore/Runtime/$SpecificVersion/productVersion.txt"
-    }
-    elseif ($Runtime -eq "windowsdesktop") {
-        # The windows desktop runtime is part of the core runtime layout prior to 5.0
-        $ProductVersionTxtURL = "$AzureFeed/Runtime/$SpecificVersion/productVersion.txt"
-        if ($SpecificVersion -match '^(\d+)\.(.*)')
-        {
-            $majorVersion = [int]$Matches[1]
-            if ($majorVersion -ge 5)
-            {
-                $ProductVersionTxtURL = "$AzureFeed/WindowsDesktop/$SpecificVersion/productVersion.txt"
+    # Try to get the version number, using the productVersion.txt file located next to the installer file.
+    $ProductVersionTxtURLs = (Get-Product-Version-Url $AzureFeed $SpecificVersion $PackageDownloadLink -Flattened $true),
+                             (Get-Product-Version-Url $AzureFeed $SpecificVersion $PackageDownloadLink -Flattened $false)
+    
+    Foreach ($ProductVersionTxtURL in $ProductVersionTxtURLs) {
+        Say-Verbose "Checking for the existence of $ProductVersionTxtURL"
+
+        try {
+            $productVersionResponse = GetHTTPResponse($productVersionTxtUrl)
+
+            if ($productVersionResponse.StatusCode -eq 200) {
+                $productVersion = $productVersionResponse.Content.ReadAsStringAsync().Result.Trim()
+                if ($productVersion -ne $SpecificVersion)
+                {
+                    Say "Using alternate version $productVersion found in $ProductVersionTxtURL"
+                }
+                return $productVersion
             }
+            else {
+                Say-Verbose "Got StatusCode $($productVersionResponse.StatusCode) when trying to get productVersion.txt at $productVersionTxtUrl."
+            }
+        } 
+        catch {
+            Say-Verbose "Could not read productVersion.txt at $productVersionTxtUrl (Exception: '$($_.Exception.Message)'. )"
         }
     }
-    elseif (-not $Runtime) {
-        $ProductVersionTxtURL = "$AzureFeed/Sdk/$SpecificVersion/productVersion.txt"
+
+    # Getting the version number with productVersion.txt has failed. Try parsing the download link for a version number.
+    if ([string]::IsNullOrEmpty($PackageDownloadLink))
+    {
+        Say-Verbose "Using the default value '$SpecificVersion' as the product version."
+        return $SpecificVersion
     }
-    else {
-        throw "Invalid value '$Runtime' specified for `$Runtime"
+
+    $productVersion = Get-ProductVersionFromDownloadLink $PackageDownloadLink $SpecificVersion
+    return $productVersion
+}
+
+function Get-Product-Version-Url([string]$AzureFeed, [string]$SpecificVersion, [string]$PackageDownloadLink, [bool]$Flattened) {
+    Say-Invocation $MyInvocation
+
+    $majorVersion=$null
+    if ($SpecificVersion -match '^(\d+)\.(.*)') {
+        $majorVersion = $Matches[1] -as[int]
     }
 
-    Say-Verbose "Checking for existence of $ProductVersionTxtURL"
-
-    try {
-        $productVersionResponse = GetHTTPResponse($productVersionTxtUrl)
-
-        if ($productVersionResponse.StatusCode -eq 200) {
-            $productVersion = $productVersionResponse.Content.ReadAsStringAsync().Result.Trim()
-            if ($productVersion -ne $SpecificVersion)
-            {
-                Say "Using alternate version $productVersion found in $ProductVersionTxtURL"
-            }
-
-            return $productVersion
+    $pvFileName='productVersion.txt'
+    if($Flattened) {
+        if(-not $Runtime) {
+            $pvFileName='sdk-productVersion.txt'
+        }
+        elseif($Runtime -eq "dotnet") {
+            $pvFileName='runtime-productVersion.txt'
         }
         else {
-            Say-Verbose "Got StatusCode $($productVersionResponse.StatusCode) trying to get productVersion.txt at $productVersionTxtUrl, so using default value of $SpecificVersion"
-            $productVersion = $SpecificVersion
+            $pvFileName="$Runtime-productVersion.txt"
         }
-    } catch {
-        Say-Verbose "Could not read productVersion.txt at $productVersionTxtUrl, so using default value of $SpecificVersion (Exception: '$($_.Exception.Message)' )"
-        $productVersion = $SpecificVersion
     }
 
-    return $productVersion
+    if ([string]::IsNullOrEmpty($PackageDownloadLink)) {
+        if ($Runtime -eq "dotnet") {
+            $ProductVersionTxtURL = "$AzureFeed/Runtime/$SpecificVersion/$pvFileName"
+        }
+        elseif ($Runtime -eq "aspnetcore") {
+            $ProductVersionTxtURL = "$AzureFeed/aspnetcore/Runtime/$SpecificVersion/$pvFileName"
+        }
+        elseif ($Runtime -eq "windowsdesktop") {
+            # The windows desktop runtime is part of the core runtime layout prior to 5.0
+            $ProductVersionTxtURL = "$AzureFeed/Runtime/$SpecificVersion/$pvFileName"
+            if ($majorVersion -ne $null -and $majorVersion -ge 5) {
+                $ProductVersionTxtURL = "$AzureFeed/WindowsDesktop/$SpecificVersion/$pvFileName"
+            }
+        }
+        elseif (-not $Runtime) {
+            $ProductVersionTxtURL = "$AzureFeed/Sdk/$SpecificVersion/$pvFileName"
+        }
+        else {
+            throw "Invalid value '$Runtime' specified for `$Runtime"
+        }
+    }
+    else {
+        $ProductVersionTxtURL = $PackageDownloadLink.Substring(0, $PackageDownloadLink.LastIndexOf("/"))  + "/$pvFileName"
+    }
+
+    Say-Verbose "Constructed productVersion link: $ProductVersionTxtURL"
+
+    return $ProductVersionTxtURL
+}
+
+function Get-ProductVersionFromDownloadLink([string]$PackageDownloadLink, [string]$SpecificVersion)
+{
+    Say-Invocation $MyInvocation
+
+    #product specific version follows the product name
+    #for filename 'dotnet-sdk-3.1.404-win-x64.zip': the product version is 3.1.400
+    $filename = $PackageDownloadLink.Substring($PackageDownloadLink.LastIndexOf("/") + 1)
+    $filenameParts = $filename.Split('-')
+    if ($filenameParts.Length -gt 2)
+    {
+        $productVersion = $filenameParts[2]
+        Say-Verbose "Extracted product version '$productVersion' from download link '$PackageDownloadLink'."
+    }
+    else {
+        Say-Verbose "Using the default value '$SpecificVersion' as the product version."
+        $productVersion = $SpecificVersion
+    }
+    return $productVersion 
 }
 
 function Get-User-Share-Path() {
@@ -702,15 +826,111 @@ function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot, [string]$BinFolde
     }
 }
 
+function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Product, [string]$Architecture) {
+    Say-Invocation $MyInvocation 
+
+    #quality is not supported for LTS or current channel
+    if (![string]::IsNullOrEmpty($Quality) -and (@("LTS", "current") -contains $Channel)) {
+        $Quality = ""
+        Say-Warning "Specifying quality for current or LTS channel is not supported, the quality will be ignored."
+    }
+    Say-Verbose "Retrieving primary payload URL from aka.ms link for channel: '$Channel', quality: '$Quality' product: '$Product', os: 'win', architecture: '$Architecture'." 
+   
+    #construct aka.ms link
+    $akaMsLink = "https://aka.ms/dotnet/$Channel" 
+    if (-not [string]::IsNullOrEmpty($Quality)) {
+        $akaMsLink +="/$Quality"
+    }
+
+    $akaMsLink +="/$Product-win-$Architecture.zip"
+    Say-Verbose  "Constructed aka.ms link: '$akaMsLink'."
+
+    #get HTTP response
+    $Response= GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true
+    Say-Verbose "Received response:`n$Response"
+
+    if ([string]::IsNullOrEmpty($Response)) {
+        Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resource is not available."
+        return $null
+    }
+
+    #if HTTP code is 301 (Moved Permanently), the redirect link exists
+    if  ($Response.StatusCode -eq 301 )
+    {
+        try {
+            $akaMsDownloadLink = $Response.Headers.GetValues("Location")[0]
+            if ([string]::IsNullOrEmpty($akaMsDownloadLink)) {
+                Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location."
+                return $null
+            }
+            Say-Verbose "The redirect location retrieved: '$akaMsDownloadLink'."
+            return $akaMsDownloadLink
+        }
+        catch {
+            Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location."
+            return $null
+        }
+    }
+    Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resourse is not available."
+    return $null
+}
+
 Say "Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:"
 Say "- The SDK needs to be installed without user interaction and without admin rights."
 Say "- The SDK installation doesn't need to persist across multiple CI runs."
 Say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.`r`n"
 
 $CLIArchitecture = Get-CLIArchitecture-From-Architecture $Architecture
-$SpecificVersion = Get-Specific-Version-From-Version -AzureFeed $AzureFeed -Channel $Channel -Version $Version -JSonFile $JSonFile
-$DownloadLink, $EffectiveVersion = Get-Download-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
-$LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
+$NormalizedQuality = Get-NormalizedQuality $Quality
+Say-Verbose "Normalized quality: '$NormalizedQuality'"
+$NormalizedChannel = Get-NormalizedChannel $Channel
+Say-Verbose "Normalized channel: '$NormalizedChannel'"
+$NormalizedProduct = Get-NormalizedProduct $Runtime
+Say-Verbose "Normalized product: '$NormalizedProduct'"
+$DownloadLink = $null
+
+#try to get download location from aka.ms link
+#not applicable when exact version is specified via command or json file
+if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
+    $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Product $NormalizedProduct -Architecture $CLIArchitecture
+   
+    if ([string]::IsNullOrEmpty($AkaMsDownloadLink)){
+        if (-not [string]::IsNullOrEmpty($NormalizedQuality)) {
+            # if quality is specified - exit with error - there is no fallback approach
+            Say-Error "Failed to locate the latest version in the channel '$NormalizedChannel' with '$NormalizedQuality' quality for '$NormalizedProduct', os: 'win', architecture: '$CLIArchitecture'."
+            Say-Error "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support."
+            throw "aka.ms link resolution failure"
+        }
+        Say-Verbose "Falling back to latest.version file approach."
+    }
+    else {
+        Say-Verbose "Retrieved primary named payload URL from aka.ms link: '$AkaMsDownloadLink'."
+        $DownloadLink = $AkaMsDownloadLink
+        Say-Verbose  "Downloading using legacy url will not be attempted."
+        $LegacyDownloadLink = $null
+
+        #get version from the path
+        $pathParts = $DownloadLink.Split('/')
+        if ($pathParts.Length -ge 2) { 
+            $SpecificVersion = $pathParts[$pathParts.Length - 2]
+            Say-Verbose "Version: '$SpecificVersion'."
+        }
+        else {
+            Say-Error "Failed to extract the version from download link '$DownloadLink'."
+        }
+
+        #retrieve effective (product) version
+        $EffectiveVersion = Get-Product-Version -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -PackageDownloadLink $DownloadLink
+        Say-Verbose "Product version: '$EffectiveVersion'."
+    }
+}
+
+if ([string]::IsNullOrEmpty($DownloadLink)) {
+    $SpecificVersion = Get-Specific-Version-From-Version -AzureFeed $AzureFeed -Channel $Channel -Version $Version -JSonFile $JSonFile
+    $DownloadLink, $EffectiveVersion = Get-Download-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
+    $LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
+}
+
 
 $InstallRoot = Resolve-Installation-Path $InstallDir
 Say-Verbose "InstallRoot: $InstallRoot"
@@ -729,8 +949,15 @@ if ($DryRun) {
     elseif ($Runtime -eq "aspnetcore") {
        $RepeatableCommand+=" -Runtime `"aspnetcore`""
     }
+
+    if (-not [string]::IsNullOrEmpty($NormalizedQuality))
+    {
+        $RepeatableCommand+=" -Quality `"$NormalizedQuality`""
+    }
+
+
     foreach ($key in $MyInvocation.BoundParameters.Keys) {
-        if (-not (@("Architecture","Channel","DryRun","InstallDir","Runtime","SharedRuntime","Version") -contains $key)) {
+        if (-not (@("Architecture","Channel","DryRun","InstallDir","Runtime","SharedRuntime","Version","Quality") -contains $key)) {
             $RepeatableCommand+=" -$key `"$($MyInvocation.BoundParameters[$key])`""
         }
     }
