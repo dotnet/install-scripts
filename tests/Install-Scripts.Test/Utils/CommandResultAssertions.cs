@@ -74,6 +74,13 @@ namespace Microsoft.NET.TestFramework.Assertions
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
+        public AndConstraint<CommandResultAssertions> NotHaveStdOutContainingIgnoreCase(string pattern)
+        {
+            Execute.Assertion.ForCondition(!_commandResult.StdOut.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+                .FailWith(AppendDiagnosticsTo($"The command output contained a result it should not have contained (ignoring case): {pattern}{Environment.NewLine}"));
+            return new AndConstraint<CommandResultAssertions>(this);
+        }
+
         public AndConstraint<CommandResultAssertions> HaveStdOutContainingIgnoreSpaces(string pattern)
         {
             string commandResultNoSpaces = _commandResult.StdOut.Replace(" ", "");
@@ -87,7 +94,7 @@ namespace Microsoft.NET.TestFramework.Assertions
 
         public AndConstraint<CommandResultAssertions> HaveStdOutContainingIgnoreCase(string pattern)
         {
-            Execute.Assertion.ForCondition(_commandResult.StdOut.IndexOf(pattern, StringComparison.OrdinalIgnoreCase) >= 0)
+            Execute.Assertion.ForCondition(_commandResult.StdOut.Contains(pattern, StringComparison.OrdinalIgnoreCase))
                 .FailWith(AppendDiagnosticsTo($"The command output did not contain expected result (ignoring case): {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
@@ -124,6 +131,13 @@ namespace Microsoft.NET.TestFramework.Assertions
         {
             Execute.Assertion.ForCondition(!_commandResult.StdErr.Contains(pattern))
                 .FailWith(AppendDiagnosticsTo($"The command error output contained a result it should not have contained: {pattern}{Environment.NewLine}"));
+            return new AndConstraint<CommandResultAssertions>(this);
+        }
+
+        public AndConstraint<CommandResultAssertions> NotHaveStdErrContainingIgnoreCase(string pattern)
+        {
+            Execute.Assertion.ForCondition(!_commandResult.StdErr.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+                .FailWith(AppendDiagnosticsTo($"The command error output contained a result it should not have contained (ignoring case): {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
