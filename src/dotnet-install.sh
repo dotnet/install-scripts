@@ -1029,7 +1029,11 @@ get_download_link_from_aka_ms() {
     say_verbose "Retrieving primary payload URL from aka.ms for channel: '$normalized_channel', quality: '$normalized_quality', product: '$normalized_product', os: '$normalized_os', architecture: '$normalized_architecture'." 
 
     #construct aka.ms link
-    aka_ms_link="https://aka.ms/dotnet/$normalized_channel" 
+    aka_ms_link="https://aka.ms/dotnet"
+    if  [ "$internal" = true ]; then
+        aka_ms_link="$aka_ms_link/internal"
+    fi
+    aka_ms_link="$aka_ms_link/$normalized_channel"
     if [[ ! -z "$normalized_quality" ]]; then
         aka_ms_link="$aka_ms_link/$normalized_quality"
     fi
@@ -1282,6 +1286,7 @@ verbose=false
 runtime=""
 runtime_id=""
 quality=""
+internal=false
 override_non_versioned_files=true
 non_dynamic_parameters=""
 user_defined_os=""
@@ -1301,6 +1306,9 @@ do
         -q|--quality|-[Qq]uality)
             shift
             quality="$1"
+            ;;
+        --internal|-[Ii]nternal)
+            internal=true
             ;;
         -i|--install-dir|-[Ii]nstall[Dd]ir)
             shift
