@@ -853,7 +853,6 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
 
     #get HTTP response
     $Response= GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true
-    Say-Verbose "Received response:`n$Response"
 
     if ([string]::IsNullOrEmpty($Response)) {
         Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resource is not available."
@@ -865,6 +864,9 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
     {
         try {
             $akaMsDownloadLink = $Response.Headers.GetValues("Location")[0]
+            #FeedCredential is the part of redirect link, remove it
+            $akaMsDownloadLink = $akaMsDownloadLink.split('?')[0]
+
             if ([string]::IsNullOrEmpty($akaMsDownloadLink)) {
                 Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location."
                 return $null
