@@ -32,6 +32,8 @@
     - latest - most latest build on specific channel
     - 3-part version in a format A.B.C - represents specific version of build
           examples: 2.0.0-preview2-006120, 1.1.0
+.PARAMETER Internal
+    Set this parameter to access internal builds. It might be nessesary also to use FeedCredential parameter with it.
 .PARAMETER InstallDir
     Default: %LocalAppData%\Microsoft\dotnet
     Path to where to install dotnet. Note that binaries will be placed directly in a given directory.
@@ -90,6 +92,7 @@ param(
    [string]$Channel="LTS",
    [string]$Quality,
    [string]$Version="Latest",
+   [switch]$Internal,
    [string]$JSonFile,
    [string]$InstallDir="<auto>",
    [string]$Architecture="<auto>",
@@ -837,11 +840,14 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
     Say-Verbose "Retrieving primary payload URL from aka.ms link for channel: '$Channel', quality: '$Quality' product: '$Product', os: 'win', architecture: '$Architecture'." 
    
     #construct aka.ms link
-    $akaMsLink = "https://aka.ms/dotnet/$Channel" 
+    $akaMsLink = "https://aka.ms/dotnet"
+    if ($Internal) {
+        $akaMsLink += "/internal"
+    }
+    $akaMsLink += "/$Channel"
     if (-not [string]::IsNullOrEmpty($Quality)) {
         $akaMsLink +="/$Quality"
     }
-
     $akaMsLink +="/$Product-win-$Architecture.zip"
     Say-Verbose  "Constructed aka.ms link: '$akaMsLink'."
 
@@ -937,6 +943,7 @@ Say-Verbose "InstallRoot: $InstallRoot"
 $ScriptName = $MyInvocation.MyCommand.Name
 
 if ($DryRun) {
+    Say "aka.ms link: $AkaMsDownloadLink"
     Say "Payload URLs:"
     Say "Primary named payload URL: $DownloadLink"
     if ($LegacyDownloadLink) {
