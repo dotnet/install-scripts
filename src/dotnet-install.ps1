@@ -125,6 +125,12 @@ if ($SharedRuntime -and (-not $Runtime)) {
     $Runtime = "dotnet"
 }
 
+#FeedCredential should start with "?", for it to be added to the end of the link.
+#adding "?" at the beginning of the FeedCredential if needed.
+if ($FeedCredential[0] -ne '?') {
+    $FeedCredential = "?" + $FeedCredential
+}
+
 # example path with regex: shared/1.0.0-beta-12345/somepath
 $VersionRegEx="/\d+\.\d+[^/]+/"
 $OverrideNonVersionedFiles = !$SkipNonVersionedFiles

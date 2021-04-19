@@ -1368,6 +1368,9 @@ do
         --feed-credential|-[Ff]eed[Cc]redential)
             shift
             feed_credential="$1"
+            #feed_credential should start with "?", for it to be added to the end of the link.
+            #adding "?" at the beginning of the feed_credential if needed.
+            [[ $feed_credential == \?* ]] || feed_credential="?$feed_credential"
             non_dynamic_parameters+=" $name "\""$1"\"""
             ;;
         --runtime-id|-[Rr]untime[Ii]d)
