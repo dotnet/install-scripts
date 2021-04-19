@@ -1497,6 +1497,10 @@ if [ "$dry_run" = true ]; then
         repeatable_command+=" --quality "\""$normalized_quality"\"""
     fi
 
+    if [ "$internal" = true ]; then
+        repeatable_command+=" --internal"
+    fi
+
     if [[ "$runtime" == "dotnet" ]]; then
         repeatable_command+=" --runtime "\""dotnet"\"""
     elif [[ "$runtime" == "aspnetcore" ]]; then
