@@ -1048,12 +1048,15 @@ get_download_link_from_aka_ms() {
     #if HTTP code is 301 (Moved Permanently), the redirect link exists
     if [[ "$http_code" == "301" ]]; then
         aka_ms_download_link=$( echo "$response" | awk '$1 ~ /^Location/{print $2}' | head -1 | tr -d '\r')
-        #feed_credential is the part of redirect link, remove it
-        aka_ms_download_link=$( echo "${aka_ms_download_link%%\?*}" )
+
         if [[ -z "$aka_ms_download_link" ]]; then
             say_verbose "The aka.ms link '$aka_ms_link' is not valid: failed to get redirect location."
             return 1
         fi
+
+        #feed_credential is the part of redirect link, remove it
+        aka_ms_download_link=$( echo "${aka_ms_download_link%%\?*}" )
+
         say_verbose "The redirect location retrieved: '$aka_ms_download_link'."
         return 0
     else

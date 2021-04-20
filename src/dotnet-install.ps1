@@ -127,7 +127,7 @@ if ($SharedRuntime -and (-not $Runtime)) {
 
 #FeedCredential should start with "?", for it to be added to the end of the link.
 #adding "?" at the beginning of the FeedCredential if needed.
-if ($FeedCredential[0] -ne '?') {
+if ((![string]::IsNullOrEmpty($FeedCredential)) -and ($FeedCredential[0] -ne '?')) {
     $FeedCredential = "?" + $FeedCredential
 }
 
@@ -870,13 +870,15 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
     {
         try {
             $akaMsDownloadLink = $Response.Headers.GetValues("Location")[0]
-            #FeedCredential is the part of redirect link, remove it
-            $akaMsDownloadLink = $akaMsDownloadLink.split('?')[0]
 
             if ([string]::IsNullOrEmpty($akaMsDownloadLink)) {
                 Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location."
                 return $null
             }
+
+            #FeedCredential is the part of redirect link, remove it
+            $akaMsDownloadLink = $akaMsDownloadLink.split('?')[0]
+
             Say-Verbose "The redirect location retrieved: '$akaMsDownloadLink'."
             return $akaMsDownloadLink
         }
