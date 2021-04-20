@@ -951,7 +951,6 @@ Say-Verbose "InstallRoot: $InstallRoot"
 $ScriptName = $MyInvocation.MyCommand.Name
 
 if ($DryRun) {
-    Say "aka.ms link: $AkaMsDownloadLink"
     Say "Payload URLs:"
     Say "Primary named payload URL: $DownloadLink"
     if ($LegacyDownloadLink) {
