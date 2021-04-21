@@ -306,7 +306,7 @@ function Load-Assembly([string] $Assembly) {
     }
 }
 
-function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect)
+function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, [bool]$DisableFeedCredential)
 {
     Invoke-With-Retry(
     {
@@ -358,7 +358,14 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect)
                 $completionOption = [System.Net.Http.HttpCompletionOption]::ResponseContentRead
             }
 
-            $Task = $HttpClient.GetAsync("${Uri}${FeedCredential}", $completionOption).ConfigureAwait("false");
+            if ($DisableFeedCredential) {
+                $UriWithCredential = $Uri
+            }
+            else {
+                $UriWithCredential = "${Uri}${FeedCredential}"
+            }
+
+            $Task = $HttpClient.GetAsync("$UriWithCredential", $completionOption).ConfigureAwait("false");
             $Response = $Task.GetAwaiter().GetResult();
 
             if (($null -eq $Response) -or ((-not $HeaderOnly) -and (-not ($Response.IsSuccessStatusCode)))) {
@@ -835,7 +842,7 @@ function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot, [string]$BinFolde
     }
 }
 
-function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Product, [string]$Architecture) {
+function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Internal, [string]$Product, [string]$Architecture) {
     Say-Invocation $MyInvocation 
 
     #quality is not supported for LTS or current channel
@@ -858,7 +865,8 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
     Say-Verbose  "Constructed aka.ms link: '$akaMsLink'."
 
     #get HTTP response
-    $Response= GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true
+    $Response= GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true -DisableFeedCredential $true
+    Say-Verbose "Received response:`n$Response"
 
     if ([string]::IsNullOrEmpty($Response)) {
         Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resource is not available."
@@ -875,9 +883,6 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
                 Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location."
                 return $null
             }
-
-            #FeedCredential is the part of redirect link, remove it
-            $akaMsDownloadLink = $akaMsDownloadLink.split('?')[0]
 
             Say-Verbose "The redirect location retrieved: '$akaMsDownloadLink'."
             return $akaMsDownloadLink
@@ -908,7 +913,7 @@ $DownloadLink = $null
 #try to get download location from aka.ms link
 #not applicable when exact version is specified via command or json file
 if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
-    $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Product $NormalizedProduct -Architecture $CLIArchitecture
+    $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Internal $Internal -Product $NormalizedProduct -Architecture $CLIArchitecture
    
     if ([string]::IsNullOrEmpty($AkaMsDownloadLink)){
         if (-not [string]::IsNullOrEmpty($NormalizedQuality)) {
