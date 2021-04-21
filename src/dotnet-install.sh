@@ -869,7 +869,7 @@ extract_dotnet_package() {
 }
 
 # args:
-# remote_path - $1
+# remote_path - $1 - Note, credentials will not be applied.
 get_http_header()
 {
     eval $invocation
@@ -891,24 +891,22 @@ get_http_header()
 }
 
 # args:
-# remote_path - $1
+# remote_path - $1 - Note, credentials will not be applied.
 get_http_header_curl() {
     eval $invocation
     local remote_path="$1"
-    remote_path_with_credential="${remote_path}${feed_credential}"
     curl_options="-I -sSL --retry 5 --retry-delay 2 --connect-timeout 15 "
-    curl $curl_options "$remote_path_with_credential" || return 1
+    curl $curl_options "$remote_path" || return 1
     return 0
 }
 
 # args:
-# remote_path - $1
+# remote_path - $1 - Note, credentials will not be applied.
 get_http_header_wget() {
     eval $invocation
     local remote_path="$1"
-    remote_path_with_credential="${remote_path}${feed_credential}"
     wget_options="-q -S --spider --tries 5 --waitretry 2 --connect-timeout 15 "
-    wget $wget_options "$remote_path_with_credential" 2>&1 || return 1
+    wget $wget_options "$remote_path" 2>&1 || return 1
     return 0
 }
 
@@ -1043,6 +1041,7 @@ get_download_link_from_aka_ms() {
     #get HTTP response
     response="$(get_http_header "$aka_ms_link")"
 
+    say_verbose "Received response: $response"
     http_code=$( echo "$response" | awk '$1 ~ /^HTTP/ {print $2}' | head -1 )
 
     #if HTTP code is 301 (Moved Permanently), the redirect link exists
