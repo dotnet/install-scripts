@@ -959,9 +959,9 @@ $ScriptName = $MyInvocation.MyCommand.Name
 
 if ($DryRun) {
     Say "Payload URLs:"
-    Say "Primary named payload URL: $DownloadLink"
+    Say "Primary named payload URL: ${DownloadLink}${FeedCredential}"
     if ($LegacyDownloadLink) {
-        Say "Legacy named payload URL: $LegacyDownloadLink"
+        Say "Legacy named payload URL: ${LegacyDownloadLink}${FeedCredential}"
     }
     $RepeatableCommand = ".\$ScriptName -Version `"$SpecificVersion`" -InstallDir `"$InstallRoot`" -Architecture `"$CLIArchitecture`""
     if ($Runtime -eq "dotnet") {

@@ -1489,9 +1489,9 @@ script_name=$(basename "$0")
 
 if [ "$dry_run" = true ]; then
     say "Payload URLs:"
-    say "Primary named payload URL: $download_link"
+    say "Primary named payload URL: ${download_link}${feed_credential}"
     if [ "$valid_legacy_download_link" = true ]; then
-        say "Legacy named payload URL: $legacy_download_link"
+        say "Legacy named payload URL: ${legacy_download_link}${feed_credential}"
     fi
     repeatable_command="./$script_name --version "\""$specific_version"\"" --install-dir "\""$install_root"\"" --architecture "\""$normalized_architecture"\"" --os "\""$normalized_os"\"""
     
