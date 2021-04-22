@@ -33,7 +33,7 @@
     - 3-part version in a format A.B.C - represents specific version of build
           examples: 2.0.0-preview2-006120, 1.1.0
 .PARAMETER Internal
-    Set this parameter to access internal builds. It might be nessesary also to use FeedCredential parameter with it.
+    Set this switch to download internal builds. It is necessary to use FeedCredential option with this.
 .PARAMETER InstallDir
     Default: %LocalAppData%\Microsoft\dotnet
     Path to where to install dotnet. Note that binaries will be placed directly in a given directory.
