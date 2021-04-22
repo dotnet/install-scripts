@@ -278,6 +278,85 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
+        [InlineData("3.1", null, @"https://aka.ms/dotnet/internal/3.1/dotnet-sdk-")]
+        [InlineData("5.0.2xx", null, @"https://aka.ms/dotnet/internal/5.0.2xx/dotnet-sdk-")]
+        [InlineData("Current", null, @"https://aka.ms/dotnet/internal/current/dotnet-sdk-")]
+        [InlineData("LTS", null, @"https://aka.ms/dotnet/internal/LTS/dotnet-sdk-")]
+        [InlineData("5.0.2xx", "validated", @"https://aka.ms/dotnet/internal/5.0.2xx/validated/dotnet-sdk-")]
+        public void InternalLinkCanBeCreatedForSdk(string channel, string quality, string expectedLink)
+        {
+            string expectedLinkPattern = Regex.Escape(expectedLink);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                expectedLinkPattern += "win";
+            }
+            else
+            {
+                expectedLinkPattern += "(linux|linux-musl|osx)";
+            }
+
+            expectedLinkPattern += "-(x86|x64|arm|arm64)\\.(zip|tar\\.gz)";
+
+            var args = new List<string> { "-dryrun", "-channel", channel, "-verbose", "-internal" };
+
+            if (!string.IsNullOrWhiteSpace (quality))
+            {
+                args.Add("-quality");
+                args.Add(quality);
+            }
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
+        }
+
+        [Theory]
+        [InlineData("LTS", "dotnet", null, @"https://aka.ms/dotnet/internal/LTS/dotnet-runtime-")]
+        [InlineData("5.0", "dotnet", "daily", @"https://aka.ms/dotnet/internal/5.0/daily/dotnet-runtime-")]
+        [InlineData("Current", "aspnetcore", null, @"https://aka.ms/dotnet/internal/current/aspnetcore-runtime-")]
+        [InlineData("5.0", "aspnetcore", "ga", @"https://aka.ms/dotnet/internal/5.0/aspnetcore-runtime-")]
+        [InlineData("LTS", "windowsdesktop", null, @"https://aka.ms/dotnet/internal/LTS/windowsdesktop-runtime-")]
+        [InlineData("5.0", "windowsdesktop", "ga", @"https://aka.ms/dotnet/internal/5.0/windowsdesktop-runtime-")]
+        public void InternalLinkCanBeCreatedForGivenRuntime(string channel, string runtime, string quality, string expectedLink)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop")
+            {
+                // Do not run windowsdesktop tests on Linux environment.
+                return;
+            }
+
+            string expectedLinkPattern = Regex.Escape(expectedLink);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                expectedLinkPattern += "win";
+            }
+            else
+            {
+                expectedLinkPattern += "(linux|linux-musl|osx)";
+            }
+
+            expectedLinkPattern += "-(x86|x64|arm|arm64)\\.(zip|tar\\.gz)";
+
+            var args = new List<string> { "-dryrun", "-channel", channel, "-verbose", "-runtime", runtime, "-internal" };
+
+            if (!string.IsNullOrWhiteSpace(quality))
+            {
+                args.Add("-quality");
+                args.Add(quality);
+            }
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
+        }
+
+        [Theory]
         [InlineData("Current", null, "daily", @"https://aka.ms/dotnet/current/dotnet-sdk-")]
         [InlineData("LTS", null, "signed", @"https://aka.ms/dotnet/LTS/dotnet-sdk-")]
         [InlineData("Current", "dotnet", "validated", @"https://aka.ms/dotnet/current/dotnet-runtime-")]
