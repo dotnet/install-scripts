@@ -8,11 +8,14 @@ using Xunit;
 using System.Collections.Generic;
 using Microsoft.NET.TestFramework.Assertions;
 using FluentAssertions;
+using System.Text.RegularExpressions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
     public class GivenThatIWantToGetTheSdkLinksFromAScript : TestBase
     {
+        private const string _feedCredential = "478a920c-2217-49f2-9c31-2fc3b4fef7cb";
+
         [Theory]
         [InlineData("InstallationScriptTests.json")]
         [InlineData("InstallationScriptTestsWithMultipleSdkFields.json")]
@@ -89,6 +92,32 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             //  Runtime should resolve to the correct 'type'
             commandResult.Should().HaveStdOutContainingIgnoreCase("-runtime");
             commandResult.Should().HaveStdOutContainingIgnoreCase(runtimeType);
+        }
+
+
+        [Theory]
+        [InlineData("3.1", _feedCredential)]
+        [InlineData("5.0.2xx", _feedCredential)]
+        [InlineData("LTS", "?" + _feedCredential)]
+        [InlineData("release/1.0.0", "?" + _feedCredential)]
+        [InlineData("master", _feedCredential)]
+        public void WhenFeedCredentialParameterIsPassedToInstallScripts(string channel, string feedCredential)
+        {
+            var args = new List<string> { "-dryrun", "-channel", channel, "-feedcredential", feedCredential, "-verbose" };
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            //  Standard 'dryrun' criterium
+            commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdOutContaining("dryrun");
+            commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
+
+            // Checking format of the link after applying feed credential
+            string linkWithCredentialsExpression = @"Primary named payload URL: [a-zA-Z0-9:/.-]*\?" + feedCredential;
+            commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, linkWithCredentialsExpression));
         }
 
         [Theory]
