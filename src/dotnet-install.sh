@@ -1053,9 +1053,6 @@ get_download_link_from_aka_ms() {
             return 1
         fi
 
-        #feed_credential is the part of redirect link, remove it
-        aka_ms_download_link=$( echo "${aka_ms_download_link%%\?*}" )
-
         say_verbose "The redirect location retrieved: '$aka_ms_download_link'."
         return 0
     else
