@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 {
     public class GivenThatIWantToGetTheSdkLinksFromAScript : TestBase
     {
+        // This is not how credentials look like, this is just a testing string.
         private const string _feedCredential = "478a920c-2217-49f2-9c31-2fc3b4fef7cb";
 
         [Theory]
