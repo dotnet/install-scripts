@@ -125,12 +125,6 @@ if ($SharedRuntime -and (-not $Runtime)) {
     $Runtime = "dotnet"
 }
 
-#FeedCredential should start with "?", for it to be added to the end of the link.
-#adding "?" at the beginning of the FeedCredential if needed.
-if ((![string]::IsNullOrEmpty($FeedCredential)) -and ($FeedCredential[0] -ne '?')) {
-    $FeedCredential = "?" + $FeedCredential
-}
-
 # example path with regex: shared/1.0.0-beta-12345/somepath
 $VersionRegEx="/\d+\.\d+[^/]+/"
 $OverrideNonVersionedFiles = !$SkipNonVersionedFiles
@@ -900,6 +894,16 @@ Say "Note that the intended use of this script is for Continuous Integration (CI
 Say "- The SDK needs to be installed without user interaction and without admin rights."
 Say "- The SDK installation doesn't need to persist across multiple CI runs."
 Say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.`r`n"
+
+if ($Internal -and [string]::IsNullOrEmpty($FeedCredential)) {
+    Say-Warning "Note, it is necessary to use FeedCredential option when Internal switch is set."
+}
+
+#FeedCredential should start with "?", for it to be added to the end of the link.
+#adding "?" at the beginning of the FeedCredential if needed.
+if ((![string]::IsNullOrEmpty($FeedCredential)) -and ($FeedCredential[0] -ne '?')) {
+    $FeedCredential = "?" + $FeedCredential
+}
 
 $CLIArchitecture = Get-CLIArchitecture-From-Architecture $Architecture
 $NormalizedQuality = Get-NormalizedQuality $Quality

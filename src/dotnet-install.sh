@@ -1481,6 +1481,10 @@ say "- The SDK needs to be installed without user interaction and without admin 
 say "- The SDK installation doesn't need to persist across multiple CI runs."
 say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.\n"
 
+if [ "$internal" = true ] && [ -z "$feed_credential" ]; then
+    say_warning "Note, it is necessary to use --feed-credential option when --internal switch is set."
+fi
+
 check_min_reqs
 calculate_vars
 script_name=$(basename "$0")
