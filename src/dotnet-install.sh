@@ -1419,7 +1419,8 @@ do
             echo "          For SDK use channel in A.B.Cxx format. Using quality for SDK together with channel in A.B format is not supported." 
             echo "          Supported since 5.0 release." 
             echo "          Note: The version parameter overrides the channel parameter when any version other than `latest` is used, and therefore overrides the quality."
-            echo "  --internal,-Internal               Set this switch to download internal builds. It is necessary to use --feed-credential option with this."
+            echo "  --internal,-Internal               Download internal builds. Provide credentials via --feed-credential parameter."
+            echo "  --feed-credential,-FeedCredential  Azure feed shared access token. This parameter typically is not specified."
             echo "  -i,--install-dir <DIR>             Install under specified location (see Install Location below)"
             echo "      -InstallDir"
             echo "  --architecture <ARCHITECTURE>      Architecture of dotnet binaries to be installed, Defaults to \`$architecture\`."
@@ -1440,7 +1441,6 @@ do
             echo "  --verbose,-Verbose                 Display diagnostics information."
             echo "  --azure-feed,-AzureFeed            Azure feed location. Defaults to $azure_feed, This parameter typically is not changed by the user."
             echo "  --uncached-feed,-UncachedFeed      Uncached feed location. This parameter typically is not changed by the user."
-            echo "  --feed-credential,-FeedCredential  Azure feed shared access token. This parameter typically is not specified."
             echo "  --skip-non-versioned-files         Skips non-versioned files if they already exist, such as the dotnet executable."
             echo "      -SkipNonVersionedFiles"
             echo "  --no-cdn,-NoCdn                    Disable downloading from the Azure CDN, and use the uncached feed directly."
@@ -1482,7 +1482,12 @@ say "- The SDK installation doesn't need to persist across multiple CI runs."
 say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.\n"
 
 if [ "$internal" = true ] && [ -z "$feed_credential" ]; then
-    say_warning "Note, it is necessary to use --feed-credential option when --internal switch is set."
+    if [ "$dry_run" = true ]; then
+        say_warning "Provide credentials via --feed-credential parameter."
+    else
+        say_err "Provide credentials via --feed-credential parameter."
+        exit 1
+    fi
 fi
 
 check_min_reqs

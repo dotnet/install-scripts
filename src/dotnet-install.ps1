@@ -33,7 +33,10 @@
     - 3-part version in a format A.B.C - represents specific version of build
           examples: 2.0.0-preview2-006120, 1.1.0
 .PARAMETER Internal
-    Set this switch to download internal builds. It is necessary to use FeedCredential option with this.
+    Download internal builds. Provide credentials via -FeedCredential parameter.
+.PARAMETER FeedCredential
+    Used as a query string to append to the Azure feed.
+    It allows changing the URL to use non-public blob storage accounts.
 .PARAMETER InstallDir
     Default: %LocalAppData%\Microsoft\dotnet
     Path to where to install dotnet. Note that binaries will be placed directly in a given directory.
@@ -68,9 +71,6 @@
 .PARAMETER UncachedFeed
     This parameter typically is not changed by the user.
     It allows changing the URL for the Uncached feed used by this installer.
-.PARAMETER FeedCredential
-    Used as a query string to append to the Azure feed.
-    It allows changing the URL to use non-public blob storage accounts.
 .PARAMETER ProxyAddress
     If set, the installer will use the proxy when making web requests
 .PARAMETER ProxyUseDefaultCredentials
@@ -896,7 +896,11 @@ Say "- The SDK installation doesn't need to persist across multiple CI runs."
 Say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.`r`n"
 
 if ($Internal -and [string]::IsNullOrEmpty($FeedCredential)) {
-    Say-Warning "Note, it is necessary to use FeedCredential option when Internal switch is set."
+    if ($DryRun) {
+        Say-Warning "Provide credentials via -FeedCredential parameter."
+    } else {
+        throw "Provide credentials via -FeedCredential parameter."
+    }
 }
 
 #FeedCredential should start with "?", for it to be added to the end of the link.
