@@ -895,11 +895,13 @@ Say "- The SDK needs to be installed without user interaction and without admin 
 Say "- The SDK installation doesn't need to persist across multiple CI runs."
 Say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.`r`n"
 
+$FeedCredential = $FeedCredential.Trim();
 if ($Internal -and [string]::IsNullOrEmpty($FeedCredential)) {
+    $message = "Provide credentials via -FeedCredential parameter."
     if ($DryRun) {
-        Say-Warning "Provide credentials via -FeedCredential parameter."
+        Say-Warning "$message"
     } else {
-        throw "Provide credentials via -FeedCredential parameter."
+        throw "$message"
     }
 }
 

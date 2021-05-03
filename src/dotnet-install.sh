@@ -1367,9 +1367,10 @@ do
         --feed-credential|-[Ff]eed[Cc]redential)
             shift
             feed_credential="$1"
+            feed_credential=$(echo $feed_credential)
             #feed_credential should start with "?", for it to be added to the end of the link.
             #adding "?" at the beginning of the feed_credential if needed.
-            [[ $feed_credential == \?* ]] || feed_credential="?$feed_credential"
+            [[ -z "$feed_credential" ]] || [[ $feed_credential == \?* ]] || feed_credential="?$feed_credential"
             non_dynamic_parameters+=" $name "\""$1"\"""
             ;;
         --runtime-id|-[Rr]untime[Ii]d)
@@ -1482,10 +1483,11 @@ say "- The SDK installation doesn't need to persist across multiple CI runs."
 say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.\n"
 
 if [ "$internal" = true ] && [ -z "$feed_credential" ]; then
+    message="Provide credentials via --feed-credential parameter."
     if [ "$dry_run" = true ]; then
-        say_warning "Provide credentials via --feed-credential parameter."
+        say_warning "$message"
     else
-        say_err "Provide credentials via --feed-credential parameter."
+        say_err "$message"
         exit 1
     fi
 fi
