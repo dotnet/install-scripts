@@ -969,9 +969,9 @@ $ScriptName = $MyInvocation.MyCommand.Name
 
 if ($DryRun) {
     Say "Payload URLs:"
-    Say "Primary named payload URL: ${DownloadLink}${FeedCredential}"
+    Say "Primary named payload URL: ${DownloadLink}"
     if ($LegacyDownloadLink) {
-        Say "Legacy named payload URL: ${LegacyDownloadLink}${FeedCredential}"
+        Say "Legacy named payload URL: ${LegacyDownloadLink}"
     }
     $RepeatableCommand = ".\$ScriptName -Version `"$SpecificVersion`" -InstallDir `"$InstallRoot`" -Architecture `"$CLIArchitecture`""
     if ($Runtime -eq "dotnet") {
@@ -991,8 +991,11 @@ if ($DryRun) {
     }
 
     foreach ($key in $MyInvocation.BoundParameters.Keys) {
-        if (-not (@("Architecture","Channel","DryRun","InstallDir","Runtime","SharedRuntime","Version","Quality") -contains $key)) {
+        if (-not (@("Architecture","Channel","DryRun","InstallDir","Runtime","SharedRuntime","Version","Quality","FeedCredential") -contains $key)) {
             $RepeatableCommand+=" -$key `"$($MyInvocation.BoundParameters[$key])`""
+        }
+        if ($key -eq "FeedCredential") {
+            $RepeatableCommand+=" -$key `"<feedCredential>`""
         }
     }
     Say "Repeatable invocation: $RepeatableCommand"

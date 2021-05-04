@@ -973,7 +973,7 @@ downloadcurl() {
         curl $curl_options -o "$out_path" "$remote_path_with_credential" || failed=true
     fi
     if [ "$failed" = true ]; then
-        local response=$(get_http_header_curl $remote_path_with_credential)
+        local response=$(get_http_header_curl $remote_path)
         http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
         download_error_msg="Unable to download $remote_path."
         if  [[ $http_code != 2* ]]; then
@@ -1371,7 +1371,6 @@ do
             #feed_credential should start with "?", for it to be added to the end of the link.
             #adding "?" at the beginning of the feed_credential if needed.
             [[ -z "$feed_credential" ]] || [[ $feed_credential == \?* ]] || feed_credential="?$feed_credential"
-            non_dynamic_parameters+=" $name "\""$1"\"""
             ;;
         --runtime-id|-[Rr]untime[Ii]d)
             shift
@@ -1498,9 +1497,9 @@ script_name=$(basename "$0")
 
 if [ "$dry_run" = true ]; then
     say "Payload URLs:"
-    say "Primary named payload URL: ${download_link}${feed_credential}"
+    say "Primary named payload URL: ${download_link}"
     if [ "$valid_legacy_download_link" = true ]; then
-        say "Legacy named payload URL: ${legacy_download_link}${feed_credential}"
+        say "Legacy named payload URL: ${legacy_download_link}"
     fi
     repeatable_command="./$script_name --version "\""$specific_version"\"" --install-dir "\""$install_root"\"" --architecture "\""$normalized_architecture"\"" --os "\""$normalized_os"\"""
     
@@ -1517,7 +1516,13 @@ if [ "$dry_run" = true ]; then
     elif [[ "$runtime" == "aspnetcore" ]]; then
         repeatable_command+=" --runtime "\""aspnetcore"\"""
     fi
+
     repeatable_command+="$non_dynamic_parameters"
+
+    if [ ! -z "$feed_credential" ]; then
+        repeatable_command+=" --feed-credential "\""<feed-credential>"\"""
+    fi
+
     say "Repeatable invocation: $repeatable_command"
     exit 0
 fi
