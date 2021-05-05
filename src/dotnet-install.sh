@@ -635,14 +635,14 @@ get_specific_product_version() {
 
         if machine_has "curl"
         then
-            specific_product_version=$(curl -s --fail "$download_link")
+            specific_product_version=$(curl -s --fail "${download_link}${feed_credential}")
             if [ $? = 0 ]; then
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
             fi
         elif machine_has "wget"
         then
-            specific_product_version=$(wget -qO- "$download_link")
+            specific_product_version=$(wget -qO- "${download_link}${feed_credential}")
             if [ $? = 0 ]; then
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
@@ -688,16 +688,16 @@ get_specific_product_version_url() {
 
     if [ -z "$package_download_link" ]; then
         if [[ "$runtime" == "dotnet" ]]; then
-            download_link="$azure_feed/Runtime/$specific_version/${pvFileName}${feed_credential}"
+            download_link="$azure_feed/Runtime/$specific_version/${pvFileName}"
         elif [[ "$runtime" == "aspnetcore" ]]; then
-            download_link="$azure_feed/aspnetcore/Runtime/$specific_version/${pvFileName}${feed_credential}"
+            download_link="$azure_feed/aspnetcore/Runtime/$specific_version/${pvFileName}"
         elif [ -z "$runtime" ]; then
-            download_link="$azure_feed/Sdk/$specific_version/${pvFileName}${feed_credential}"
+            download_link="$azure_feed/Sdk/$specific_version/${pvFileName}"
         else
             return 1
         fi
     else
-        download_link="${package_download_link%/*}/${pvFileName}${feed_credential}" 
+        download_link="${package_download_link%/*}/${pvFileName}"
     fi
 
     say_verbose "Constructed productVersion link: $download_link"
@@ -869,17 +869,20 @@ extract_dotnet_package() {
 }
 
 # args:
-# remote_path - $1 - Note, credentials will not be applied.
+# remote_path - $1
+# disable_feed_credential - $2
 get_http_header()
 {
     eval $invocation
     local remote_path="$1"
+    local disable_feed_credential="$2"
+
     local failed=false
     local response
     if machine_has "curl"; then
-        get_http_header_curl $remote_path || failed=true
+        get_http_header_curl $remote_path "$disable_feed_credential" || failed=true
     elif machine_has "wget"; then
-        get_http_header_wget $remote_path || failed=true
+        get_http_header_wget $remote_path "$disable_feed_credential" || failed=true
     else
         failed=true
     fi
@@ -891,22 +894,38 @@ get_http_header()
 }
 
 # args:
-# remote_path - $1 - Note, credentials will not be applied.
+# remote_path - $1
+# disable_feed_credential - $2
 get_http_header_curl() {
     eval $invocation
     local remote_path="$1"
+    local disable_feed_credential="$2"
+
+    remote_path_with_credential="$remote_path"
+    if [ "$disable_feed_credential" = false ]; then
+        remote_path_with_credential+="$feed_credential"
+    fi
+
     curl_options="-I -sSL --retry 5 --retry-delay 2 --connect-timeout 15 "
-    curl $curl_options "$remote_path" || return 1
+    curl $curl_options "$remote_path_with_credential" || return 1
     return 0
 }
 
 # args:
-# remote_path - $1 - Note, credentials will not be applied.
+# remote_path - $1
+# disable_feed_credential - $2
 get_http_header_wget() {
     eval $invocation
     local remote_path="$1"
+    local disable_feed_credential="$2"
+
+    remote_path_with_credential="$remote_path"
+    if [ "$disable_feed_credential" = false ]; then
+        remote_path_with_credential+="$feed_credential"
+    fi
+
     wget_options="-q -S --spider --tries 5 --waitretry 2 --connect-timeout 15 "
-    wget $wget_options "$remote_path" 2>&1 || return 1
+    wget $wget_options "$remote_path_with_credential" 2>&1 || return 1
     return 0
 }
 
@@ -973,7 +992,7 @@ downloadcurl() {
         curl $curl_options -o "$out_path" "$remote_path_with_credential" || failed=true
     fi
     if [ "$failed" = true ]; then
-        local response=$(get_http_header_curl $remote_path)
+        local response=$(get_http_header_curl $remote_path false)
         http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
         download_error_msg="Unable to download $remote_path."
         if  [[ $http_code != 2* ]]; then
@@ -1003,7 +1022,7 @@ downloadwget() {
         wget $wget_options -O "$out_path" "$remote_path_with_credential" || failed=true
     fi
     if [ "$failed" = true ]; then
-        local response=$(get_http_header_wget $remote_path_with_credential)
+        local response=$(get_http_header_wget $remote_path false)
         http_code=$( echo "$response" | awk '/^  HTTP/{print $2}' | tail -1 )
         download_error_msg="Unable to download $remote_path."
         if  [[ $http_code != 2* ]]; then
@@ -1039,7 +1058,7 @@ get_download_link_from_aka_ms() {
     say_verbose "Constructed aka.ms link: '$aka_ms_link'."
 
     #get HTTP response
-    response="$(get_http_header "$aka_ms_link")"
+    response="$(get_http_header "$aka_ms_link" true)"
 
     say_verbose "Received response: $response"
     http_code=$( echo "$response" | awk '$1 ~ /^HTTP/ {print $2}' | head -1 )
