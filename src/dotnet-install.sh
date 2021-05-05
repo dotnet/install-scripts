@@ -1328,6 +1328,7 @@ do
             ;;
         --internal|-[Ii]nternal)
             internal=true
+            non_dynamic_parameters+=" $name"
             ;;
         -i|--install-dir|-[Ii]nstall[Dd]ir)
             shift
@@ -1526,9 +1527,6 @@ if [ "$dry_run" = true ]; then
         repeatable_command+=" --quality "\""$normalized_quality"\"""
     fi
 
-    if [ "$internal" = true ]; then
-        repeatable_command+=" --internal"
-    fi
 
     if [[ "$runtime" == "dotnet" ]]; then
         repeatable_command+=" --runtime "\""dotnet"\"""
@@ -1539,7 +1537,7 @@ if [ "$dry_run" = true ]; then
     repeatable_command+="$non_dynamic_parameters"
 
     if [ ! -z "$feed_credential" ]; then
-        repeatable_command+=" --feed-credential "\""<feed-credential>"\"""
+        repeatable_command+=" --feed-credential "\""<feed_credential>"\"""
     fi
 
     say "Repeatable invocation: $repeatable_command"

@@ -986,10 +986,6 @@ if ($DryRun) {
         $RepeatableCommand+=" -Quality `"$NormalizedQuality`""
     }
 
-    if ($Internal) {
-        $RepeatableCommand+=" -Internal"
-    }
-
     foreach ($key in $MyInvocation.BoundParameters.Keys) {
         if (-not (@("Architecture","Channel","DryRun","InstallDir","Runtime","SharedRuntime","Version","Quality","FeedCredential") -contains $key)) {
             $RepeatableCommand+=" -$key `"$($MyInvocation.BoundParameters[$key])`""
