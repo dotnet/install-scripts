@@ -318,7 +318,83 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Add the validation once the becomes available in the artifacts.
         }
 
-        private static IEnumerable<string> GetInstallScriptArgs(string? channel, string? runtime, string? quality, string? installDir)
+        [Theory]
+        [MemberData(nameof(InstallSdkFromChannelTestCases))]
+        public void WhenInstallingTheSdkWithFeedCredential(string channel, string? quality, string versionRegex)
+        {
+            string guid = "?" + Guid.NewGuid().ToString();
+
+            // Run install script to download and install.
+            var args = GetInstallScriptArgs(channel, null, quality, _sdkInstallationDirectory, guid);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdOutContainingIgnoreCase(guid);
+        }
+
+        [Theory]
+        [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
+        public void WhenInstallingDotnetRuntimeWithFeedCredential(string channel, string? quality, string versionRegex)
+        {
+            if (channel == "release/5.0" ||
+                channel == "5.0" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Broken scenario
+                return;
+            }
+            string guid = "?" + Guid.NewGuid().ToString();
+
+            // Run install script to download and install.
+            var args = GetInstallScriptArgs(channel, "dotnet", quality, _sdkInstallationDirectory, guid);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdErrContaining("RuntimeException");
+            commandResult.Should().NotHaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdOutContainingIgnoreCase(guid);
+        }
+
+        [Theory]
+        [InlineData(null, "2.4", "ga")]
+        [InlineData(null, "3.9", null)]
+        [InlineData(null, "6.a", "preview")]
+        [InlineData(null, "release/1.4.1xx", null)]
+        [InlineData(null, "LTS", "invalidQuality")]
+        [InlineData("dotnet", "2.4", "ga")]
+        [InlineData("dotnet", "3.9", null)]
+        [InlineData("dotnet", "6.a", "preview")]
+        [InlineData("dotnet", "release/1.4.1xx", null)]
+        [InlineData("dotnet", "LTS", "invalidQuality")]
+        public void WhenFailingToInstallWithFeedCredentials(string? runtime, string channel, string? quality)
+        {
+            string guid = "?" + Guid.NewGuid().ToString();
+
+            // Run install script to download and install.
+            var args = GetInstallScriptArgs(channel, runtime, quality, _sdkInstallationDirectory, guid);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdErrContaining("RuntimeException");
+            commandResult.Should().NotHaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdOutContainingIgnoreCase(guid);
+        }
+
+        private static IEnumerable<string> GetInstallScriptArgs(
+            string? channel, 
+            string? runtime,
+            string? quality, 
+            string? installDir, 
+            string? feedCredentials = null)
         {
             if (!string.IsNullOrWhiteSpace(channel))
             {
@@ -342,6 +418,12 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             {
                 yield return "-Quality";
                 yield return quality;
+            }
+
+            if (!string.IsNullOrWhiteSpace(feedCredentials))
+            {
+                yield return "-FeedCredential";
+                yield return feedCredentials;
             }
         }
 
