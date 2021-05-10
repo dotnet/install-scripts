@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft. All rights reserved.
 
+using FluentAssertions;
+using Microsoft.NET.TestFramework.Assertions;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.DotNet.Cli.Utils;
 using Xunit;
-using System.Collections.Generic;
-using Microsoft.NET.TestFramework.Assertions;
-using FluentAssertions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
@@ -132,14 +131,23 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("3.1", "windowsdesktop")]
         [InlineData("5.0", "windowsdesktop")]
         [InlineData("master", "windowsdesktop")]
-        public void WhenChannelResolvesToASpecificRuntimeVersion(string channel, string runtimeType)
+        public void WhenChannelResolvesToASpecificRuntimeVersion(string channel, string runtimeType, bool internalBuild = false)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtimeType == "windowsdesktop")
             {
                 //do not run windowsdesktop test on Linux environment
                 return;
             }
-            var args = new string[] { "-dryrun", "-channel", channel, "-runtime", runtimeType };
+            var args = new List<string> { "-dryrun", "-channel", channel, "-runtime", runtimeType };
+
+            string feedCredentials = default;
+            if (internalBuild)
+            {
+                feedCredentials = Guid.NewGuid().ToString();
+                args.Add("-internal");
+                args.Add("-feedCredentials");
+                args.Add(feedCredentials);
+            }
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
@@ -148,11 +156,17 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             //  Standard 'dryrun' criterium
             commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
 
             //  Channel should be translated to a specific Runtime version
             commandResult.Should().HaveStdOutContainingIgnoreCase("-version");
+
+            if (internalBuild)
+            {
+                commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
+            }
         }
 
         [Theory]
@@ -169,6 +183,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("release/1.0.0")]
         [InlineData("release/2.0.0")]
         [InlineData("release/2.0.2")]
+        [InlineData("release/2.0.2", true)]
         [InlineData("release/2.1.1xx")]
         [InlineData("release/2.1.2xx")]
         [InlineData("release/2.1.3xx")]
@@ -180,11 +195,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("release/2.1.7xx")]
         [InlineData("release/2.1.8xx")]
         [InlineData("release/2.2.1xx")]
+        [InlineData("release/2.2.1xx", true)]
         [InlineData("release/2.2.2xx")]
         [InlineData("release/2.2.3xx")]
         [InlineData("release/2.2.4xx")]
         [InlineData("release/3.0.1xx")]
         [InlineData("release/5.0.1xx")]
+        [InlineData("release/5.0.1xx", true)]
         [InlineData("release/5.0.1xx-preview1")]
         [InlineData("release/5.0.1xx-preview2")]
         [InlineData("release/5.0.1xx-preview3")]
@@ -193,9 +210,19 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("release/5.0.1xx-preview6")]
         [InlineData("release/5.0.1xx-preview7")]
         [InlineData("release/5.0.1xx-preview8")]
-        public void WhenChannelResolvesToASpecificSDKVersion(string channel)
+        [InlineData("release/5.0.1xx-preview8", true)]
+        public void WhenChannelResolvesToASpecificSDKVersion(string channel, bool internalBuild = false)
         {
-            var args = new string[] { "-dryrun", "-channel", channel };
+            var args = new List<string> { "-dryrun", "-channel", channel };
+
+            string feedCredentials = default;
+            if (internalBuild)
+            {
+                feedCredentials = Guid.NewGuid().ToString();
+                args.Add("-internal");
+                args.Add("-feedCredentials");
+                args.Add(feedCredentials);
+            }
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
@@ -204,12 +231,19 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             //  Standard 'dryrun' criterium
             commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
 
             //  Channel should be translated to a specific SDK version
             commandResult.Should().HaveStdOutContainingIgnoreCase("-version");
+
+            if (internalBuild)
+            {
+                commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
+            }
         }
+
         [Theory]
         [InlineData("5.0.1", "WindowsDesktop")]
         [InlineData("3.1.10", "Runtime")]
@@ -221,14 +255,34 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 return;
             }
             string expectedLinkLog = $"Constructed primary named payload URL: {Environment.NewLine}https://dotnetcli.azureedge.net/dotnet/{location}/{version}";
-            var args = new string[] { "-version", version, "-runtime", "windowsdesktop", "-verbose", "-dryrun"};
+            var args = new string[] { "-version", version, "-runtime", "windowsdesktop", "-verbose", "-dryrun" };
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
                             .CaptureStdErr()
                             .Execute();
 
             commandResult.Should().Pass().And.HaveStdOutContaining(expectedLinkLog);
-        } 
+        }
 
+        [Theory]
+        [InlineData("release/2.6.1xx")]
+        [InlineData("4.8.2")]
+        [InlineData("abcdefg")]
+        public void WhenInvalidChannelWasUsed(string channel)
+        {
+            string feedCredentials = Guid.NewGuid().ToString();
+            var args = new [] { "-dryrun", "-channel", channel, "-internal", "-feedCredentials", feedCredentials };
+            
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            //  Standard 'dryrun' criterium
+            commandResult.Should().Fail();
+            commandResult.Should().NotHaveStdOutContaining("Repeatable invocation:");
+            commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
+            commandResult.Should().NotHaveStdErrContainingIgnoreCase(feedCredentials);
+        }
     }
 }

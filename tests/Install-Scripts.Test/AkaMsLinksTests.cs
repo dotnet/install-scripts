@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.DotNet.Cli.Utils;
 using Xunit;
 using System.Collections.Generic;
 using Microsoft.NET.TestFramework.Assertions;
@@ -12,9 +11,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 {
     public class AkaMsLinksTests : TestBase
     {
-        // This is not how credentials look like, this is just a testing string.
-        private const string _feedCredential = "478a920c-2217-49f2-9c31-2fc3b4fef7cb";
-
         /// <summary>
         /// Test verifies E2E the aka.ms resolution for SDK
         /// </summary>
@@ -71,6 +67,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
             commandResult.Should().HaveStdOutContaining("The redirect location retrieved:");
             commandResult.Should().HaveStdOutContaining("Downloading using legacy url will not be attempted.");
@@ -162,6 +159,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
             commandResult.Should().HaveStdOutContaining("The redirect location retrieved:");
             commandResult.Should().HaveStdOutContaining("Downloading using legacy url will not be attempted.");
@@ -211,11 +209,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 args.Add(quality);
             }
 
+            string feedCredentials = default;
             if (isInternal)
             {
+                feedCredentials = Guid.NewGuid().ToString();
                 args.Add("-internal");
                 args.Add("-feedcredential");
-                args.Add(_feedCredential);
+                args.Add(feedCredentials);
             }
 
             var commandResult = CreateInstallCommand(args)
@@ -223,7 +223,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
+
+            if(isInternal)
+            {
+                commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
+            }
         }
 
         [Theory]
@@ -290,11 +296,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 args.Add(quality);
             }
 
+            string feedCredentials = default;
             if (isInternal)
             {
+                feedCredentials = Guid.NewGuid().ToString();
                 args.Add("-internal");
                 args.Add("-feedcredential");
-                args.Add(_feedCredential);
+                args.Add(feedCredentials);
             }
 
             var commandResult = CreateInstallCommand(args)
@@ -302,7 +310,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
+
+            if(isInternal)
+            {
+                commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
+            }
         }
 
         [Theory]
@@ -347,6 +361,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Specifying quality for current or LTS channel is not supported, the quality will be ignored.");
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
         }
@@ -393,6 +408,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("Retrieving primary payload URL from aka.ms link for channel");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
         }
@@ -410,6 +426,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("Retrieving primary payload URL from aka.ms link for channel");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
         }
