@@ -859,6 +859,9 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
     Say-Verbose  "Constructed aka.ms link: '$akaMsLink'."
 
     #get HTTP response
+    #do not pass credentials as a part of the $akaMsLink and do not apply credentials in the GetHTTPResponse function
+    #otherwise the redirect link would have credentials as well
+    #it would result in applying credentials twice to the resulting link and thus breaking it, and in echoing credentials to the output as a part of redirect link
     $Response= GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true -DisableFeedCredential $true
     Say-Verbose "Received response:`n$Response"
 

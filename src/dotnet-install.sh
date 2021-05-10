@@ -983,6 +983,7 @@ downloadcurl() {
     local remote_path="$1"
     local out_path="${2:-}"
     # Append feed_credential as late as possible before calling curl to avoid logging feed_credential
+    # Avoid passing URI with credentials to functions: note, most of them echoing parameters of invocation in verbose output.
     local remote_path_with_credential="${remote_path}${feed_credential}"
     local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
     local failed=false
@@ -1058,6 +1059,9 @@ get_download_link_from_aka_ms() {
     say_verbose "Constructed aka.ms link: '$aka_ms_link'."
 
     #get HTTP response
+    #do not pass credentials as a part of the $aka_ms_link and do not apply credentials in the get_http_header function
+    #otherwise the redirect link would have credentials as well
+    #it would result in applying credentials twice to the resulting link and thus breaking it, and in echoing credentials to the output as a part of redirect link
     response="$(get_http_header "$aka_ms_link" true)"
 
     say_verbose "Received response: $response"
