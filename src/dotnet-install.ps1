@@ -33,10 +33,10 @@
     - 3-part version in a format A.B.C - represents specific version of build
           examples: 2.0.0-preview2-006120, 1.1.0
 .PARAMETER Internal
-    Download internal builds. Provide credentials via -FeedCredential parameter.
+    Download internal builds. Requires providing credentials via -FeedCredential parameter.
 .PARAMETER FeedCredential
-    Used as a query string to append to the Azure feed.
-    It allows changing the URL to use non-public blob storage accounts.
+    Token to access Azure feed. Used as a query string to append to the Azure feed.
+    This parameter typically is not specified.
 .PARAMETER InstallDir
     Default: %LocalAppData%\Microsoft\dotnet
     Path to where to install dotnet. Note that binaries will be placed directly in a given directory.
@@ -859,6 +859,9 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
     Say-Verbose  "Constructed aka.ms link: '$akaMsLink'."
 
     #get HTTP response
+    #do not pass credentials as a part of the $akaMsLink and do not apply credentials in the GetHTTPResponse function
+    #otherwise the redirect link would have credentials as well
+    #it would result in applying credentials twice to the resulting link and thus breaking it, and in echoing credentials to the output as a part of redirect link
     $Response= GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true -DisableFeedCredential $true
     Say-Verbose "Received response:`n$Response"
 
@@ -895,8 +898,7 @@ Say "- The SDK needs to be installed without user interaction and without admin 
 Say "- The SDK installation doesn't need to persist across multiple CI runs."
 Say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.`r`n"
 
-$FeedCredential = $FeedCredential.Trim();
-if ($Internal -and [string]::IsNullOrEmpty($FeedCredential)) {
+if ($Internal -and [string]::IsNullOrWhitespace($FeedCredential)) {
     $message = "Provide credentials via -FeedCredential parameter."
     if ($DryRun) {
         Say-Warning "$message"
@@ -907,7 +909,7 @@ if ($Internal -and [string]::IsNullOrEmpty($FeedCredential)) {
 
 #FeedCredential should start with "?", for it to be added to the end of the link.
 #adding "?" at the beginning of the FeedCredential if needed.
-if ((![string]::IsNullOrEmpty($FeedCredential)) -and ($FeedCredential[0] -ne '?')) {
+if ((![string]::IsNullOrWhitespace($FeedCredential)) -and ($FeedCredential[0] -ne '?')) {
     $FeedCredential = "?" + $FeedCredential
 }
 
@@ -990,9 +992,9 @@ if ($DryRun) {
         if (-not (@("Architecture","Channel","DryRun","InstallDir","Runtime","SharedRuntime","Version","Quality","FeedCredential") -contains $key)) {
             $RepeatableCommand+=" -$key `"$($MyInvocation.BoundParameters[$key])`""
         }
-        if ($key -eq "FeedCredential") {
-            $RepeatableCommand+=" -$key `"<feedCredential>`""
-        }
+    }
+    if ($MyInvocation.BoundParameters.Keys -contains "FeedCredential") {
+        $RepeatableCommand+=" -FeedCredential `"<feedCredential>`""
     }
     Say "Repeatable invocation: $RepeatableCommand"
     if ($SpecificVersion -ne $EffectiveVersion)

@@ -134,6 +134,13 @@ namespace Microsoft.NET.TestFramework.Assertions
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
+        public AndConstraint<CommandResultAssertions> NotHaveStdErrContainingIgnoreCase(string pattern)
+        {
+            Execute.Assertion.ForCondition(!_commandResult.StdErr.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+                .FailWith(AppendDiagnosticsTo($"The command error output contained a result it should not have contained (ignoring case): {pattern}{Environment.NewLine}"));
+            return new AndConstraint<CommandResultAssertions>(this);
+        }
+
         public AndConstraint<CommandResultAssertions> HaveStdErrMatching(string pattern, RegexOptions options = RegexOptions.None)
         {
             Execute.Assertion.ForCondition(Regex.Match(_commandResult.StdErr, pattern, options).Success)

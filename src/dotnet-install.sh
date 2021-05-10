@@ -880,9 +880,9 @@ get_http_header()
     local failed=false
     local response
     if machine_has "curl"; then
-        get_http_header_curl $remote_path "$disable_feed_credential" || failed=true
+        get_http_header_curl $remote_path $disable_feed_credential || failed=true
     elif machine_has "wget"; then
-        get_http_header_wget $remote_path "$disable_feed_credential" || failed=true
+        get_http_header_wget $remote_path $disable_feed_credential || failed=true
     else
         failed=true
     fi
@@ -983,6 +983,7 @@ downloadcurl() {
     local remote_path="$1"
     local out_path="${2:-}"
     # Append feed_credential as late as possible before calling curl to avoid logging feed_credential
+    # Avoid passing URI with credentials to functions: note, most of them echoing parameters of invocation in verbose output.
     local remote_path_with_credential="${remote_path}${feed_credential}"
     local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
     local failed=false
@@ -992,7 +993,8 @@ downloadcurl() {
         curl $curl_options -o "$out_path" "$remote_path_with_credential" || failed=true
     fi
     if [ "$failed" = true ]; then
-        local response=$(get_http_header_curl $remote_path false)
+        local disable_feed_credential=false
+        local response=$(get_http_header_curl $remote_path $disable_feed_credential)
         http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
         download_error_msg="Unable to download $remote_path."
         if  [[ $http_code != 2* ]]; then
@@ -1022,7 +1024,8 @@ downloadwget() {
         wget $wget_options -O "$out_path" "$remote_path_with_credential" || failed=true
     fi
     if [ "$failed" = true ]; then
-        local response=$(get_http_header_wget $remote_path false)
+        local disable_feed_credential=false
+        local response=$(get_http_header_wget $remote_path $disable_feed_credential)
         http_code=$( echo "$response" | awk '/^  HTTP/{print $2}' | tail -1 )
         download_error_msg="Unable to download $remote_path."
         if  [[ $http_code != 2* ]]; then
@@ -1058,7 +1061,11 @@ get_download_link_from_aka_ms() {
     say_verbose "Constructed aka.ms link: '$aka_ms_link'."
 
     #get HTTP response
-    response="$(get_http_header "$aka_ms_link" true)"
+    #do not pass credentials as a part of the $aka_ms_link and do not apply credentials in the get_http_header function
+    #otherwise the redirect link would have credentials as well
+    #it would result in applying credentials twice to the resulting link and thus breaking it, and in echoing credentials to the output as a part of redirect link
+    disable_feed_credential=true
+    response="$(get_http_header $aka_ms_link $disable_feed_credential)"
 
     say_verbose "Received response: $response"
     http_code=$( echo "$response" | awk '$1 ~ /^HTTP/ {print $2}' | head -1 )
@@ -1387,10 +1394,9 @@ do
         --feed-credential|-[Ff]eed[Cc]redential)
             shift
             feed_credential="$1"
-            feed_credential=$(echo $feed_credential)
             #feed_credential should start with "?", for it to be added to the end of the link.
             #adding "?" at the beginning of the feed_credential if needed.
-            [[ -z "$feed_credential" ]] || [[ $feed_credential == \?* ]] || feed_credential="?$feed_credential"
+            [[ -z "$(echo $feed_credential)" ]] || [[ $feed_credential == \?* ]] || feed_credential="?$feed_credential"
             ;;
         --runtime-id|-[Rr]untime[Ii]d)
             shift
@@ -1439,8 +1445,9 @@ do
             echo "          For SDK use channel in A.B.Cxx format. Using quality for SDK together with channel in A.B format is not supported." 
             echo "          Supported since 5.0 release." 
             echo "          Note: The version parameter overrides the channel parameter when any version other than `latest` is used, and therefore overrides the quality."
-            echo "  --internal,-Internal               Download internal builds. Provide credentials via --feed-credential parameter."
-            echo "  --feed-credential,-FeedCredential  Azure feed shared access token. This parameter typically is not specified."
+            echo "  --internal,-Internal               Download internal builds. Requires providing credentials via --feed-credential parameter."
+            echo "  --feed-credential <FEEDCREDENTIAL> Token to access Azure feed. Used as a query string to append to the Azure feed."
+            echo "      -FeedCredential                This parameter typically is not specified."
             echo "  -i,--install-dir <DIR>             Install under specified location (see Install Location below)"
             echo "      -InstallDir"
             echo "  --architecture <ARCHITECTURE>      Architecture of dotnet binaries to be installed, Defaults to \`$architecture\`."
@@ -1501,7 +1508,7 @@ say "- The SDK needs to be installed without user interaction and without admin 
 say "- The SDK installation doesn't need to persist across multiple CI runs."
 say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.\n"
 
-if [ "$internal" = true ] && [ -z "$feed_credential" ]; then
+if [ "$internal" = true ] && [ -z "$(echo $feed_credential)" ]; then
     message="Provide credentials via --feed-credential parameter."
     if [ "$dry_run" = true ]; then
         say_warning "$message"
@@ -1536,7 +1543,7 @@ if [ "$dry_run" = true ]; then
 
     repeatable_command+="$non_dynamic_parameters"
 
-    if [ ! -z "$feed_credential" ]; then
+    if [ -n "$feed_credential" ]; then
         repeatable_command+=" --feed-credential "\""<feed_credential>"\"""
     fi
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.DotNet.Cli.Utils;
 using Xunit;
 using System.Collections.Generic;
 using Microsoft.NET.TestFramework.Assertions;
@@ -12,9 +11,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 {
     public class AkaMsLinksTests : TestBase
     {
-        // This is not how credentials look like, this is just a testing string.
-        private const string _feedCredential = "478a920c-2217-49f2-9c31-2fc3b4fef7cb";
-
         /// <summary>
         /// Test verifies E2E the aka.ms resolution for SDK
         /// </summary>
@@ -71,6 +67,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
             commandResult.Should().HaveStdOutContaining("The redirect location retrieved:");
             commandResult.Should().HaveStdOutContaining("Downloading using legacy url will not be attempted.");
@@ -162,6 +159,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
             commandResult.Should().HaveStdOutContaining("The redirect location retrieved:");
             commandResult.Should().HaveStdOutContaining("Downloading using legacy url will not be attempted.");
@@ -189,7 +187,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("Current", null, true, @"https://aka.ms/dotnet/internal/current/dotnet-sdk-")]
         [InlineData("LTS", null, true, @"https://aka.ms/dotnet/internal/LTS/dotnet-sdk-")]
         [InlineData("5.0.2xx", "validated", true, @"https://aka.ms/dotnet/internal/5.0.2xx/validated/dotnet-sdk-")]
-        public void LinkCanBeCreatedForSdk(string channel, string quality, bool isInternal, string expectedLink)
+        public void LinkCanBeCreatedForSdk(string channel, string quality, bool useFeedCredential, string expectedLink)
         {
             string expectedLinkPattern = Regex.Escape(expectedLink);
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -211,11 +209,12 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 args.Add(quality);
             }
 
-            if (isInternal)
+            string feedCredentials = default;
+            if (useFeedCredential)
             {
-                args.Add("-internal");
+                feedCredentials = Guid.NewGuid().ToString();
                 args.Add("-feedcredential");
-                args.Add(_feedCredential);
+                args.Add(feedCredentials);
             }
 
             var commandResult = CreateInstallCommand(args)
@@ -223,7 +222,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
+
+            if(useFeedCredential)
+            {
+                commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
+            }
         }
 
         [Theory]
@@ -262,7 +267,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("5.0", "aspnetcore", "ga", true, @"https://aka.ms/dotnet/internal/5.0/aspnetcore-runtime-")]
         [InlineData("LTS", "windowsdesktop", null, true, @"https://aka.ms/dotnet/internal/LTS/windowsdesktop-runtime-")]
         [InlineData("5.0", "windowsdesktop", "ga", true, @"https://aka.ms/dotnet/internal/5.0/windowsdesktop-runtime-")]
-        public void LinkCanBeCreatedForGivenRuntime(string channel, string runtime, string quality, bool isInternal, string expectedLink)
+        public void LinkCanBeCreatedForGivenRuntime(string channel, string runtime, string quality, bool useFeedCredential, string expectedLink)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop")
             {
@@ -290,11 +295,12 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 args.Add(quality);
             }
 
-            if (isInternal)
+            string feedCredentials = default;
+            if (useFeedCredential)
             {
-                args.Add("-internal");
+                feedCredentials = Guid.NewGuid().ToString();
                 args.Add("-feedcredential");
-                args.Add(_feedCredential);
+                args.Add(feedCredentials);
             }
 
             var commandResult = CreateInstallCommand(args)
@@ -302,7 +308,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
+
+            if(useFeedCredential)
+            {
+                commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
+            }
         }
 
         [Theory]
@@ -347,6 +359,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Specifying quality for current or LTS channel is not supported, the quality will be ignored.");
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
         }
@@ -393,6 +406,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("Retrieving primary payload URL from aka.ms link for channel");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
         }
@@ -410,6 +424,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("Retrieving primary payload URL from aka.ms link for channel");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
         }
