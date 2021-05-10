@@ -356,8 +356,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
-            commandResult.Should().HaveStdErrContaining("RuntimeException");
-            commandResult.Should().NotHaveStdOutContaining("Installation finished");
+            commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdOutContainingIgnoreCase(guid);
         }
 
@@ -377,7 +376,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string guid = "?" + Guid.NewGuid().ToString();
 
             // Run install script to download and install.
-            var args = GetInstallScriptArgs(channel, runtime, quality, _sdkInstallationDirectory, guid);
+            var args = GetInstallScriptArgs(channel, runtime, quality, _sdkInstallationDirectory, guid, verboseLogging: true);
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
@@ -394,7 +393,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string? runtime,
             string? quality, 
             string? installDir, 
-            string? feedCredentials = null)
+            string? feedCredentials = null,
+            bool verboseLogging = false)
         {
             if (!string.IsNullOrWhiteSpace(channel))
             {
@@ -424,6 +424,11 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             {
                 yield return "-FeedCredential";
                 yield return feedCredentials;
+            }
+
+            if (verboseLogging)
+            {
+                yield return "-Verbose";
             }
         }
 
