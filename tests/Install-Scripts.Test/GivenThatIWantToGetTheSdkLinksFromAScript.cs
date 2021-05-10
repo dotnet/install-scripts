@@ -8,7 +8,6 @@ using Xunit;
 using System.Collections.Generic;
 using Microsoft.NET.TestFramework.Assertions;
 using FluentAssertions;
-using System.Text.RegularExpressions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {

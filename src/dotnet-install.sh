@@ -880,9 +880,9 @@ get_http_header()
     local failed=false
     local response
     if machine_has "curl"; then
-        get_http_header_curl $remote_path "$disable_feed_credential" || failed=true
+        get_http_header_curl $remote_path $disable_feed_credential || failed=true
     elif machine_has "wget"; then
-        get_http_header_wget $remote_path "$disable_feed_credential" || failed=true
+        get_http_header_wget $remote_path $disable_feed_credential || failed=true
     else
         failed=true
     fi
@@ -1387,10 +1387,9 @@ do
         --feed-credential|-[Ff]eed[Cc]redential)
             shift
             feed_credential="$1"
-            feed_credential=$(echo $feed_credential)
             #feed_credential should start with "?", for it to be added to the end of the link.
             #adding "?" at the beginning of the feed_credential if needed.
-            [[ -z "$feed_credential" ]] || [[ $feed_credential == \?* ]] || feed_credential="?$feed_credential"
+            [[ -z "$(echo $feed_credential)" ]] || [[ $feed_credential == \?* ]] || feed_credential="?$feed_credential"
             ;;
         --runtime-id|-[Rr]untime[Ii]d)
             shift
@@ -1439,8 +1438,9 @@ do
             echo "          For SDK use channel in A.B.Cxx format. Using quality for SDK together with channel in A.B format is not supported." 
             echo "          Supported since 5.0 release." 
             echo "          Note: The version parameter overrides the channel parameter when any version other than `latest` is used, and therefore overrides the quality."
-            echo "  --internal,-Internal               Download internal builds. Provide credentials via --feed-credential parameter."
-            echo "  --feed-credential,-FeedCredential  Azure feed shared access token. This parameter typically is not specified."
+            echo "  --internal,-Internal               Download internal builds. Requires providing credentials via --feed-credential parameter."
+            echo "  --feed-credential <FEEDCREDENTIAL> Token to access Azure feed. Used as a query string to append to the Azure feed."
+            echo "      -FeedCredential                It allows changing the URL to use non-public blob storage accounts. This parameter typically is not specified."
             echo "  -i,--install-dir <DIR>             Install under specified location (see Install Location below)"
             echo "      -InstallDir"
             echo "  --architecture <ARCHITECTURE>      Architecture of dotnet binaries to be installed, Defaults to \`$architecture\`."
@@ -1501,7 +1501,7 @@ say "- The SDK needs to be installed without user interaction and without admin 
 say "- The SDK installation doesn't need to persist across multiple CI runs."
 say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.\n"
 
-if [ "$internal" = true ] && [ -z "$feed_credential" ]; then
+if [ "$internal" = true ] && [ -z "$(echo $feed_credential)" ]; then
     message="Provide credentials via --feed-credential parameter."
     if [ "$dry_run" = true ]; then
         say_warning "$message"
@@ -1536,7 +1536,7 @@ if [ "$dry_run" = true ]; then
 
     repeatable_command+="$non_dynamic_parameters"
 
-    if [ ! -z "$feed_credential" ]; then
+    if [ -n "$feed_credential" ]; then
         repeatable_command+=" --feed-credential "\""<feed_credential>"\"""
     fi
 
