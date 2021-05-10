@@ -383,7 +383,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
-            commandResult.Should().HaveStdErrContaining("Exception");
+            commandResult.Should().HaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdOutContainingIgnoreCase(guid);
         }
