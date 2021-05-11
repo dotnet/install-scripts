@@ -326,10 +326,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [MemberData(nameof(InstallSdkFromChannelTestCases))]
         public void WhenInstallingTheSdkWithFeedCredential(string channel, string? quality, string versionRegex)
         {
-            string guid = "?" + Guid.NewGuid().ToString();
+            string feedCredential = "?" + Guid.NewGuid().ToString();
 
             // Run install script to download and install.
-            var args = GetInstallScriptArgs(channel, null, quality, _sdkInstallationDirectory, guid, true);
+            var args = GetInstallScriptArgs(channel, null, quality, _sdkInstallationDirectory, feedCredential, true);
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
@@ -338,7 +338,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Installation finished");
-            commandResult.Should().NotHaveStdOutContainingIgnoreCase(guid);
+            commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredential);
         }
 
         [Theory]
@@ -351,10 +351,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 // Broken scenario
                 return;
             }
-            string guid = "?" + Guid.NewGuid().ToString();
+            string feedCredential = "?" + Guid.NewGuid().ToString();
 
             // Run install script to download and install.
-            var args = GetInstallScriptArgs(channel, "dotnet", quality, _sdkInstallationDirectory, guid, true);
+            var args = GetInstallScriptArgs(channel, "dotnet", quality, _sdkInstallationDirectory, feedCredential, true);
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
@@ -363,7 +363,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Installation finished");
-            commandResult.Should().NotHaveStdOutContainingIgnoreCase(guid);
+            commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredential);
         }
 
         [Theory]
@@ -379,10 +379,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("dotnet", "LTS", "invalidQuality")]
         public void WhenFailingToInstallWithFeedCredentials(string? runtime, string channel, string? quality)
         {
-            string guid = "?" + Guid.NewGuid().ToString();
+            string feedCredential = "?" + Guid.NewGuid().ToString();
 
             // Run install script to download and install.
-            var args = GetInstallScriptArgs(channel, runtime, quality, _sdkInstallationDirectory, guid, verboseLogging: true);
+            var args = GetInstallScriptArgs(channel, runtime, quality, _sdkInstallationDirectory, feedCredential, verboseLogging: true);
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
@@ -391,7 +391,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             commandResult.Should().HaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("Installation finished");
-            commandResult.Should().NotHaveStdOutContainingIgnoreCase(guid);
+            commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredential);
         }
 
         private static IEnumerable<string> GetInstallScriptArgs(

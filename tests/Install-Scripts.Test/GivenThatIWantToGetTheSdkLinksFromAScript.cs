@@ -97,7 +97,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("2.2", "dotnet")]
         [InlineData("3.0", "dotnet")]
         [InlineData("3.1", "dotnet")]
+        [InlineData("3.1", "dotnet", true)]
         [InlineData("5.0", "dotnet")]
+        [InlineData("5.0", "dotnet", true)]
         [InlineData("Current", "dotnet")]
         [InlineData("LTS", "dotnet")]
         [InlineData("master", "dotnet")]
@@ -105,6 +107,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("release/2.2", "dotnet")]
         [InlineData("release/3.0", "dotnet")]
         [InlineData("release/3.1", "dotnet")]
+        [InlineData("release/3.1", "dotnet", true)]
         // [InlineData("release/5.0", "dotnet")] - Broken
         [InlineData("Current", "aspnetcore")]
         [InlineData("LTS", "aspnetcore")]
@@ -115,23 +118,23 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("3.0", "aspnetcore")]
         [InlineData("3.1", "aspnetcore")]
         [InlineData("5.0", "aspnetcore")]
+        [InlineData("5.0", "aspnetcore", true)]
         [InlineData("master", "aspnetcore")]
-        [InlineData("2.2", "aspnetcore")]
-        [InlineData("3.0", "aspnetcore")]
-        [InlineData("3.1", "aspnetcore")]
-        [InlineData("5.0", "aspnetcore")]
         [InlineData("release/2.1", "aspnetcore")]
         [InlineData("release/2.2", "aspnetcore")]
         //[InlineData("release/3.0", "aspnetcore")] - Broken
         //[InlineData("release/3.1", "aspnetcore")] - Broken
         //[InlineData("release/5.0", "aspnetcore")] - Broken 
         [InlineData("Current", "windowsdesktop")]
+        [InlineData("Current", "windowsdesktop", true)]
         [InlineData("LTS", "windowsdesktop")]
         [InlineData("3.0", "windowsdesktop")]
         [InlineData("3.1", "windowsdesktop")]
         [InlineData("5.0", "windowsdesktop")]
+        [InlineData("5.0", "windowsdesktop", true)]
         [InlineData("master", "windowsdesktop")]
-        public void WhenChannelResolvesToASpecificRuntimeVersion(string channel, string runtimeType, bool internalBuild = false)
+        [InlineData("master", "windowsdesktop", true)]
+        public void WhenChannelResolvesToASpecificRuntimeVersion(string channel, string runtimeType, bool useCustomFeedCredential = false)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtimeType == "windowsdesktop")
             {
@@ -141,11 +144,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             var args = new List<string> { "-dryrun", "-channel", channel, "-runtime", runtimeType };
 
             string feedCredentials = default;
-            if (internalBuild)
+            if (useCustomFeedCredential)
             {
                 feedCredentials = Guid.NewGuid().ToString();
-                args.Add("-internal");
-                args.Add("-feedCredentials");
+                args.Add("-feedCredential");
                 args.Add(feedCredentials);
             }
 
@@ -163,7 +165,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             //  Channel should be translated to a specific Runtime version
             commandResult.Should().HaveStdOutContainingIgnoreCase("-version");
 
-            if (internalBuild)
+            if (useCustomFeedCredential)
             {
                 commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
             }
@@ -211,16 +213,15 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("release/5.0.1xx-preview7")]
         [InlineData("release/5.0.1xx-preview8")]
         [InlineData("release/5.0.1xx-preview8", true)]
-        public void WhenChannelResolvesToASpecificSDKVersion(string channel, bool internalBuild = false)
+        public void WhenChannelResolvesToASpecificSDKVersion(string channel, bool useFeedCredential = false)
         {
             var args = new List<string> { "-dryrun", "-channel", channel };
 
             string feedCredentials = default;
-            if (internalBuild)
+            if (useFeedCredential)
             {
                 feedCredentials = Guid.NewGuid().ToString();
-                args.Add("-internal");
-                args.Add("-feedCredentials");
+                args.Add("-feedCredential");
                 args.Add(feedCredentials);
             }
 
@@ -238,7 +239,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             //  Channel should be translated to a specific SDK version
             commandResult.Should().HaveStdOutContainingIgnoreCase("-version");
 
-            if (internalBuild)
+            if (useFeedCredential)
             {
                 commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
             }
@@ -271,7 +272,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         public void WhenInvalidChannelWasUsed(string channel)
         {
             string feedCredentials = Guid.NewGuid().ToString();
-            var args = new [] { "-dryrun", "-channel", channel, "-internal", "-feedCredentials", feedCredentials };
+            var args = new [] { "-dryrun", "-channel", channel, "-internal", "-feedCredential", feedCredentials };
             
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
