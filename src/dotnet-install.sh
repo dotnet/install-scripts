@@ -729,7 +729,7 @@ get_product_specific_version_from_download_link()
     IFS='-'
     read -ra filename_elems <<< "$filename"
     count=${#filename_elems[@]}
-    if ["$count" -gt 2]; then
+    if [[ "$count" -gt 2 ]]; then
         specific_product_version="${filename_elems[2]}"
     else
         specific_product_version=$specific_version
