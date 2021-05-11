@@ -36,7 +36,7 @@
     Download internal builds. Requires providing credentials via -FeedCredential parameter.
 .PARAMETER FeedCredential
     Token to access Azure feed. Used as a query string to append to the Azure feed.
-    It allows changing the URL to use non-public blob storage accounts. This parameter typically is not specified.
+    This parameter typically is not specified.
 .PARAMETER InstallDir
     Default: %LocalAppData%\Microsoft\dotnet
     Path to where to install dotnet. Note that binaries will be placed directly in a given directory.

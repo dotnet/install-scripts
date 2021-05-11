@@ -993,7 +993,8 @@ downloadcurl() {
         curl $curl_options -o "$out_path" "$remote_path_with_credential" || failed=true
     fi
     if [ "$failed" = true ]; then
-        local response=$(get_http_header_curl $remote_path false)
+        local disable_feed_credential=false
+        local response=$(get_http_header_curl $remote_path $disable_feed_credential)
         http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
         download_error_msg="Unable to download $remote_path."
         if  [[ $http_code != 2* ]]; then
@@ -1023,7 +1024,8 @@ downloadwget() {
         wget $wget_options -O "$out_path" "$remote_path_with_credential" || failed=true
     fi
     if [ "$failed" = true ]; then
-        local response=$(get_http_header_wget $remote_path false)
+        local disable_feed_credential=false
+        local response=$(get_http_header_wget $remote_path $disable_feed_credential)
         http_code=$( echo "$response" | awk '/^  HTTP/{print $2}' | tail -1 )
         download_error_msg="Unable to download $remote_path."
         if  [[ $http_code != 2* ]]; then
@@ -1062,7 +1064,8 @@ get_download_link_from_aka_ms() {
     #do not pass credentials as a part of the $aka_ms_link and do not apply credentials in the get_http_header function
     #otherwise the redirect link would have credentials as well
     #it would result in applying credentials twice to the resulting link and thus breaking it, and in echoing credentials to the output as a part of redirect link
-    response="$(get_http_header "$aka_ms_link" true)"
+    disable_feed_credential=true
+    response="$(get_http_header $aka_ms_link $disable_feed_credential)"
 
     say_verbose "Received response: $response"
     http_code=$( echo "$response" | awk '$1 ~ /^HTTP/ {print $2}' | head -1 )
@@ -1444,7 +1447,7 @@ do
             echo "          Note: The version parameter overrides the channel parameter when any version other than `latest` is used, and therefore overrides the quality."
             echo "  --internal,-Internal               Download internal builds. Requires providing credentials via --feed-credential parameter."
             echo "  --feed-credential <FEEDCREDENTIAL> Token to access Azure feed. Used as a query string to append to the Azure feed."
-            echo "      -FeedCredential                It allows changing the URL to use non-public blob storage accounts. This parameter typically is not specified."
+            echo "      -FeedCredential                This parameter typically is not specified."
             echo "  -i,--install-dir <DIR>             Install under specified location (see Install Location below)"
             echo "      -InstallDir"
             echo "  --architecture <ARCHITECTURE>      Architecture of dotnet binaries to be installed, Defaults to \`$architecture\`."
