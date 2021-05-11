@@ -223,7 +223,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
-            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
 
             if(isInternal)
@@ -310,7 +309,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
-            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
 
             if(isInternal)
@@ -361,7 +359,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
-            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Specifying quality for current or LTS channel is not supported, the quality will be ignored.");
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
         }
