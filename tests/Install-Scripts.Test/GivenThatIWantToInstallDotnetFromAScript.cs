@@ -329,7 +329,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string feedCredential = "?" + Guid.NewGuid().ToString();
 
             // Run install script to download and install.
-            var args = GetInstallScriptArgs(channel, null, quality, _sdkInstallationDirectory, feedCredential, true);
+            var args = GetInstallScriptArgs(channel, null, quality, _sdkInstallationDirectory, feedCredential, verboseLogging: true);
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
@@ -354,7 +354,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string feedCredential = "?" + Guid.NewGuid().ToString();
 
             // Run install script to download and install.
-            var args = GetInstallScriptArgs(channel, "dotnet", quality, _sdkInstallationDirectory, feedCredential, true);
+            var args = GetInstallScriptArgs(channel, "dotnet", quality, _sdkInstallationDirectory, feedCredential, verboseLogging: true);
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
