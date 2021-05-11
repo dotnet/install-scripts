@@ -191,6 +191,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("release/2.1.3xx")]
         [InlineData("release/2.1.4xx")]
         [InlineData("release/2.1.401")]
+        [InlineData("release/2.1.401", true)]
         [InlineData("release/2.1.5xx")]
         [InlineData("release/2.1.502")]
         [InlineData("release/2.1.6xx")]
