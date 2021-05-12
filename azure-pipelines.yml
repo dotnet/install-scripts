@@ -175,13 +175,22 @@ stages:
           ${{ if eq(variables._RunAsPublic, True) }}:
             poolName:  NetCorePublic-Pool
             poolQueue: BuildPool.Ubuntu.1604.Amd64.Open
+            vmImage:
+            helixTargetQueue:
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCoreInternal-Pool
+            poolName: NetCoreInternal-Pool
             poolQueue: BuildPool.Ubuntu.1604.Amd64
+            vmImage:
+            helixTargetQueue:
         Darwin_10_15:
+          poolName:
+          poolQueue:
           vmImage: macOS-10.15
+          helixTargetQueue:
         Darvin_10_14:
-          name: Hosted macOS
+          poolName: Hosted macOS
+          poolQueue:
+          vmImage:
           helixTargetQueue: OSX.1014.Amd64.Open
     pool:
       name: $(poolName)
