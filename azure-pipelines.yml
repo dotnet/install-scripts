@@ -172,12 +172,12 @@ stages:
     strategy:
       matrix:
         Ubuntu:
-        ${{ if eq(variables._RunAsPublic, True) }}:
-          poolName:  NetCorePublic-Pool
-          poolQueue: BuildPool.Ubuntu.1604.Amd64.Open
-        ${{ if eq(variables._RunAsInternal, True) }}:
-          name: NetCoreInternal-Pool
-          poolQueue: BuildPool.Ubuntu.1604.Amd64
+          ${{ if eq(variables._RunAsPublic, True) }}:
+            poolName:  NetCorePublic-Pool
+            poolQueue: BuildPool.Ubuntu.1604.Amd64.Open
+          ${{ if eq(variables._RunAsInternal, True) }}:
+            name: NetCoreInternal-Pool
+            poolQueue: BuildPool.Ubuntu.1604.Amd64
         Darwin_10_15:
           vmImage: macOS-10.15
         Darvin_10_14:
