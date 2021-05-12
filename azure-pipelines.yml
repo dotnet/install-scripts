@@ -166,16 +166,28 @@ stages:
               ResourceGroupName: 'Dotnet-Install-Monitoring'
               Package: '$(System.DefaultWorkingDirectory)/build_windows_$(Build.BuildId).zip'
 
-  - job: LinuxTests
+  - job: Tests
     timeoutInMinutes: 30
     container: LinuxContainer
+    strategy:
+      matrix:
+        Ubuntu:
+        ${{ if eq(variables._RunAsPublic, True) }}:
+          poolName:  NetCorePublic-Pool
+          poolQueue: BuildPool.Ubuntu.1604.Amd64.Open
+        ${{ if eq(variables._RunAsInternal, True) }}:
+          name: NetCoreInternal-Pool
+          poolQueue: BuildPool.Ubuntu.1604.Amd64
+        Darwin_10_15:
+          vmImage: macOS-10.15
+        Darvin_10_14:
+          name: Hosted macOS
+          helixTargetQueue: OSX.1014.Amd64.Open
     pool:
-      ${{ if eq(variables._RunAsPublic, True) }}:
-        name:  NetCorePublic-Pool
-        queue: BuildPool.Ubuntu.1604.Amd64.Open
-      ${{ if eq(variables._RunAsInternal, True) }}:
-        name: NetCoreInternal-Pool
-        queue: BuildPool.Ubuntu.1604.Amd64
+      name: $(poolName)
+      queue: $(poolQueue)
+      vmImage: $(vmImage)
+      helixTargetQueue: $(helixTargetQueue)
     steps:
     - checkout: self
       displayName: Checkout Self
