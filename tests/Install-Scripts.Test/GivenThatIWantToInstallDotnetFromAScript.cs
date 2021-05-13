@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("release/2.1.8xx", "2\\.1\\.8.*", Quality.None),
                 ("release/2.2.4xx", "2\\.2\\.4.*", Quality.None),
                 ("release/3.0.1xx", "3\\.0\\.1.*", Quality.None),
-                // ("release/3.1.4xx", "3\\.1\\.4.*", Quality.None), Temporarily broken scenario
+                ("release/3.1.4xx", "3\\.1\\.4.*", Quality.None),
                 ("release/5.0.1xx", "5\\.0\\.1.*", Quality.None),
                 ("release/5.0.2xx", "5\\.0\\.2.*", Quality.None),
                 // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
@@ -210,8 +210,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingDotnetRuntime(string channel, string? quality, string versionRegex)
         {
-            if (channel == "release/5.0" ||
-                channel == "5.0" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (channel == "release/5.0")
             {
                 // Broken scenario
                 return;
@@ -248,9 +247,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             if (channel == "release/3.0"
                 || channel == "release/3.1"
-                || channel == "release/5.0"
-                ||
-                channel == "5.0" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                || channel == "release/5.0")
             {
                 // These scenarios are broken.
                 return;
