@@ -29,6 +29,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("3.1", "3\\.1\\..*", Quality.None),
                 ("5.0", "5\\.0\\..*", Quality.None),
                 ("6.0", "6\\.0\\..*", Quality.Daily),
+                ("6.0", "6\\.0\\..*", Quality.None),
                 ("Current", "5\\.0\\..*", Quality.None),
                 ("LTS", "3\\.1\\..*", Quality.None),
             };
@@ -46,6 +47,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("release/5.0", "5\\.0\\..*", Quality.None),
                 // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
                 ("6.0-preview2", "6\\.0\\..*", Quality.Daily | Quality.Signed),
+                ("6.0-preview3", "6\\.0\\..*", Quality.Daily),
+                ("6.0-preview4", "6\\.0\\..*", Quality.Daily),
             };
 
         /// <summary>
@@ -62,6 +65,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("release/5.0.2xx", "5\\.0\\.2.*", Quality.None),
                 // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
                 ("6.0.1xx-preview2", "6\\.0\\.1.*", Quality.Daily | Quality.Signed),
+                ("6.0.1xx-preview3", "6\\.0\\.1.*", Quality.Daily),
+                ("6.0.1xx-preview4", "6\\.0\\.1.*", Quality.Daily),
             };
 
         public static IEnumerable<object?[]> InstallSdkFromChannelTestCases
