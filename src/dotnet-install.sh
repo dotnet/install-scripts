@@ -400,7 +400,7 @@ get_normalized_channel() {
 
     local channel="$(to_lowercase "$1")"
 
-    if [[ $channel == release/* ]] || [[ $channel == 'lts' ]] || [[ $channel == 'current' ]] ; then
+    if [[ $channel == release/* ]]; then
         say_warning 'Using branch name with -Channel option is no longer supported with newer releases. Use -Quality option with a channel in X.Y format instead.';
     fi
 
