@@ -716,7 +716,7 @@ get_product_specific_version_from_download_link()
     local specific_version="$2"
     local specific_product_version="" 
 
-    if [ ! -z "$download_link" ]; then
+    if [ -z "$download_link" ]; then
         echo "$specific_version"
         return 0
     fi
