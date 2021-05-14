@@ -32,6 +32,11 @@
     - latest - most latest build on specific channel
     - 3-part version in a format A.B.C - represents specific version of build
           examples: 2.0.0-preview2-006120, 1.1.0
+.PARAMETER Internal
+    Download internal builds. Requires providing credentials via -FeedCredential parameter.
+.PARAMETER FeedCredential
+    Token to access Azure feed. Used as a query string to append to the Azure feed.
+    This parameter typically is not specified.
 .PARAMETER InstallDir
     Default: %LocalAppData%\Microsoft\dotnet
     Path to where to install dotnet. Note that binaries will be placed directly in a given directory.
@@ -66,9 +71,6 @@
 .PARAMETER UncachedFeed
     This parameter typically is not changed by the user.
     It allows changing the URL for the Uncached feed used by this installer.
-.PARAMETER FeedCredential
-    Used as a query string to append to the Azure feed.
-    It allows changing the URL to use non-public blob storage accounts.
 .PARAMETER ProxyAddress
     If set, the installer will use the proxy when making web requests
 .PARAMETER ProxyUseDefaultCredentials
@@ -90,6 +92,7 @@ param(
    [string]$Channel="LTS",
    [string]$Quality,
    [string]$Version="Latest",
+   [switch]$Internal,
    [string]$JSonFile,
    [string]$InstallDir="<auto>",
    [string]$Architecture="<auto>",
@@ -246,7 +249,7 @@ function Get-NormalizedChannel([string]$Channel) {
     }
 
     if ($Channel -eq "lts" -or $Channel -eq "current" -or $Channel.StartsWith('release/')) {
-        Say-Warning "Using branch name with -Channel option is no longer supported with newer releases. Use -Quality option with a channel in X.Y format instead."
+        Say-Warning 'Using branch name with -Channel option is no longer supported with newer releases. Use -Quality option with a channel in X.Y format instead, such as "-Channel 5.0 -Quality Daily."'
     }
 
     switch ($Channel) {
@@ -297,7 +300,7 @@ function Load-Assembly([string] $Assembly) {
     }
 }
 
-function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect)
+function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, [bool]$DisableFeedCredential)
 {
     Invoke-With-Retry(
     {
@@ -349,7 +352,14 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect)
                 $completionOption = [System.Net.Http.HttpCompletionOption]::ResponseContentRead
             }
 
-            $Task = $HttpClient.GetAsync("${Uri}${FeedCredential}", $completionOption).ConfigureAwait("false");
+            if ($DisableFeedCredential) {
+                $UriWithCredential = $Uri
+            }
+            else {
+                $UriWithCredential = "${Uri}${FeedCredential}"
+            }
+
+            $Task = $HttpClient.GetAsync("$UriWithCredential", $completionOption).ConfigureAwait("false");
             $Response = $Task.GetAwaiter().GetResult();
 
             if (($null -eq $Response) -or ((-not $HeaderOnly) -and (-not ($Response.IsSuccessStatusCode)))) {
@@ -826,7 +836,7 @@ function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot, [string]$BinFolde
     }
 }
 
-function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Product, [string]$Architecture) {
+function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Internal, [string]$Product, [string]$Architecture) {
     Say-Invocation $MyInvocation 
 
     #quality is not supported for LTS or current channel
@@ -837,16 +847,22 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
     Say-Verbose "Retrieving primary payload URL from aka.ms link for channel: '$Channel', quality: '$Quality' product: '$Product', os: 'win', architecture: '$Architecture'." 
    
     #construct aka.ms link
-    $akaMsLink = "https://aka.ms/dotnet/$Channel" 
+    $akaMsLink = "https://aka.ms/dotnet"
+    if ($Internal) {
+        $akaMsLink += "/internal"
+    }
+    $akaMsLink += "/$Channel"
     if (-not [string]::IsNullOrEmpty($Quality)) {
         $akaMsLink +="/$Quality"
     }
-
     $akaMsLink +="/$Product-win-$Architecture.zip"
     Say-Verbose  "Constructed aka.ms link: '$akaMsLink'."
 
     #get HTTP response
-    $Response= GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true
+    #do not pass credentials as a part of the $akaMsLink and do not apply credentials in the GetHTTPResponse function
+    #otherwise the redirect link would have credentials as well
+    #it would result in applying credentials twice to the resulting link and thus breaking it, and in echoing credentials to the output as a part of redirect link
+    $Response= GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true -DisableFeedCredential $true
     Say-Verbose "Received response:`n$Response"
 
     if ([string]::IsNullOrEmpty($Response)) {
@@ -859,10 +875,12 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [string]$Prod
     {
         try {
             $akaMsDownloadLink = $Response.Headers.GetValues("Location")[0]
+
             if ([string]::IsNullOrEmpty($akaMsDownloadLink)) {
                 Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location."
                 return $null
             }
+
             Say-Verbose "The redirect location retrieved: '$akaMsDownloadLink'."
             return $akaMsDownloadLink
         }
@@ -880,6 +898,21 @@ Say "- The SDK needs to be installed without user interaction and without admin 
 Say "- The SDK installation doesn't need to persist across multiple CI runs."
 Say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.`r`n"
 
+if ($Internal -and [string]::IsNullOrWhitespace($FeedCredential)) {
+    $message = "Provide credentials via -FeedCredential parameter."
+    if ($DryRun) {
+        Say-Warning "$message"
+    } else {
+        throw "$message"
+    }
+}
+
+#FeedCredential should start with "?", for it to be added to the end of the link.
+#adding "?" at the beginning of the FeedCredential if needed.
+if ((![string]::IsNullOrWhitespace($FeedCredential)) -and ($FeedCredential[0] -ne '?')) {
+    $FeedCredential = "?" + $FeedCredential
+}
+
 $CLIArchitecture = Get-CLIArchitecture-From-Architecture $Architecture
 $NormalizedQuality = Get-NormalizedQuality $Quality
 Say-Verbose "Normalized quality: '$NormalizedQuality'"
@@ -892,7 +925,7 @@ $DownloadLink = $null
 #try to get download location from aka.ms link
 #not applicable when exact version is specified via command or json file
 if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
-    $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Product $NormalizedProduct -Architecture $CLIArchitecture
+    $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Internal $Internal -Product $NormalizedProduct -Architecture $CLIArchitecture
    
     if ([string]::IsNullOrEmpty($AkaMsDownloadLink)){
         if (-not [string]::IsNullOrEmpty($NormalizedQuality)) {
@@ -938,9 +971,9 @@ $ScriptName = $MyInvocation.MyCommand.Name
 
 if ($DryRun) {
     Say "Payload URLs:"
-    Say "Primary named payload URL: $DownloadLink"
+    Say "Primary named payload URL: ${DownloadLink}"
     if ($LegacyDownloadLink) {
-        Say "Legacy named payload URL: $LegacyDownloadLink"
+        Say "Legacy named payload URL: ${LegacyDownloadLink}"
     }
     $RepeatableCommand = ".\$ScriptName -Version `"$SpecificVersion`" -InstallDir `"$InstallRoot`" -Architecture `"$CLIArchitecture`""
     if ($Runtime -eq "dotnet") {
@@ -955,11 +988,13 @@ if ($DryRun) {
         $RepeatableCommand+=" -Quality `"$NormalizedQuality`""
     }
 
-
     foreach ($key in $MyInvocation.BoundParameters.Keys) {
-        if (-not (@("Architecture","Channel","DryRun","InstallDir","Runtime","SharedRuntime","Version","Quality") -contains $key)) {
+        if (-not (@("Architecture","Channel","DryRun","InstallDir","Runtime","SharedRuntime","Version","Quality","FeedCredential") -contains $key)) {
             $RepeatableCommand+=" -$key `"$($MyInvocation.BoundParameters[$key])`""
         }
+    }
+    if ($MyInvocation.BoundParameters.Keys -contains "FeedCredential") {
+        $RepeatableCommand+=" -FeedCredential `"<feedCredential>`""
     }
     Say "Repeatable invocation: $RepeatableCommand"
     if ($SpecificVersion -ne $EffectiveVersion)

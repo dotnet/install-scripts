@@ -203,6 +203,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string installPath = " [" + Path.Combine(_sdkInstallationDirectory, "sdk") + "]";
             string regex = Regex.Escape("  ") + versionRegex + Regex.Escape(installPath);
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
+            commandResult.Should().NotHaveStdErr();
         }
 
         [Theory]
@@ -238,6 +239,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string lineEnd = " [" + Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.NETCore.App") + "]";
             string regex = Regex.Escape(lineStart) + versionRegex + Regex.Escape(lineEnd);
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
+            commandResult.Should().NotHaveStdErr();
         }
 
         [Theory]
@@ -276,6 +278,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string lineEnd = " [" + Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.AspNetCore.App") + "]";
             string regex = Regex.Escape(lineStart) + versionRegex + Regex.Escape(lineEnd);
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
+            commandResult.Should().NotHaveStdErr();
         }
 
         [Theory]
@@ -312,13 +315,92 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
+            commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Installation finished");
 
             // Dotnet CLI is not included in the windowsdesktop runtime. Therefore, version validation cannot be tested.
             // Add the validation once the becomes available in the artifacts.
         }
 
-        private static IEnumerable<string> GetInstallScriptArgs(string? channel, string? runtime, string? quality, string? installDir)
+        [Theory]
+        [MemberData(nameof(InstallSdkFromChannelTestCases))]
+        public void WhenInstallingTheSdkWithFeedCredential(string channel, string? quality, string versionRegex)
+        {
+            string feedCredential = "?" + Guid.NewGuid().ToString();
+
+            // Run install script to download and install.
+            var args = GetInstallScriptArgs(channel, null, quality, _sdkInstallationDirectory, feedCredential, verboseLogging: true);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredential);
+        }
+
+        [Theory]
+        [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
+        public void WhenInstallingDotnetRuntimeWithFeedCredential(string channel, string? quality, string versionRegex)
+        {
+            if (channel == "release/5.0" ||
+                channel == "5.0" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Broken scenario
+                return;
+            }
+            string feedCredential = "?" + Guid.NewGuid().ToString();
+
+            // Run install script to download and install.
+            var args = GetInstallScriptArgs(channel, "dotnet", quality, _sdkInstallationDirectory, feedCredential, verboseLogging: true);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredential);
+        }
+
+        [Theory]
+        [InlineData(null, "2.4", "ga")]
+        [InlineData(null, "3.9", null)]
+        [InlineData(null, "6.a", "preview")]
+        [InlineData(null, "release/1.4.1xx", null)]
+        [InlineData(null, "LTS", "invalidQuality")]
+        [InlineData("dotnet", "2.4", "ga")]
+        [InlineData("dotnet", "3.9", null)]
+        [InlineData("dotnet", "6.a", "preview")]
+        [InlineData("dotnet", "release/1.4.1xx", null)]
+        [InlineData("dotnet", "LTS", "invalidQuality")]
+        public void WhenFailingToInstallWithFeedCredentials(string? runtime, string channel, string? quality)
+        {
+            string feedCredential = "?" + Guid.NewGuid().ToString();
+
+            // Run install script to download and install.
+            var args = GetInstallScriptArgs(channel, runtime, quality, _sdkInstallationDirectory, feedCredential, verboseLogging: true);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdErr();
+            commandResult.Should().NotHaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredential);
+        }
+
+        private static IEnumerable<string> GetInstallScriptArgs(
+            string? channel, 
+            string? runtime,
+            string? quality, 
+            string? installDir, 
+            string? feedCredentials = null,
+            bool verboseLogging = false)
         {
             if (!string.IsNullOrWhiteSpace(channel))
             {
@@ -342,6 +424,17 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             {
                 yield return "-Quality";
                 yield return quality;
+            }
+
+            if (!string.IsNullOrWhiteSpace(feedCredentials))
+            {
+                yield return "-FeedCredential";
+                yield return feedCredentials;
+            }
+
+            if (verboseLogging)
+            {
+                yield return "-Verbose";
             }
         }
 

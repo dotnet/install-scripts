@@ -635,14 +635,14 @@ get_specific_product_version() {
 
         if machine_has "curl"
         then
-            specific_product_version=$(curl -s --fail "$download_link")
+            specific_product_version=$(curl -s --fail "${download_link}${feed_credential}")
             if [ $? = 0 ]; then
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
             fi
         elif machine_has "wget"
         then
-            specific_product_version=$(wget -qO- "$download_link")
+            specific_product_version=$(wget -qO- "${download_link}${feed_credential}")
             if [ $? = 0 ]; then
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
@@ -688,16 +688,16 @@ get_specific_product_version_url() {
 
     if [ -z "$package_download_link" ]; then
         if [[ "$runtime" == "dotnet" ]]; then
-            download_link="$azure_feed/Runtime/$specific_version/${pvFileName}${feed_credential}"
+            download_link="$azure_feed/Runtime/$specific_version/${pvFileName}"
         elif [[ "$runtime" == "aspnetcore" ]]; then
-            download_link="$azure_feed/aspnetcore/Runtime/$specific_version/${pvFileName}${feed_credential}"
+            download_link="$azure_feed/aspnetcore/Runtime/$specific_version/${pvFileName}"
         elif [ -z "$runtime" ]; then
-            download_link="$azure_feed/Sdk/$specific_version/${pvFileName}${feed_credential}"
+            download_link="$azure_feed/Sdk/$specific_version/${pvFileName}"
         else
             return 1
         fi
     else
-        download_link="${package_download_link%/*}/${pvFileName}${feed_credential}" 
+        download_link="${package_download_link%/*}/${pvFileName}"
     fi
 
     say_verbose "Constructed productVersion link: $download_link"
@@ -729,7 +729,7 @@ get_product_specific_version_from_download_link()
     IFS='-'
     read -ra filename_elems <<< "$filename"
     count=${#filename_elems[@]}
-    if ["$count" -gt 2]; then
+    if [[ "$count" -gt 2 ]]; then
         specific_product_version="${filename_elems[2]}"
     else
         specific_product_version=$specific_version
@@ -870,16 +870,19 @@ extract_dotnet_package() {
 
 # args:
 # remote_path - $1
+# disable_feed_credential - $2
 get_http_header()
 {
     eval $invocation
     local remote_path="$1"
+    local disable_feed_credential="$2"
+
     local failed=false
     local response
     if machine_has "curl"; then
-        get_http_header_curl $remote_path || failed=true
+        get_http_header_curl $remote_path $disable_feed_credential || failed=true
     elif machine_has "wget"; then
-        get_http_header_wget $remote_path || failed=true
+        get_http_header_wget $remote_path $disable_feed_credential || failed=true
     else
         failed=true
     fi
@@ -892,10 +895,17 @@ get_http_header()
 
 # args:
 # remote_path - $1
+# disable_feed_credential - $2
 get_http_header_curl() {
     eval $invocation
     local remote_path="$1"
-    remote_path_with_credential="${remote_path}${feed_credential}"
+    local disable_feed_credential="$2"
+
+    remote_path_with_credential="$remote_path"
+    if [ "$disable_feed_credential" = false ]; then
+        remote_path_with_credential+="$feed_credential"
+    fi
+
     curl_options="-I -sSL --retry 5 --retry-delay 2 --connect-timeout 15 "
     curl $curl_options "$remote_path_with_credential" || return 1
     return 0
@@ -903,10 +913,17 @@ get_http_header_curl() {
 
 # args:
 # remote_path - $1
+# disable_feed_credential - $2
 get_http_header_wget() {
     eval $invocation
     local remote_path="$1"
-    remote_path_with_credential="${remote_path}${feed_credential}"
+    local disable_feed_credential="$2"
+
+    remote_path_with_credential="$remote_path"
+    if [ "$disable_feed_credential" = false ]; then
+        remote_path_with_credential+="$feed_credential"
+    fi
+
     wget_options="-q -S --spider --tries 5 --waitretry 2 --connect-timeout 15 "
     wget $wget_options "$remote_path_with_credential" 2>&1 || return 1
     return 0
@@ -966,6 +983,7 @@ downloadcurl() {
     local remote_path="$1"
     local out_path="${2:-}"
     # Append feed_credential as late as possible before calling curl to avoid logging feed_credential
+    # Avoid passing URI with credentials to functions: note, most of them echoing parameters of invocation in verbose output.
     local remote_path_with_credential="${remote_path}${feed_credential}"
     local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
     local failed=false
@@ -975,7 +993,8 @@ downloadcurl() {
         curl $curl_options -o "$out_path" "$remote_path_with_credential" || failed=true
     fi
     if [ "$failed" = true ]; then
-        local response=$(get_http_header_curl $remote_path_with_credential)
+        local disable_feed_credential=false
+        local response=$(get_http_header_curl $remote_path $disable_feed_credential)
         http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
         download_error_msg="Unable to download $remote_path."
         if  [[ $http_code != 2* ]]; then
@@ -1005,7 +1024,8 @@ downloadwget() {
         wget $wget_options -O "$out_path" "$remote_path_with_credential" || failed=true
     fi
     if [ "$failed" = true ]; then
-        local response=$(get_http_header_wget $remote_path_with_credential)
+        local disable_feed_credential=false
+        local response=$(get_http_header_wget $remote_path $disable_feed_credential)
         http_code=$( echo "$response" | awk '/^  HTTP/{print $2}' | tail -1 )
         download_error_msg="Unable to download $remote_path."
         if  [[ $http_code != 2* ]]; then
@@ -1029,7 +1049,11 @@ get_download_link_from_aka_ms() {
     say_verbose "Retrieving primary payload URL from aka.ms for channel: '$normalized_channel', quality: '$normalized_quality', product: '$normalized_product', os: '$normalized_os', architecture: '$normalized_architecture'." 
 
     #construct aka.ms link
-    aka_ms_link="https://aka.ms/dotnet/$normalized_channel" 
+    aka_ms_link="https://aka.ms/dotnet"
+    if  [ "$internal" = true ]; then
+        aka_ms_link="$aka_ms_link/internal"
+    fi
+    aka_ms_link="$aka_ms_link/$normalized_channel"
     if [[ ! -z "$normalized_quality" ]]; then
         aka_ms_link="$aka_ms_link/$normalized_quality"
     fi
@@ -1037,7 +1061,11 @@ get_download_link_from_aka_ms() {
     say_verbose "Constructed aka.ms link: '$aka_ms_link'."
 
     #get HTTP response
-    response="$(get_http_header "$aka_ms_link")"
+    #do not pass credentials as a part of the $aka_ms_link and do not apply credentials in the get_http_header function
+    #otherwise the redirect link would have credentials as well
+    #it would result in applying credentials twice to the resulting link and thus breaking it, and in echoing credentials to the output as a part of redirect link
+    disable_feed_credential=true
+    response="$(get_http_header $aka_ms_link $disable_feed_credential)"
 
     say_verbose "Received response: $response"
     http_code=$( echo "$response" | awk '$1 ~ /^HTTP/ {print $2}' | head -1 )
@@ -1045,10 +1073,12 @@ get_download_link_from_aka_ms() {
     #if HTTP code is 301 (Moved Permanently), the redirect link exists
     if [[ "$http_code" == "301" ]]; then
         aka_ms_download_link=$( echo "$response" | awk '$1 ~ /^Location/{print $2}' | head -1 | tr -d '\r')
+
         if [[ -z "$aka_ms_download_link" ]]; then
             say_verbose "The aka.ms link '$aka_ms_link' is not valid: failed to get redirect location."
             return 1
         fi
+
         say_verbose "The redirect location retrieved: '$aka_ms_download_link'."
         return 0
     else
@@ -1282,6 +1312,7 @@ verbose=false
 runtime=""
 runtime_id=""
 quality=""
+internal=false
 override_non_versioned_files=true
 non_dynamic_parameters=""
 user_defined_os=""
@@ -1301,6 +1332,10 @@ do
         -q|--quality|-[Qq]uality)
             shift
             quality="$1"
+            ;;
+        --internal|-[Ii]nternal)
+            internal=true
+            non_dynamic_parameters+=" $name"
             ;;
         -i|--install-dir|-[Ii]nstall[Dd]ir)
             shift
@@ -1359,7 +1394,9 @@ do
         --feed-credential|-[Ff]eed[Cc]redential)
             shift
             feed_credential="$1"
-            non_dynamic_parameters+=" $name "\""$1"\"""
+            #feed_credential should start with "?", for it to be added to the end of the link.
+            #adding "?" at the beginning of the feed_credential if needed.
+            [[ -z "$(echo $feed_credential)" ]] || [[ $feed_credential == \?* ]] || feed_credential="?$feed_credential"
             ;;
         --runtime-id|-[Rr]untime[Ii]d)
             shift
@@ -1408,6 +1445,9 @@ do
             echo "          For SDK use channel in A.B.Cxx format. Using quality for SDK together with channel in A.B format is not supported." 
             echo "          Supported since 5.0 release." 
             echo "          Note: The version parameter overrides the channel parameter when any version other than `latest` is used, and therefore overrides the quality."
+            echo "  --internal,-Internal               Download internal builds. Requires providing credentials via --feed-credential parameter."
+            echo "  --feed-credential <FEEDCREDENTIAL> Token to access Azure feed. Used as a query string to append to the Azure feed."
+            echo "      -FeedCredential                This parameter typically is not specified."
             echo "  -i,--install-dir <DIR>             Install under specified location (see Install Location below)"
             echo "      -InstallDir"
             echo "  --architecture <ARCHITECTURE>      Architecture of dotnet binaries to be installed, Defaults to \`$architecture\`."
@@ -1428,7 +1468,6 @@ do
             echo "  --verbose,-Verbose                 Display diagnostics information."
             echo "  --azure-feed,-AzureFeed            Azure feed location. Defaults to $azure_feed, This parameter typically is not changed by the user."
             echo "  --uncached-feed,-UncachedFeed      Uncached feed location. This parameter typically is not changed by the user."
-            echo "  --feed-credential,-FeedCredential  Azure feed shared access token. This parameter typically is not specified."
             echo "  --skip-non-versioned-files         Skips non-versioned files if they already exist, such as the dotnet executable."
             echo "      -SkipNonVersionedFiles"
             echo "  --no-cdn,-NoCdn                    Disable downloading from the Azure CDN, and use the uncached feed directly."
@@ -1469,15 +1508,25 @@ say "- The SDK needs to be installed without user interaction and without admin 
 say "- The SDK installation doesn't need to persist across multiple CI runs."
 say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.\n"
 
+if [ "$internal" = true ] && [ -z "$(echo $feed_credential)" ]; then
+    message="Provide credentials via --feed-credential parameter."
+    if [ "$dry_run" = true ]; then
+        say_warning "$message"
+    else
+        say_err "$message"
+        exit 1
+    fi
+fi
+
 check_min_reqs
 calculate_vars
 script_name=$(basename "$0")
 
 if [ "$dry_run" = true ]; then
     say "Payload URLs:"
-    say "Primary named payload URL: $download_link"
+    say "Primary named payload URL: ${download_link}"
     if [ "$valid_legacy_download_link" = true ]; then
-        say "Legacy named payload URL: $legacy_download_link"
+        say "Legacy named payload URL: ${legacy_download_link}"
     fi
     repeatable_command="./$script_name --version "\""$specific_version"\"" --install-dir "\""$install_root"\"" --architecture "\""$normalized_architecture"\"" --os "\""$normalized_os"\"""
     
@@ -1490,7 +1539,13 @@ if [ "$dry_run" = true ]; then
     elif [[ "$runtime" == "aspnetcore" ]]; then
         repeatable_command+=" --runtime "\""aspnetcore"\"""
     fi
+
     repeatable_command+="$non_dynamic_parameters"
+
+    if [ -n "$feed_credential" ]; then
+        repeatable_command+=" --feed-credential "\""<feed_credential>"\"""
+    fi
+
     say "Repeatable invocation: $repeatable_command"
     exit 0
 fi
