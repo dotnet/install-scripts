@@ -248,7 +248,7 @@ function Get-NormalizedChannel([string]$Channel) {
         return ""
     }
 
-    if ($Channel -eq "lts" -or $Channel -eq "current" -or $Channel.StartsWith('release/')) {
+    if ($Channel.StartsWith('release/')) {
         Say-Warning 'Using branch name with -Channel option is no longer supported with newer releases. Use -Quality option with a channel in X.Y format instead, such as "-Channel 5.0 -Quality Daily."'
     }
 

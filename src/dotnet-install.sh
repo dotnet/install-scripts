@@ -400,7 +400,7 @@ get_normalized_channel() {
 
     local channel="$(to_lowercase "$1")"
 
-    if [[ $channel == release/* ]] || [[ $channel == 'lts' ]] || [[ $channel == 'current' ]] ; then
+    if [[ $channel == release/* ]]; then
         say_warning 'Using branch name with -Channel option is no longer supported with newer releases. Use -Quality option with a channel in X.Y format instead.';
     fi
 
@@ -716,7 +716,7 @@ get_product_specific_version_from_download_link()
     local specific_version="$2"
     local specific_product_version="" 
 
-    if [ ! -z "$download_link" ]; then
+    if [ -z "$download_link" ]; then
         echo "$specific_version"
         return 0
     fi
