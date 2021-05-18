@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("release/2.2", "2\\.2\\..*", Quality.None),
                 ("release/3.0", "3\\.0\\..*", Quality.None),
                 ("release/3.1", "3\\.1\\..*", Quality.None),
-                ("release/5.0", "5\\.0\\..*", Quality.None),
+                // ("release/5.0", "5\\.0\\..*", Quality.None), Broken scenario
                 // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
                 ("6.0-preview2", "6\\.0\\..*", Quality.Daily | Quality.Signed),
                 ("6.0-preview3", "6\\.0\\..*", Quality.Daily),
@@ -215,12 +215,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingDotnetRuntime(string channel, string? quality, string versionRegex)
         {
-            if (channel == "release/5.0")
-            {
-                // Broken scenario
-                return;
-            }
-
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, "dotnet", quality, _sdkInstallationDirectory);
 
@@ -251,8 +245,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         public void WhenInstallingAspNetCoreRuntime(string channel, string? quality, string versionRegex)
         {
             if (channel == "release/3.0"
-                || channel == "release/3.1"
-                || channel == "release/5.0")
+                || channel == "release/3.1")
             {
                 // These scenarios are broken.
                 return;
@@ -298,7 +291,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 new Regex(".*2\\..*"),     // Runtime is not supported in this version.
                 new Regex(".*3\\.0.*"),    // Runtime is not supported in this version.
                 new Regex("release/3.1"),  // Broken scenario.
-                new Regex("release/5.0"),  // Broken scenario.
                 new Regex("6.0"),          // Broken scenario.
                 new Regex("6.0-preview2"), // Broken scenario.
             };
@@ -347,12 +339,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingDotnetRuntimeWithFeedCredential(string channel, string? quality, string versionRegex)
         {
-            if (channel == "release/5.0" ||
-                channel == "5.0" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Broken scenario
-                return;
-            }
             string feedCredential = "?" + Guid.NewGuid().ToString();
 
             // Run install script to download and install.
