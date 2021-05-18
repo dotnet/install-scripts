@@ -29,6 +29,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("3.1", "3\\.1\\..*", Quality.None),
                 ("5.0", "5\\.0\\..*", Quality.None),
                 ("6.0", "6\\.0\\..*", Quality.Daily),
+                ("6.0", "6\\.0\\..*", Quality.None),
                 ("Current", "5\\.0\\..*", Quality.None),
                 ("LTS", "3\\.1\\..*", Quality.None),
             };
@@ -43,9 +44,11 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("release/2.2", "2\\.2\\..*", Quality.None),
                 ("release/3.0", "3\\.0\\..*", Quality.None),
                 ("release/3.1", "3\\.1\\..*", Quality.None),
-                ("release/5.0", "5\\.0\\..*", Quality.None),
+                // ("release/5.0", "5\\.0\\..*", Quality.None), Broken scenario
                 // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
                 ("6.0-preview2", "6\\.0\\..*", Quality.Daily | Quality.Signed),
+                ("6.0-preview3", "6\\.0\\..*", Quality.Daily),
+                ("6.0-preview4", "6\\.0\\..*", Quality.Daily),
             };
 
         /// <summary>
@@ -57,11 +60,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("release/2.1.8xx", "2\\.1\\.8.*", Quality.None),
                 ("release/2.2.4xx", "2\\.2\\.4.*", Quality.None),
                 ("release/3.0.1xx", "3\\.0\\.1.*", Quality.None),
-                // ("release/3.1.4xx", "3\\.1\\.4.*", Quality.None), Temporarily broken scenario
+                ("release/3.1.4xx", "3\\.1\\.4.*", Quality.None),
                 ("release/5.0.1xx", "5\\.0\\.1.*", Quality.None),
                 ("release/5.0.2xx", "5\\.0\\.2.*", Quality.None),
                 // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
                 ("6.0.1xx-preview2", "6\\.0\\.1.*", Quality.Daily | Quality.Signed),
+                ("6.0.1xx-preview3", "6\\.0\\.1.*", Quality.Daily),
+                ("6.0.1xx-preview4", "6\\.0\\.1.*", Quality.Daily),
             };
 
         public static IEnumerable<object?[]> InstallSdkFromChannelTestCases
@@ -210,13 +215,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingDotnetRuntime(string channel, string? quality, string versionRegex)
         {
-            if (channel == "release/5.0" ||
-                channel == "5.0" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Broken scenario
-                return;
-            }
-
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, "dotnet", quality, _sdkInstallationDirectory);
 
@@ -247,10 +245,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         public void WhenInstallingAspNetCoreRuntime(string channel, string? quality, string versionRegex)
         {
             if (channel == "release/3.0"
-                || channel == "release/3.1"
-                || channel == "release/5.0"
-                ||
-                channel == "5.0" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                || channel == "release/3.1")
             {
                 // These scenarios are broken.
                 return;
@@ -296,7 +291,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 new Regex(".*2\\..*"),     // Runtime is not supported in this version.
                 new Regex(".*3\\.0.*"),    // Runtime is not supported in this version.
                 new Regex("release/3.1"),  // Broken scenario.
-                new Regex("release/5.0"),  // Broken scenario.
                 new Regex("6.0"),          // Broken scenario.
                 new Regex("6.0-preview2"), // Broken scenario.
             };
@@ -345,12 +339,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingDotnetRuntimeWithFeedCredential(string channel, string? quality, string versionRegex)
         {
-            if (channel == "release/5.0" ||
-                channel == "5.0" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Broken scenario
-                return;
-            }
             string feedCredential = "?" + Guid.NewGuid().ToString();
 
             // Run install script to download and install.
