@@ -868,37 +868,38 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
         Say-Verbose "Received response:`n$Response"
 
         if ([string]::IsNullOrEmpty($Response)) {
-            Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resource is not available."
+            Say-Verbose "The link '$akaMsLink' is not valid: failed to get redirect location. The resource is not available."
             return $null
         }
 
         #if HTTP code is 301 (Moved Permanently), the redirect link exists
-        if  ($Response.StatusCode -eq 301 )
+        if  ($Response.StatusCode -eq 301)
         {
             try {
                 $akaMsDownloadLink = $Response.Headers.GetValues("Location")[0]
 
                 if ([string]::IsNullOrEmpty($akaMsDownloadLink)) {
-                    Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location."
+                    Say-Verbose "The link '$akaMsLink' is not valid: server returned 301 (Moved Permanently), but the headers do not contain the redirect location."
                     return $null
                 }
 
                 Say-Verbose "The redirect location retrieved: '$akaMsDownloadLink'."
-                if ($akaMsDownloadLink.StartsWith('https://aka.ms/'))
-                {
-                    # aka.ms link refers to another aka.ms link. Resolve the address again.
-                    $akaMsLink = $akaMsDownloadLink
-                    Say-Verbose "The aka.ms link points to another aka.ms link. Attempting to retrieve redirect location again."
-                    continue
-                }
-                return $akaMsDownloadLink
+                # This may yet be a link to another redirection. Attempt to retrieve the page again.
+                $akaMsLink = $akaMsDownloadLink
+                continue
             }
             catch {
-                Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location."
+                Say-Verbose "The link '$akaMsLink' is not valid: failed to get redirect location."
                 return $null
             }
         }
-        Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resourse is not available."
+        elseif ($Response.StatusCode -eq 200)
+        {
+            # We ended up with a valid URL. This is where the resource should be.
+            return $akaMsDownloadLink
+        }
+
+        Say-Verbose "The link '$akaMsLink' is not valid: failed to trace redirections to a valid resource. Last received HTTP code is '$Response.StatusCode'."
         return $null
     }
 
