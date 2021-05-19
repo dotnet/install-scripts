@@ -858,39 +858,53 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
     $akaMsLink +="/$Product-win-$Architecture.zip"
     Say-Verbose  "Constructed aka.ms link: '$akaMsLink'."
 
-    #get HTTP response
-    #do not pass credentials as a part of the $akaMsLink and do not apply credentials in the GetHTTPResponse function
-    #otherwise the redirect link would have credentials as well
-    #it would result in applying credentials twice to the resulting link and thus breaking it, and in echoing credentials to the output as a part of redirect link
-    $Response= GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true -DisableFeedCredential $true
-    Say-Verbose "Received response:`n$Response"
-
-    if ([string]::IsNullOrEmpty($Response)) {
-        Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resource is not available."
-        return $null
-    }
-
-    #if HTTP code is 301 (Moved Permanently), the redirect link exists
-    if  ($Response.StatusCode -eq 301 )
+    for ($maxRedirections = 9; $maxRedirections -ge 0; $maxRedirections--)
     {
-        try {
-            $akaMsDownloadLink = $Response.Headers.GetValues("Location")[0]
+        #get HTTP response
+        #do not pass credentials as a part of the $akaMsLink and do not apply credentials in the GetHTTPResponse function
+        #otherwise the redirect link would have credentials as well
+        #it would result in applying credentials twice to the resulting link and thus breaking it, and in echoing credentials to the output as a part of redirect link
+        $Response= GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true -DisableFeedCredential $true
+        Say-Verbose "Received response:`n$Response"
 
-            if ([string]::IsNullOrEmpty($akaMsDownloadLink)) {
+        if ([string]::IsNullOrEmpty($Response)) {
+            Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resource is not available."
+            return $null
+        }
+
+        #if HTTP code is 301 (Moved Permanently), the redirect link exists
+        if  ($Response.StatusCode -eq 301 )
+        {
+            try {
+                $akaMsDownloadLink = $Response.Headers.GetValues("Location")[0]
+
+                if ([string]::IsNullOrEmpty($akaMsDownloadLink)) {
+                    Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location."
+                    return $null
+                }
+
+                Say-Verbose "The redirect location retrieved: '$akaMsDownloadLink'."
+                if ($akaMsDownloadLink.StartsWith('https://aka.ms/'))
+                {
+                    # aka.ms link refers to another aka.ms link. Resolve the address again.
+                    $akaMsLink = $akaMsDownloadLink
+                    Say-Verbose "The aka.ms link points to another aka.ms link. Attempting to retrieve redirect location again."
+                    continue
+                }
+                return $akaMsDownloadLink
+            }
+            catch {
                 Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location."
                 return $null
             }
-
-            Say-Verbose "The redirect location retrieved: '$akaMsDownloadLink'."
-            return $akaMsDownloadLink
         }
-        catch {
-            Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location."
-            return $null
-        }
+        Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resourse is not available."
+        return $null
     }
-    Say-Verbose "The aka.ms link '$akaMsLink' is not valid: failed to get redirect location. The resourse is not available."
+
+    Say-Warning "Aka.ms links have redirected more than the maximum allowed redirections. This may be caused by a cyclic redirection of aka.ms links."
     return $null
+
 }
 
 Say "Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:"
