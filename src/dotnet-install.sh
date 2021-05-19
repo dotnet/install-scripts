@@ -1068,11 +1068,14 @@ get_download_link_from_aka_ms() {
     response="$(get_http_header $aka_ms_link $disable_feed_credential)"
 
     say_verbose "Received response: $response"
-    http_code=$( echo "$response" | awk '$1 ~ /^HTTP/ {print $2}' | head -1 )
+    # Get results of all the redirects.
+    http_codes=$( echo "$response" | awk '$1 ~ /^HTTP/ {print $2}' )
+    # They all need to be 301, otherwise some links are broken (except for the last, which is not a redirect but 200 or 404).
+    broken_redirects=$( echo "$http_codes" | sed '$d' | grep -v '301' )
 
-    #if HTTP code is 301 (Moved Permanently), the redirect link exists
-    if [[ "$http_code" == "301" ]]; then
-        aka_ms_download_link=$( echo "$response" | awk '$1 ~ /^Location/{print $2}' | head -1 | tr -d '\r')
+    # All HTTP codes are 301 (Moved Permanently), the redirect link exists.
+    if [[ -z "$broken_redirects" ]]; then
+        aka_ms_download_link=$( echo "$response" | awk '$1 ~ /^Location/{print $2}' | tail -1 | tr -d '\r')
 
         if [[ -z "$aka_ms_download_link" ]]; then
             say_verbose "The aka.ms link '$aka_ms_link' is not valid: failed to get redirect location."
@@ -1082,7 +1085,7 @@ get_download_link_from_aka_ms() {
         say_verbose "The redirect location retrieved: '$aka_ms_download_link'."
         return 0
     else
-        say_verbose "The aka.ms link '$aka_ms_link' is not valid: received HTTP code: $http_code."
+        say_verbose "The aka.ms link '$aka_ms_link' is not valid: received HTTP code: $(echo "$broken_redirects" | paste -sd "," -)."
         return 1
     fi
 }
