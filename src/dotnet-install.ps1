@@ -857,6 +857,7 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
     }
     $akaMsLink +="/$Product-win-$Architecture.zip"
     Say-Verbose  "Constructed aka.ms link: '$akaMsLink'."
+    $akaMsDownloadLink=$null
 
     for ($maxRedirections = 9; $maxRedirections -ge 0; $maxRedirections--)
     {
@@ -893,13 +894,13 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
                 return $null
             }
         }
-        elseif ($Response.StatusCode -eq 200)
+        elseif (-not [string]::IsNullOrEmpty($akaMsDownloadLink))
         {
-            # We ended up with a valid URL. This is where the resource should be.
+            # Redirections have ended.
             return $akaMsDownloadLink
         }
 
-        Say-Verbose "The link '$akaMsLink' is not valid: failed to trace redirections to a valid resource. Last received HTTP code is '$Response.StatusCode'."
+        Say-Verbose "The link '$akaMsLink' is not valid: failed to retrieve the redirection location."
         return $null
     }
 
