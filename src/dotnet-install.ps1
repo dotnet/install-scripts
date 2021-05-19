@@ -894,7 +894,7 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
                 return $null
             }
         }
-        elseif (-not [string]::IsNullOrEmpty($akaMsDownloadLink))
+        elseif ((($Response.StatusCode -lt 300) -or ($Response.StatusCode -ge 400)) -and (-not [string]::IsNullOrEmpty($akaMsDownloadLink)))
         {
             # Redirections have ended.
             return $akaMsDownloadLink
