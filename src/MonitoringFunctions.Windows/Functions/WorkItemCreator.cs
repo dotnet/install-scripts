@@ -11,6 +11,7 @@ using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 using Microsoft.VisualStudio.Services.WebApi.Patch.Json;
+using MonitoringFunctions.Common;
 using MonitoringFunctions.Incidents;
 using MonitoringFunctions.Models;
 using Newtonsoft.Json;
@@ -29,6 +30,7 @@ namespace MonitoringFunctions.Windows.Functions
         private const string IncidentAreaPath = "DevDiv\\NET Tools\\install-scripts-incidents";
         private static readonly string? _devdivAdoPAT = Environment.GetEnvironmentVariable("devdiv-ado-pat");
         private static readonly Uri _devdivCollectionUri = new Uri("https://devdiv.visualstudio.com/DefaultCollection/");
+        private static readonly string? TeamsWebhookUrl = Environment.GetEnvironmentVariable("teams-webhook-url");
         private static readonly IncidentSerializer IncidentSerializer = new IncidentSerializer();
 
         [FunctionName("WorkItemCreator")]
@@ -36,6 +38,11 @@ namespace MonitoringFunctions.Windows.Functions
             [HttpTrigger(AuthorizationLevel.Function, "get", "post", Route = null)] HttpRequest req,
             ILogger log)
         {
+            // Function run shouldn't take longer than 3 minutes.
+            TimeSpan maxExecutionDuration = TimeSpan.FromMinutes(3);
+            CancellationTokenSource cancellationTokenSource = new CancellationTokenSource(maxExecutionDuration);
+            CancellationToken cancellationToken = cancellationTokenSource.Token;
+
             using StreamReader requestStream = new StreamReader(req.Body);
             string requestBody = await requestStream.ReadToEndAsync().ConfigureAwait(false);
 
@@ -64,6 +71,27 @@ namespace MonitoringFunctions.Windows.Functions
             string alertMessage = data.Message ?? "Alert triggered";
             int alertingMonitorCount = data.MatchingAlerts?.Length ?? 0;
             List<WorkItem> createdWorkItems = new List<WorkItem>();
+            TeamsConnector? teamsConnector = null;
+
+            if (data.Tags != null
+                && data.Tags.ContainsKey("notifyTeams")
+                && bool.TryParse(data.Tags["notifyTeams"], out bool notifyTeams)
+                && notifyTeams)
+            {
+                if (string.IsNullOrWhiteSpace(TeamsWebhookUrl))
+                {
+                    log.LogError("Teams notifications were requested, but no webhook url was provided."
+                        + " No notifications will be sent.");
+                }
+                else
+                {
+                    teamsConnector = new TeamsConnector(TeamsWebhookUrl);
+                }
+            }
+            else
+            {
+                log.LogInformation("Teams notifications will not be sent, because the request doesn't have 'notifyTeams' tag or the value isn't true.");
+            }
 
             for (int i = 0; i < alertingMonitorCount; i++)
             {
@@ -83,8 +111,11 @@ namespace MonitoringFunctions.Windows.Functions
 
                 string title = $"#{match.Value.Tags["monitor_name"]}# {alertMessage}";
 
-                bool workItemExists = await ActiveWorkItemExists(workItemClient, devdivProject, title, IncidentAreaPath)
-                    .ConfigureAwait(false);
+                bool workItemExists = await ActiveWorkItemExists(workItemClient,
+                    devdivProject, 
+                    title, 
+                    IncidentAreaPath, 
+                    cancellationToken).ConfigureAwait(false);
 
                 if (workItemExists)
                 {
@@ -94,13 +125,34 @@ namespace MonitoringFunctions.Windows.Functions
 
                 string description = IncidentSerializer.GetIncidentDescription(match.Value.Tags["monitor_name"], data, log);
                 log.LogInformation($"Incident description body: {description}");
-                WorkItem workItem = await CreateAdoTask(workItemClient, devdivProject, IncidentAreaPath, title, description).ConfigureAwait(false);
+                WorkItem workItem = await CreateAdoTask(workItemClient,
+                    devdivProject, 
+                    IncidentAreaPath, 
+                    title, 
+                    description,
+                    tags: null,
+                    cancellationToken).ConfigureAwait(false);
 
                 string workItemUrl = (workItem.Links?.Links?["html"] as ReferenceLink)?.Href ?? "<url-not-found>";
                 string successMessage = $"Work item with ID {workItem.Id} was created at address {workItemUrl}";
 
                 log.LogInformation(successMessage);
                 createdWorkItems.Add(workItem);
+
+                if (teamsConnector != null)
+                {
+                    try
+                    {
+                        await teamsConnector.SendIncidentCardAsync("There is a new issue with the install scripts.",
+                            title, 
+                            workItemUrl,
+                            cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (Exception e)
+                    {
+                        log.LogError($"An exception occured while sending a Teams notification: {e}");
+                    }
+                }
             }
 
             return new OkObjectResult($"{createdWorkItems.Count} work items were created with IDs {string.Join(", ", createdWorkItems.Select(w => w.Id))}");
