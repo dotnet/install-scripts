@@ -86,6 +86,9 @@
 .PARAMETER JSonFile
     Determines the SDK version from a user specified global.json file
     Note: global.json must have a value for 'SDK:Version'
+.PARAMETER Timeout
+    Determines timeout duration in minutes for dowloading of the SDK file
+    Default: 20 minutes
 #>
 [cmdletbinding()]
 param(
@@ -108,7 +111,8 @@ param(
    [switch]$ProxyUseDefaultCredentials,
    [string[]]$ProxyBypassList=@(),
    [switch]$SkipNonVersionedFiles,
-   [switch]$NoCdn
+   [switch]$NoCdn,
+   [number]$Timeout=20
 )
 
 Set-StrictMode -Version Latest
@@ -342,8 +346,8 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
             $HttpClient = New-Object System.Net.Http.HttpClient -ArgumentList $HttpClientHandler
 
             # Default timeout for HttpClient is 100s.  For a 50 MB download this assumes 500 KB/s average, any less will time out
-            # 20 minutes allows it to work over much slower connections.
-            $HttpClient.Timeout = New-TimeSpan -Minutes 20
+            # Defaulting to 20 minutes allows it to work over much slower connections.
+            $HttpClient.Timeout = New-TimeSpan -Minutes $Timeout
 
             if ($HeaderOnly){
                 $completionOption = [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead
