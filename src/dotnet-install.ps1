@@ -112,7 +112,7 @@ param(
    [string[]]$ProxyBypassList=@(),
    [switch]$SkipNonVersionedFiles,
    [switch]$NoCdn,
-   [number]$Timeout=20
+   [int]$Timeout=20
 )
 
 Set-StrictMode -Version Latest
