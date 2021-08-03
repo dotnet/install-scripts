@@ -190,7 +190,7 @@ function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [System.Threading.Cancella
         }
         catch {
             $Attempts++
-            if (($Attempts -lt $MaxAttempts) -and (True -ne $cancellationToken.IsCancellationRequested)) {
+            if (($Attempts -lt $MaxAttempts) -and -not $cancellationToken.IsCancellationRequested) {
                 Start-Sleep $SecondsBetweenAttempts
             }
             else {
