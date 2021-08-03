@@ -181,7 +181,7 @@ function Say-Invocation($Invocation) {
     Say-Verbose "$command $args"
 }
 
-function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [int]$MaxAttempts = 3, [int]$SecondsBetweenAttempts = 1) {
+function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [System.Threading.CancellationToken]$cancellationToken = [System.Threading.CancellationToken]::None, [int]$MaxAttempts = 3, [int]$SecondsBetweenAttempts = 1) {
     $Attempts = 0
 
     while ($true) {
@@ -190,7 +190,7 @@ function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [int]$MaxAttempts = 3, [in
         }
         catch {
             $Attempts++
-            if ($Attempts -lt $MaxAttempts) {
+            if (($Attempts -lt $MaxAttempts) -and (True -ne $cancellationToken.IsCancellationRequested)) {
                 Start-Sleep $SecondsBetweenAttempts
             }
             else {
@@ -306,8 +306,9 @@ function Load-Assembly([string] $Assembly) {
 
 function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, [bool]$DisableFeedCredential)
 {
-    Invoke-With-Retry(
-    {
+    $cts = New-Object System.Threading.CancellationTokenSource
+
+    $downloadScript = {
 
         $HttpClient = $null
 
@@ -373,6 +374,11 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
                 if ($null -ne $Response) {
                     $DownloadException.Data["StatusCode"] = [int] $Response.StatusCode
                     $DownloadException.Data["ErrorMessage"] = "Unable to download $Uri. Returned HTTP status code: " + $DownloadException.Data["StatusCode"]
+
+                    if (404 -eq [int] $Response.StatusCode)
+                    {
+                        $cts.Cancel()
+                    }
                 }
 
                 throw $DownloadException
@@ -400,11 +406,22 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
             throw $DownloadException
         }
         finally {
-             if ($HttpClient -ne $null) {
+             if ($null -ne $HttpClient) {
                 $HttpClient.Dispose()
             }
         }
-    })
+    }
+
+    try {
+        return Invoke-With-Retry $downloadScript $cts.Token
+    }
+    finally
+    {
+        if ($null -ne $cts)
+        {
+            $cts.Dispose()
+        }
+    }
 }
 
 function Get-Latest-Version-Info([string]$AzureFeed, [string]$Channel) {
