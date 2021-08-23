@@ -300,11 +300,19 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
             
-            // -i shouldn't be considered ambiguous
+            // -i shouldn't be considered ambiguous on powershell.
             commandResult.Should().NotHaveStdOutContaining("the parameter name 'i' is ambiguous");
+            // bash doesn't give error on ambiguity. The first occurance of the alias wins.
 
             //  -i should translate to -InstallDir
-            commandResult.Should().HaveStdOutContainingIgnoreCase("-InstallDir \"installation_path\"");
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                commandResult.Should().HaveStdOutContainingIgnoreCase("-InstallDir \"installation_path\"");
+            }
+            else
+            {
+                commandResult.Should().HaveStdOutContainingIgnoreCase("-install-dir \"installation_path\"");
+            }
         }
     }
 }
