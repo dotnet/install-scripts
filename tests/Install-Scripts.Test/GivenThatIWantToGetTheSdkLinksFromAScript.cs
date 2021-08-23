@@ -286,5 +286,25 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
             commandResult.Should().NotHaveStdErrContainingIgnoreCase(feedCredentials);
         }
+
+        [Fact]
+        public void WhenInstallDirAliasIsUsed()
+        {
+            var commandResult = CreateInstallCommand(new []{"-DryRun", "-i", "installation_path" })
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            //  Standard 'dryrun' criterium
+            commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdOutContaining("dryrun");
+            commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
+            
+            // -i shouldn't be considered ambiguous
+            commandResult.Should().NotHaveStdOutContaining("the parameter name 'i' is ambiguous");
+
+            //  -i should translate to -InstallDir
+            commandResult.Should().HaveStdOutContainingIgnoreCase("-InstallDir \"installation_path\"");
+        }
     }
 }
