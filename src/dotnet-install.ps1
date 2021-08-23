@@ -97,7 +97,7 @@ param(
    [string]$Version="Latest",
    [switch]$Internal,
    [string]$JSonFile,
-   [string]$InstallDir="<auto>",
+   [Alias('i')][string]$InstallDir="<auto>",
    [string]$Architecture="<auto>",
    [string]$Runtime,
    [Obsolete("This parameter may be removed in a future version of this script. The recommended alternative is '-Runtime dotnet'.")]
