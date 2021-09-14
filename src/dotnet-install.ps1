@@ -227,12 +227,12 @@ function Get-Machine-Architecture() {
     # PS x64 doesn't define this, so we fall back to PROCESSOR_ARCHITECTURE.
     # Possible values: amd64, x64, x86, arm64, arm
 
-    if( $ENV:PROCESSOR_ARCHITEW6432 -ne $null )
+    if( $env:PROCESSOR_ARCHITEW6432 -ne $null )
     {    
-        return $ENV:PROCESSOR_ARCHITEW6432
+        return $env:PROCESSOR_ARCHITEW6432
     }
 
-    return $ENV:PROCESSOR_ARCHITECTURE
+    return $env:PROCESSOR_ARCHITECTURE
 }
 
 function Get-CLIArchitecture-From-Architecture([string]$Architecture) {
@@ -880,9 +880,9 @@ function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot, [string]$BinFolde
     $BinPath = Get-Absolute-Path $(Join-Path -Path $InstallRoot -ChildPath $BinFolderRelativePath)
     if (-Not $NoPath) {
         $SuffixedBinPath = "$BinPath;"
-        if (-Not $env:path.Contains($SuffixedBinPath)) {
+        if (-Not $env:PATH.Contains($SuffixedBinPath)) {
             Say "Adding to current process PATH: `"$BinPath`". Note: This change will not be visible if PowerShell was run as a child process."
-            $env:path = $SuffixedBinPath + $env:path
+            $env:PATH = $SuffixedBinPath + $env:PATH
         } else {
             Say-Verbose "Current process PATH already contains `"$BinPath`""
         }
