@@ -133,6 +133,21 @@ if ($SharedRuntime -and (-not $Runtime)) {
 $VersionRegEx="/\d+\.\d+[^/]+/"
 $OverrideNonVersionedFiles = !$SkipNonVersionedFiles
 
+function Set-Environment {
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('AvoidAssignmentToAutomaticVariable', '', Scope = 'Function')]
+    param()
+
+    # Those automatic variables are defined in PowerShell (6+) but not on Windows PowerShell (<6).
+    if ($PSVersionTable.PSVersion.Major -lt 6) { 
+        Set-Variable -Name IsWindows -Value $true -Scope Script
+        Set-Variable -Name IsLinux -Value $false -Scope Script
+        Set-Variable -Name IsMacOS -Value $false -Scope Script
+        Set-Variable -Name IsCoreCLR -Value $false -Scope Script
+    }
+}
+
+Set-Environment
+
 function Say($str) {
     try {
         Write-Host "dotnet-install: $str"
@@ -202,6 +217,10 @@ function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [System.Threading.Cancella
 
 function Get-Machine-Architecture() {
     Say-Invocation $MyInvocation
+
+    if ($IsCoreCLR) { 
+        return [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+    }
 
     # On PS x86, PROCESSOR_ARCHITECTURE reports x86 even on x64 systems.
     # To get the correct architecture, we need to use PROCESSOR_ARCHITEW6432.
@@ -275,6 +294,19 @@ function Get-NormalizedProduct([string]$Runtime) {
     }
 }
 
+function Get-NormalizedOs([string]$Os) {
+    Say-Invocation $MyInvocation
+
+    # REVIEW: I know I am missing a lot here.
+    switch ($Os) {
+        { $_ -like "Darwin*" } { return "osx"}
+        { $_ -like "FreeBSD*" } { return "freebsd" }
+        { $_ -like "Linux*" } { return "linux"}
+        { $_ -like "Microsoft Windows*" } { return "win" }
+        { [string]::IsNullOrEmpty($_) } { return "win" }
+        default { throw "'$Os' is not a supported OS. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues." }
+    }
+}
 
 # The version text returned from the feeds is a 1-line or 2-line string:
 # For the SDK and the dotnet runtime (2 lines):
@@ -521,32 +553,30 @@ function Get-Specific-Version-From-Version([string]$AzureFeed, [string]$Channel,
     }
 }
 
-function Get-Download-Link([string]$AzureFeed, [string]$SpecificVersion, [string]$CLIArchitecture) {
+function Get-Download-Link([string]$AzureFeed, [string]$SpecificVersion, [string]$CLIArchitecture, [string]$Os) {
     Say-Invocation $MyInvocation
 
     # If anything fails in this lookup it will default to $SpecificVersion
     $SpecificProductVersion = Get-Product-Version -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion
 
     if ($Runtime -eq "dotnet") {
-        $PayloadURL = "$AzureFeed/Runtime/$SpecificVersion/dotnet-runtime-$SpecificProductVersion-win-$CLIArchitecture.zip"
+        $PayloadURL = "$AzureFeed/Runtime/$SpecificVersion/dotnet-runtime-$SpecificProductVersion-$Os-$CLIArchitecture.zip"
     }
     elseif ($Runtime -eq "aspnetcore") {
-        $PayloadURL = "$AzureFeed/aspnetcore/Runtime/$SpecificVersion/aspnetcore-runtime-$SpecificProductVersion-win-$CLIArchitecture.zip"
+        $PayloadURL = "$AzureFeed/aspnetcore/Runtime/$SpecificVersion/aspnetcore-runtime-$SpecificProductVersion-$Os-$CLIArchitecture.zip"
     }
     elseif ($Runtime -eq "windowsdesktop") {
         # The windows desktop runtime is part of the core runtime layout prior to 5.0
-        $PayloadURL = "$AzureFeed/Runtime/$SpecificVersion/windowsdesktop-runtime-$SpecificProductVersion-win-$CLIArchitecture.zip"
-        if ($SpecificVersion -match '^(\d+)\.(.*)$')
-        {
+        $PayloadURL = "$AzureFeed/Runtime/$SpecificVersion/windowsdesktop-runtime-$SpecificProductVersion-$Os-$CLIArchitecture.zip"
+        if ($SpecificVersion -match '^(\d+)\.(.*)$') {
             $majorVersion = [int]$Matches[1]
-            if ($majorVersion -ge 5)
-            {
-                $PayloadURL = "$AzureFeed/WindowsDesktop/$SpecificVersion/windowsdesktop-runtime-$SpecificProductVersion-win-$CLIArchitecture.zip"
+            if ($majorVersion -ge 5) {
+                $PayloadURL = "$AzureFeed/WindowsDesktop/$SpecificVersion/windowsdesktop-runtime-$SpecificProductVersion-$Os-$CLIArchitecture.zip"
             }
         }
     }
     elseif (-not $Runtime) {
-        $PayloadURL = "$AzureFeed/Sdk/$SpecificVersion/dotnet-sdk-$SpecificProductVersion-win-$CLIArchitecture.zip"
+        $PayloadURL = "$AzureFeed/Sdk/$SpecificVersion/dotnet-sdk-$SpecificProductVersion-$Os-$CLIArchitecture.zip"
     }
     else {
         throw "Invalid value for `$Runtime"
@@ -557,14 +587,14 @@ function Get-Download-Link([string]$AzureFeed, [string]$SpecificVersion, [string
     return $PayloadURL, $SpecificProductVersion
 }
 
-function Get-LegacyDownload-Link([string]$AzureFeed, [string]$SpecificVersion, [string]$CLIArchitecture) {
+function Get-LegacyDownload-Link([string]$AzureFeed, [string]$SpecificVersion, [string]$CLIArchitecture, [string]$Os) {
     Say-Invocation $MyInvocation
 
     if (-not $Runtime) {
-        $PayloadURL = "$AzureFeed/Sdk/$SpecificVersion/dotnet-dev-win-$CLIArchitecture.$SpecificVersion.zip"
+        $PayloadURL = "$AzureFeed/Sdk/$SpecificVersion/dotnet-dev-$Os-$CLIArchitecture.$SpecificVersion.zip"
     }
     elseif ($Runtime -eq "dotnet") {
-        $PayloadURL = "$AzureFeed/Runtime/$SpecificVersion/dotnet-win-$CLIArchitecture.$SpecificVersion.zip"
+        $PayloadURL = "$AzureFeed/Runtime/$SpecificVersion/dotnet-$Os-$CLIArchitecture.$SpecificVersion.zip"
     }
     else {
         return $null
@@ -691,8 +721,13 @@ function Get-User-Share-Path() {
     Say-Invocation $MyInvocation
 
     $InstallRoot = $env:DOTNET_INSTALL_DIR
-    if (!$InstallRoot) {
-        $InstallRoot = "$env:LocalAppData\Microsoft\dotnet"
+    if ([String]::IsNullOrEmpty($InstallRoot)) {
+        if ($IsWindows) {
+            $InstallRoot = "$env:LocalAppData\Microsoft\dotnet"
+        }
+        else { 
+            $InstallRoot = "~/dotnet"
+        }
     }
     return $InstallRoot
 }
@@ -857,7 +892,7 @@ function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot, [string]$BinFolde
     }
 }
 
-function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Internal, [string]$Product, [string]$Architecture) {
+function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Internal, [string]$Product, [string]$Architecture, [string]$Os) {
     Say-Invocation $MyInvocation 
 
     #quality is not supported for LTS or current channel
@@ -865,7 +900,7 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
         $Quality = ""
         Say-Warning "Specifying quality for current or LTS channel is not supported, the quality will be ignored."
     }
-    Say-Verbose "Retrieving primary payload URL from aka.ms link for channel: '$Channel', quality: '$Quality' product: '$Product', os: 'win', architecture: '$Architecture'." 
+    Say-Verbose "Retrieving primary payload URL from aka.ms link for channel: '$Channel', quality: '$Quality' product: '$Product', os: '$Os', architecture: '$Architecture'." 
    
     #construct aka.ms link
     $akaMsLink = "https://aka.ms/dotnet"
@@ -876,7 +911,7 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
     if (-not [string]::IsNullOrEmpty($Quality)) {
         $akaMsLink +="/$Quality"
     }
-    $akaMsLink +="/$Product-win-$Architecture.zip"
+    $akaMsLink +="/$Product-$Os-$Architecture.zip"
     Say-Verbose  "Constructed aka.ms link: '$akaMsLink'."
     $akaMsDownloadLink=$null
 
@@ -957,17 +992,20 @@ $NormalizedChannel = Get-NormalizedChannel $Channel
 Say-Verbose "Normalized channel: '$NormalizedChannel'"
 $NormalizedProduct = Get-NormalizedProduct $Runtime
 Say-Verbose "Normalized product: '$NormalizedProduct'"
+$Os = if ($IsCoreCLR) { [System.Runtime.InteropServices.RuntimeInformation]::OSDescription } else { "Micrososoft Windows" }
+$NormalizedOs = Get-NormalizedOs $Os
+Say-Verbose "Normalized os: '$NormalizedOs'"
 $DownloadLink = $null
 
 #try to get download location from aka.ms link
 #not applicable when exact version is specified via command or json file
 if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
-    $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Internal $Internal -Product $NormalizedProduct -Architecture $CLIArchitecture
+    $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Internal $Internal -Product $NormalizedProduct -Architecture $CLIArchitecture -Os $NormalizedOs
    
-    if ([string]::IsNullOrEmpty($AkaMsDownloadLink)){
+    if ([string]::IsNullOrEmpty($AkaMsDownloadLink)) {
         if (-not [string]::IsNullOrEmpty($NormalizedQuality)) {
             # if quality is specified - exit with error - there is no fallback approach
-            Say-Error "Failed to locate the latest version in the channel '$NormalizedChannel' with '$NormalizedQuality' quality for '$NormalizedProduct', os: 'win', architecture: '$CLIArchitecture'."
+            Say-Error "Failed to locate the latest version in the channel '$NormalizedChannel' with '$NormalizedQuality' quality for '$NormalizedProduct', os: '$NormalizedOs', architecture: '$CLIArchitecture'."
             Say-Error "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support."
             throw "aka.ms link resolution failure"
         }
@@ -996,9 +1034,9 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
 }
 
 if ([string]::IsNullOrEmpty($DownloadLink)) {
-    $SpecificVersion = Get-Specific-Version-From-Version -AzureFeed $AzureFeed -Channel $Channel -Version $Version -JSonFile $JSonFile
-    $DownloadLink, $EffectiveVersion = Get-Download-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
-    $LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
+    $SpecificVersion = Get-Specific-Version-From-Version -AzureFeed $AzureFeed -Channel $Channel -Version $Version -JSonFile $JSonFile -Os $NormalizedOs
+    $DownloadLink, $EffectiveVersion = Get-Download-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture -Os $NormalizedOs
+    $LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture -Os $NormalizedOs
 }
 
 
