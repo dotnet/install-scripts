@@ -642,7 +642,7 @@ get_specific_product_version() {
             fi
         elif machine_has "wget"
         then
-            specific_product_version=$(wget -qO- "${download_link}${feed_credential}")
+            specific_product_version=$(wget -qO- "${download_link}${feed_credential}" 2>&1)
             if [ $? = 0 ]; then
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
@@ -918,6 +918,8 @@ get_http_header_wget() {
     eval $invocation
     local remote_path="$1"
     local disable_feed_credential="$2"
+    local wget_output=''
+    local wget_result=''
 
     remote_path_with_credential="$remote_path"
     if [ "$disable_feed_credential" = false ]; then
@@ -925,8 +927,17 @@ get_http_header_wget() {
     fi
 
     wget_options="-q -S --spider --tries 5 --waitretry 2 --connect-timeout 15 "
-    wget $wget_options "$remote_path_with_credential" 2>&1 || return 1
-    return 0
+    wget_output=$(wget $wget_options "$remote_path_with_credential" 2>&1)
+    wget_result=$?
+
+    if [[ $wget_result != 0 ]] && [[ $wget_output == *"unrecognized option:"* ]]; then
+        wget_options="-q -S --spider --tries 5"
+        wget $wget_options "$remote_path_with_credential" 2>&1 || return 1
+        return 0
+    fi
+
+    echo $wget_output
+    return $wget_result
 }
 
 # args:
@@ -1017,13 +1028,29 @@ downloadwget() {
     # Append feed_credential as late as possible before calling wget to avoid logging feed_credential
     local remote_path_with_credential="${remote_path}${feed_credential}"
     local wget_options="--tries 20 --waitretry 2 --connect-timeout 15 "
-    local failed=false
+    local wget_output=''
+    local wget_result=''
+
     if [ -z "$out_path" ]; then
-        wget -q $wget_options -O - "$remote_path_with_credential" || failed=true
+        wget_output=$(wget -q $wget_options -O - "$remote_path_with_credential" 2>&1)
+        wget_result=$?
     else
-        wget $wget_options -O "$out_path" "$remote_path_with_credential" || failed=true
+        wget_output=$(wget $wget_options -O "$out_path" "$remote_path_with_credential" 2>&1)
+        wget_result=$?
     fi
-    if [ "$failed" = true ]; then
+
+    if [[ $wget_result != 0 ]] && [[ $wget_output == *"unrecognized option:"* ]]; then
+        wget_options="--tries 20 "
+        if [ -z "$out_path" ]; then
+            wget_output=$(wget -q $wget_options -O - "$remote_path_with_credential" 2>&1)
+            wget_result=$?
+        else
+            wget_output=$(wget $wget_options -O "$out_path" "$remote_path_with_credential" 2>&1)
+            wget_result=$?
+        fi
+    fi
+
+    if [[ $wget_result != 0 ]]; then
         local disable_feed_credential=false
         local response=$(get_http_header_wget $remote_path $disable_feed_credential)
         http_code=$( echo "$response" | awk '/^  HTTP/{print $2}' | tail -1 )
@@ -1034,6 +1061,8 @@ downloadwget() {
         say_verbose "$download_error_msg"
         return 1
     fi
+
+    echo $wget_output
     return 0
 }
 
