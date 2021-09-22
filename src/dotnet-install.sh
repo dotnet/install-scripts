@@ -918,6 +918,9 @@ get_http_header_wget() {
     eval $invocation
     local remote_path="$1"
     local disable_feed_credential="$2"
+    local wget_options="-q -S --spider --tries 5 "
+    # Store options that aren't supported on all wget implementations separately.
+    local wget_options_extra="--waitretry 2 --connect-timeout 15 "
     local wget_output=''
     local wget_result=''
 
@@ -926,12 +929,11 @@ get_http_header_wget() {
         remote_path_with_credential+="$feed_credential"
     fi
 
-    wget_options="-q -S --spider --tries 5 --waitretry 2 --connect-timeout 15 "
-    wget_output=$(wget $wget_options "$remote_path_with_credential" 2>&1)
+    wget_output=$(wget $wget_options $wget_options_extra "$remote_path_with_credential" 2>&1)
     wget_result=$?
 
-    if [[ $wget_result != 0 ]] && [[ $wget_output == *"unrecognized option:"* ]]; then
-        wget_options="-q -S --spider --tries 5"
+    if [[ $wget_result == 2 ]]; then
+        # Parsing of the command has failed. Exclude potentially unrecognized options and retry.
         wget $wget_options "$remote_path_with_credential" 2>&1 || return 1
         return 0
     fi
@@ -1027,20 +1029,22 @@ downloadwget() {
     local out_path="${2:-}"
     # Append feed_credential as late as possible before calling wget to avoid logging feed_credential
     local remote_path_with_credential="${remote_path}${feed_credential}"
-    local wget_options="--tries 20 --waitretry 2 --connect-timeout 15 "
+    local wget_options="--tries 20 "
+    # Store options that aren't supported on all wget implementations separately.
+    local wget_options_extra="--waitretry 2 --connect-timeout 15 "
     local wget_output=''
     local wget_result=''
 
     if [ -z "$out_path" ]; then
-        wget_output=$(wget -q $wget_options -O - "$remote_path_with_credential" 2>&1)
+        wget_output=$(wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential" 2>&1)
         wget_result=$?
     else
-        wget_output=$(wget $wget_options -O "$out_path" "$remote_path_with_credential" 2>&1)
+        wget_output=$(wget $wget_options $wget_options_extra -O "$out_path" "$remote_path_with_credential" 2>&1)
         wget_result=$?
     fi
 
-    if [[ $wget_result != 0 ]] && [[ $wget_output == *"unrecognized option:"* ]]; then
-        wget_options="--tries 20 "
+    if [[ $wget_result == 2 ]]; then
+        # Parsing of the command has failed. Exclude potentially unrecognized options and retry.
         if [ -z "$out_path" ]; then
             wget_output=$(wget -q $wget_options -O - "$remote_path_with_credential" 2>&1)
             wget_result=$?
