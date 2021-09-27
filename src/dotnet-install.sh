@@ -498,8 +498,8 @@ get_latest_version_info() {
     fi
     say_verbose "get_latest_version_info: latest url: $version_file_url"
 
-    download "$version_file_url"
-    return $?
+    download "$version_file_url" || return $?
+    return 0
 }
 
 # args:
@@ -921,7 +921,6 @@ get_http_header_wget() {
     local wget_options="-q -S --spider --tries 5 "
     # Store options that aren't supported on all wget implementations separately.
     local wget_options_extra="--waitretry 2 --connect-timeout 15 "
-    local wget_output=''
     local wget_result=''
 
     remote_path_with_credential="$remote_path"
@@ -929,16 +928,15 @@ get_http_header_wget() {
         remote_path_with_credential+="$feed_credential"
     fi
 
-    wget_output=$(wget $wget_options $wget_options_extra "$remote_path_with_credential" 2>&1)
+    wget $wget_options $wget_options_extra "$remote_path_with_credential" 2>&1
     wget_result=$?
 
     if [[ $wget_result == 2 ]]; then
         # Parsing of the command has failed. Exclude potentially unrecognized options and retry.
-        wget $wget_options "$remote_path_with_credential" 2>&1 || return 1
-        return 0
+        wget $wget_options "$remote_path_with_credential" 2>&1
+        return $?
     fi
 
-    echo $wget_output
     return $wget_result
 }
 
@@ -1032,24 +1030,23 @@ downloadwget() {
     local wget_options="--tries 20 "
     # Store options that aren't supported on all wget implementations separately.
     local wget_options_extra="--waitretry 2 --connect-timeout 15 "
-    local wget_output=''
     local wget_result=''
 
     if [ -z "$out_path" ]; then
-        wget_output=$(wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential" 2>&1)
+        wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential"
         wget_result=$?
     else
-        wget_output=$(wget $wget_options $wget_options_extra -O "$out_path" "$remote_path_with_credential" 2>&1)
+        wget $wget_options $wget_options_extra -O "$out_path" "$remote_path_with_credential"
         wget_result=$?
     fi
 
     if [[ $wget_result == 2 ]]; then
         # Parsing of the command has failed. Exclude potentially unrecognized options and retry.
         if [ -z "$out_path" ]; then
-            wget_output=$(wget -q $wget_options -O - "$remote_path_with_credential" 2>&1)
+            wget -q $wget_options -O - "$remote_path_with_credential"
             wget_result=$?
         else
-            wget_output=$(wget $wget_options -O "$out_path" "$remote_path_with_credential" 2>&1)
+            wget $wget_options -O "$out_path" "$remote_path_with_credential"
             wget_result=$?
         fi
     fi
@@ -1066,7 +1063,6 @@ downloadwget() {
         return 1
     fi
 
-    echo $wget_output
     return 0
 }
 
@@ -1180,13 +1176,13 @@ calculate_vars() {
             fi
     fi
 
-    specific_version="$(get_specific_version_from_version "$azure_feed" "$channel" "$normalized_architecture" "$version" "$json_file")"
-    specific_product_version="$(get_specific_product_version "$azure_feed" "$specific_version")"
-    say_verbose "specific_version=$specific_version"
-    if [ -z "$specific_version" ]; then
+    if [[ ${specific_version=$(get_specific_version_from_version "$azure_feed" "$channel" "$normalized_architecture" "$version" "$json_file")} != 0 ]]; then
         say_err "Could not resolve version information."
         return 1
     fi
+
+    specific_product_version="$(get_specific_product_version "$azure_feed" "$specific_version")"
+    say_verbose "specific_version=$specific_version"
 
     download_link="$(construct_download_link "$azure_feed" "$channel" "$normalized_architecture" "$specific_version" "$normalized_os")"
     say_verbose "Constructed primary named payload URL: $download_link"
