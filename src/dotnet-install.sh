@@ -948,13 +948,14 @@ download() {
     while [ $attempts -lt 3 ]; do
         attempts=$((attempts+1))
         failed=false
-        if machine_has "curl"; then
-            downloadcurl "$remote_path" "$out_path" || failed=true
-        elif machine_has "wget"; then
-            downloadwget "$remote_path" "$out_path" || failed=true
-        else
-            say_err "Missing dependency: neither curl nor wget was found."
-            exit 1
+        downloadworker "$remote_path" "$out_path" || failed=true
+
+        if [ "$failed" = true ] && [[ $remote_path == ${azure_feed}* ]] && [ $http_code = "404" ]; then
+            say "File not found on $azure_feed, trying $azure_secondary_feed"
+            # remove azure_feed from the front, and then put azure_secondary_feed in its place
+            remote_path=$azure_secondary_feed${remote_path#"$azure_feed"}
+            failed=false
+            downloadworker "$remote_path" "$out_path" || failed=true
         fi
 
         if [ "$failed" = false ] || [ $attempts -ge 3 ] || { [ ! -z $http_code ] && [ $http_code = "404" ]; }; then
@@ -971,6 +972,18 @@ download() {
     if [ "$failed" = true ]; then
         say_verbose "Download failed: $remote_path"
         return 1
+    fi
+    return 0
+}
+
+downloadworker() {
+    if machine_has "curl"; then
+        downloadcurl "$remote_path" "$out_path" || return 1
+    elif machine_has "wget"; then
+        downloadwget "$remote_path" "$out_path" || return 1
+    else
+        say_err "Missing dependency: neither curl nor wget was found."
+        exit 1
     fi
     return 0
 }
@@ -1308,8 +1321,10 @@ architecture="<auto>"
 dry_run=false
 no_path=false
 no_cdn=false
-azure_feed="https://dotnetcli.azureedge.net/dotnet"
+azure_feed="https://dotnetcli.azureedge.net/dotnetbad"
+azure_secondary_feed="https://dotnetbuilds.azureedge.net/public"
 uncached_feed="https://dotnetcli.blob.core.windows.net/dotnet"
+uncached_secondary_feed="https://dotnetbuilds.blob.core.windows.net/public"
 feed_credential=""
 verbose=false
 runtime=""
@@ -1389,9 +1404,19 @@ do
             azure_feed="$1"
             non_dynamic_parameters+=" $name "\""$1"\"""
             ;;
+        --azure-secondary-feed|-[Aa]zure[Ss]econdary[Ff]eed)
+            shift
+            azure_secondary_feed="$1"
+            non_dynamic_parameters+=" $name "\""$1"\"""
+            ;;
         --uncached-feed|-[Uu]ncached[Ff]eed)
             shift
             uncached_feed="$1"
+            non_dynamic_parameters+=" $name "\""$1"\"""
+            ;;
+        --uncached-secondary-feed|-[Uu]ncached[Ss]econdary[Ff]eed)
+            shift
+            uncached_secondary_feed="$1"
             non_dynamic_parameters+=" $name "\""$1"\"""
             ;;
         --feed-credential|-[Ff]eed[Cc]redential)
@@ -1470,7 +1495,11 @@ do
             echo "  --no-path, -NoPath                 Do not set PATH for the current process."
             echo "  --verbose,-Verbose                 Display diagnostics information."
             echo "  --azure-feed,-AzureFeed            Azure feed location. Defaults to $azure_feed, This parameter typically is not changed by the user."
+            echo "  --azure-secondary-feed             Secondary Azure feed location. Defaults to $azure_secondary_feed, This parameter typically is not changed by the user."
+            echo "      -AzureSecondaryFeed"
             echo "  --uncached-feed,-UncachedFeed      Uncached feed location. This parameter typically is not changed by the user."
+            echo "  --uncached-secondary-feed          Uncached secondary feed location. This parameter typically is not changed by the user."
+            echo "      -UncachedSecondaryFeed"
             echo "  --skip-non-versioned-files         Skips non-versioned files if they already exist, such as the dotnet executable."
             echo "      -SkipNonVersionedFiles"
             echo "  --no-cdn,-NoCdn                    Disable downloading from the Azure CDN, and use the uncached feed directly."
@@ -1504,6 +1533,7 @@ done
 
 if [ "$no_cdn" = true ]; then
     azure_feed="$uncached_feed"
+    azure_secondary_feed="$uncached_secondary_feed"
 fi
 
 say "Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:"

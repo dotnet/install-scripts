@@ -68,9 +68,16 @@
     Default: https://dotnetcli.azureedge.net/dotnet
     This parameter typically is not changed by the user.
     It allows changing the URL for the Azure feed used by this installer.
+.PARAMETER AzureSecondaryFeed
+    Default: https://dotnetbuilds.azureedge.net/dotnet
+    This parameter typically is not changed by the user.
+    It allows changing the secondary URL for the Azure feed used by this installer.
 .PARAMETER UncachedFeed
     This parameter typically is not changed by the user.
     It allows changing the URL for the Uncached feed used by this installer.
+.PARAMETER UncachedSecondaryFeed
+    This parameter typically is not changed by the user.
+    It allows changing the secondary URL for the Uncached feed used by this installer.
 .PARAMETER ProxyAddress
     If set, the installer will use the proxy when making web requests
 .PARAMETER ProxyUseDefaultCredentials
@@ -105,7 +112,9 @@ param(
    [switch]$DryRun,
    [switch]$NoPath,
    [string]$AzureFeed="https://dotnetcli.azureedge.net/dotnet",
+   [string]$AzureSecondaryFeed="https://dotnetbuilds.azureedge.net/public",
    [string]$UncachedFeed="https://dotnetcli.blob.core.windows.net/dotnet",
+   [string]$UncachedSecondaryFeed="https://dotnetbuilds.blob.core.windows.net/public",
    [string]$FeedCredential,
    [string]$ProxyAddress,
    [switch]$ProxyUseDefaultCredentials,
@@ -121,6 +130,7 @@ $ProgressPreference="SilentlyContinue"
 
 if ($NoCdn) {
     $AzureFeed = $UncachedFeed
+    $AzureSecondaryFeed = $UncachedSecondaryFeed
 }
 
 $BinFolderRelativePath=""
@@ -304,7 +314,7 @@ function Load-Assembly([string] $Assembly) {
     }
 }
 
-function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, [bool]$DisableFeedCredential)
+function GetHTTPResponse([string] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, [bool]$DisableFeedCredential)
 {
     $cts = New-Object System.Threading.CancellationTokenSource
 
@@ -328,7 +338,7 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
                     # Eat the exception and move forward as the above code is an attempt
                     #    at resolving the DefaultProxy that may not have been a problem.
                     $ProxyAddress = $null
-                    Say-Verbose("Exception ignored: $_.Exception.Message - moving forward...")
+                    Say-Verbose "Exception ignored: $($_.Exception.Message) - moving forward..."
                 }
             }
 
@@ -339,7 +349,7 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
                     UseDefaultCredentials=$ProxyUseDefaultCredentials;
                     BypassList = $ProxyBypassList;
                 }
-            }       
+            }
             if ($DisableRedirect)
             {
                 $HttpClientHandler.AllowAutoRedirect = $false
@@ -364,8 +374,17 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
                 $UriWithCredential = "${Uri}${FeedCredential}"
             }
 
-            $Task = $HttpClient.GetAsync("$UriWithCredential", $completionOption).ConfigureAwait("false");
+            $Task = $HttpClient.GetAsync("$UriWithCredential", $completionOption)
             $Response = $Task.GetAwaiter().GetResult();
+
+            if (($Response.StatusCode -eq 404) -and ($UriWithCredential.StartsWith($AzureFeed))) {
+                $Response.Dispose()
+                Say "File not found on $AzureFeed, trying $AzureSecondaryFeed"
+                $UriWithCredential = $AzureSecondaryFeed + $UriWithCredential.Substring($AzureFeed.Length)
+
+                $Task = $HttpClient.GetAsync("$UriWithCredential", $completionOption)
+                $Response = $Task.GetAwaiter().GetResult();
+            }
 
             if (($null -eq $Response) -or ((-not $HeaderOnly) -and (-not ($Response.IsSuccessStatusCode)))) {
                 # The feed credential is potentially sensitive info. Do not log FeedCredential to console output.
@@ -429,16 +448,16 @@ function Get-Latest-Version-Info([string]$AzureFeed, [string]$Channel) {
 
     $VersionFileUrl = $null
     if ($Runtime -eq "dotnet") {
-        $VersionFileUrl = "$UncachedFeed/Runtime/$Channel/latest.version"
+        $VersionFileUrl = "$AzureFeed/Runtime/$Channel/latest.version"
     }
     elseif ($Runtime -eq "aspnetcore") {
-        $VersionFileUrl = "$UncachedFeed/aspnetcore/Runtime/$Channel/latest.version"
+        $VersionFileUrl = "$AzureFeed/aspnetcore/Runtime/$Channel/latest.version"
     }
     elseif ($Runtime -eq "windowsdesktop") {
-        $VersionFileUrl = "$UncachedFeed/WindowsDesktop/$Channel/latest.version"
+        $VersionFileUrl = "$AzureFeed/WindowsDesktop/$Channel/latest.version"
     }
     elseif (-not $Runtime) {
-        $VersionFileUrl = "$UncachedFeed/Sdk/$Channel/latest.version"
+        $VersionFileUrl = "$AzureFeed/Sdk/$Channel/latest.version"
     }
     else {
         throw "Invalid value for `$Runtime"
