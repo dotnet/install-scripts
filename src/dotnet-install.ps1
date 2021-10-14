@@ -69,7 +69,7 @@
     This parameter typically is not changed by the user.
     It allows changing the URL for the Azure feed used by this installer.
 .PARAMETER AzureSecondaryFeed
-    Default: https://dotnetbuilds.azureedge.net/dotnet
+    Default: https://dotnetbuilds.azureedge.net/public
     This parameter typically is not changed by the user.
     It allows changing the secondary URL for the Azure feed used by this installer.
 .PARAMETER UncachedFeed
