@@ -948,14 +948,13 @@ download() {
     while [ $attempts -lt 3 ]; do
         attempts=$((attempts+1))
         failed=false
-        downloadworker "$remote_path" "$out_path" || failed=true
-
-        if [ "$failed" = true ] && [[ $remote_path == ${azure_feed}* ]] && [ $http_code = "404" ]; then
-            say "File not found on $azure_feed, trying $azure_secondary_feed"
-            # remove azure_feed from the front, and then put azure_secondary_feed in its place
-            remote_path=$azure_secondary_feed${remote_path#"$azure_feed"}
-            failed=false
-            downloadworker "$remote_path" "$out_path" || failed=true
+        if machine_has "curl"; then
+            downloadcurl "$remote_path" "$out_path" || failed=true
+        elif machine_has "wget"; then
+            downloadwget "$remote_path" "$out_path" || failed=true
+        else
+            say_err "Missing dependency: neither curl nor wget was found."
+            exit 1
         fi
 
         if [ "$failed" = false ] || [ $attempts -ge 3 ] || { [ ! -z $http_code ] && [ $http_code = "404" ]; }; then
@@ -972,18 +971,6 @@ download() {
     if [ "$failed" = true ]; then
         say_verbose "Download failed: $remote_path"
         return 1
-    fi
-    return 0
-}
-
-downloadworker() {
-    if machine_has "curl"; then
-        downloadcurl "$remote_path" "$out_path" || return 1
-    elif machine_has "wget"; then
-        downloadwget "$remote_path" "$out_path" || return 1
-    else
-        say_err "Missing dependency: neither curl nor wget was found."
-        exit 1
     fi
     return 0
 }
@@ -1552,47 +1539,57 @@ if [ "$internal" = true ] && [ -z "$(echo $feed_credential)" ]; then
 fi
 
 check_min_reqs
-calculate_vars
 script_name=$(basename "$0")
 
-if [ "$dry_run" = true ]; then
-    say "Payload URLs:"
-    say "Primary named payload URL: ${download_link}"
-    if [ "$valid_legacy_download_link" = true ]; then
-        say "Legacy named payload URL: ${legacy_download_link}"
-    fi
-    repeatable_command="./$script_name --version "\""$specific_version"\"" --install-dir "\""$install_root"\"" --architecture "\""$normalized_architecture"\"" --os "\""$normalized_os"\"""
-    
-    if [ ! -z "$normalized_quality" ]; then
-        repeatable_command+=" --quality "\""$normalized_quality"\"""
+main() {
+    calculate_vars
+
+    if [ "$dry_run" = true ]; then
+        say "Payload URLs:"
+        say "Primary named payload URL: ${download_link}"
+        if [ "$valid_legacy_download_link" = true ]; then
+            say "Legacy named payload URL: ${legacy_download_link}"
+        fi
+        repeatable_command="./$script_name --version "\""$specific_version"\"" --install-dir "\""$install_root"\"" --architecture "\""$normalized_architecture"\"" --os "\""$normalized_os"\"""
+
+        if [ ! -z "$normalized_quality" ]; then
+            repeatable_command+=" --quality "\""$normalized_quality"\"""
+        fi
+
+        if [[ "$runtime" == "dotnet" ]]; then
+            repeatable_command+=" --runtime "\""dotnet"\"""
+        elif [[ "$runtime" == "aspnetcore" ]]; then
+            repeatable_command+=" --runtime "\""aspnetcore"\"""
+        fi
+
+        repeatable_command+="$non_dynamic_parameters"
+
+        if [ -n "$feed_credential" ]; then
+            repeatable_command+=" --feed-credential "\""<feed_credential>"\"""
+        fi
+
+        say "Repeatable invocation: $repeatable_command"
+        return 0
     fi
 
-    if [[ "$runtime" == "dotnet" ]]; then
-        repeatable_command+=" --runtime "\""dotnet"\"""
-    elif [[ "$runtime" == "aspnetcore" ]]; then
-        repeatable_command+=" --runtime "\""aspnetcore"\"""
+    install_dotnet || return
+
+    bin_path="$(get_absolute_path "$(combine_paths "$install_root" "$bin_folder_relative_path")")"
+    if [ "$no_path" = false ]; then
+        say "Adding to current process PATH: \`$bin_path\`. Note: This change will be visible only when sourcing script."
+        export PATH="$bin_path":"$PATH"
+    else
+        say "Binaries of dotnet can be found in $bin_path"
     fi
 
-    repeatable_command+="$non_dynamic_parameters"
+    say "Note that the script does not resolve dependencies during installation."
+    say "To check the list of dependencies, go to https://docs.microsoft.com/dotnet/core/install, select your operating system and check the \"Dependencies\" section."
+    say "Installation finished successfully."
+}
 
-    if [ -n "$feed_credential" ]; then
-        repeatable_command+=" --feed-credential "\""<feed_credential>"\"""
-    fi
-
-    say "Repeatable invocation: $repeatable_command"
+if main; then
     exit 0
-fi
-
-install_dotnet
-
-bin_path="$(get_absolute_path "$(combine_paths "$install_root" "$bin_folder_relative_path")")"
-if [ "$no_path" = false ]; then
-    say "Adding to current process PATH: \`$bin_path\`. Note: This change will be visible only when sourcing script."
-    export PATH="$bin_path":"$PATH"
 else
-    say "Binaries of dotnet can be found in $bin_path"
+    azure_feed=$azure_secondary_feed
+    main
 fi
-
-say "Note that the script does not resolve dependencies during installation."
-say "To check the list of dependencies, go to https://docs.microsoft.com/dotnet/core/install, select your operating system and check the \"Dependencies\" section."
-say "Installation finished successfully."
