@@ -1587,9 +1587,21 @@ main() {
     say "Installation finished successfully."
 }
 
-if main; then
-    exit 0
-else
+
+# any form of checking the result from invoking 'main' ends up neutering `set -e`
+# such that commands in the entire function tree start not terminating when things fail
+# here we turn off error exit, then invoke main in a subshell that turns it back on
+# this lets us get the failing exit code from main correctly, without breaking error handling
+set +e
+(
+    set -e
+    main
+)
+result=$?
+if [ $result -ne 0 ]; then
+(
+    set -e
     azure_feed=$azure_secondary_feed
     main
+)
 fi
