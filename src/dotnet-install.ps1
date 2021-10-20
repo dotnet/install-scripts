@@ -969,6 +969,9 @@ $NormalizedProduct = Get-NormalizedProduct $Runtime
 Say-Verbose "Normalized product: '$NormalizedProduct'"
 $DownloadLink = $null
 
+$ScriptName = $MyInvocation.MyCommand.Name
+$boundParameters = $MyInvocation.BoundParameters
+
 function Main {
     #try to get download location from aka.ms link
     #not applicable when exact version is specified via command or json file
@@ -1015,7 +1018,6 @@ function Main {
 
     $InstallRoot = Resolve-Installation-Path $InstallDir
     Say-Verbose "InstallRoot: $InstallRoot"
-    $ScriptName = $MyInvocation.MyCommand.Name
 
     if ($DryRun) {
         Say "Payload URLs:"
@@ -1036,12 +1038,12 @@ function Main {
             $RepeatableCommand+=" -Quality `"$NormalizedQuality`""
         }
 
-        foreach ($key in $MyInvocation.BoundParameters.Keys) {
+        foreach ($key in $boundParameters.Keys) {
             if (-not (@("Architecture","Channel","DryRun","InstallDir","Runtime","SharedRuntime","Version","Quality","FeedCredential") -contains $key)) {
-                $RepeatableCommand+=" -$key `"$($MyInvocation.BoundParameters[$key])`""
+                $RepeatableCommand+=" -$key `"$($boundParameters[$key])`""
             }
         }
-        if ($MyInvocation.BoundParameters.Keys -contains "FeedCredential") {
+        if ($boundParameters.Keys -contains "FeedCredential") {
             $RepeatableCommand+=" -FeedCredential `"<feedCredential>`""
         }
         Say "Repeatable invocation: $RepeatableCommand"
