@@ -64,20 +64,8 @@
     If set it will display binaries location but not set any environment variable.
 .PARAMETER Verbose
     Displays diagnostics information.
-.PARAMETER AzureFeed
-    Default: https://dotnetcli.azureedge.net/dotnet
-    This parameter typically is not changed by the user.
-    It allows changing the URL for the Azure feed used by this installer.
-.PARAMETER AzureSecondaryFeed
-    Default: https://dotnetbuilds.azureedge.net/public
-    This parameter typically is not changed by the user.
-    It allows changing the secondary URL for the Azure feed used by this installer.
-.PARAMETER UncachedFeed
-    This parameter typically is not changed by the user.
-    It allows changing the URL for the Uncached feed used by this installer.
-.PARAMETER UncachedSecondaryFeed
-    This parameter typically is not changed by the user.
-    It allows changing the secondary URL for the Uncached feed used by this installer.
+.PARAMETER AddSource
+    Adds a source url that this script will prefer downloading dotnet from.
 .PARAMETER ProxyAddress
     If set, the installer will use the proxy when making web requests
 .PARAMETER ProxyUseDefaultCredentials
@@ -111,10 +99,8 @@ param(
    [switch]$SharedRuntime,
    [switch]$DryRun,
    [switch]$NoPath,
-   [string]$AzureFeed="https://dotnetcli.azureedge.net/dotnet",
-   [string]$AzureSecondaryFeed="https://dotnetbuilds.azureedge.net/public",
-   [string]$UncachedFeed="https://dotnetcli.blob.core.windows.net/dotnet",
-   [string]$UncachedSecondaryFeed="https://dotnetbuilds.blob.core.windows.net/public",
+   [Alias("AzureFeed")][string]$AddSource,
+   [Parameter(DontShow=$true)][string]$UncachedFeed,
    [string]$FeedCredential,
    [string]$ProxyAddress,
    [switch]$ProxyUseDefaultCredentials,
@@ -128,9 +114,26 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference="Stop"
 $ProgressPreference="SilentlyContinue"
 
+$feeds = @(
+    "https://dotnetcli.azureedge.net/dotnet",
+    "https://dotnetbuilds.azureedge.net/public"
+)
+
+$uncachedFeeds = @(
+   "https://dotnetcli.blob.core.windows.net/dotnet",
+   "https://dotnetbuilds.blob.core.windows.net/public"
+)
+
+if (-not [string]::IsNullOrEmpty($AddSource)) {
+    $feeds = @($AddSource) + $feeds
+}
+
+if (-not [string]::IsNullOrEmpty($UncachedFeed)) {
+    $uncachedFeeds = @($UncachedFeed) + $uncachedFeeds
+}
+
 if ($NoCdn) {
-    $AzureFeed = $UncachedFeed
-    $AzureSecondaryFeed = $UncachedSecondaryFeed
+    $feeds = $uncachedFeeds
 }
 
 $BinFolderRelativePath=""
@@ -1223,12 +1226,15 @@ function Main {
 
 }
 
-try
-{
-    Main
+foreach ($feed in $feeds) {
+    $AzureFeed = $feed
+    try {
+        Say-Verbose "Using Feed $AzureFeed"
+        Main
+        exit 0
+    }
+    catch {
+        Say-Verbose "Installation failed, trying next feed: $_"
+    }
 }
-catch
-{
-    $AzureFeed = $AzureSecondaryFeed
-    Main
-}
+exit 1

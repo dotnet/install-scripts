@@ -1308,10 +1308,14 @@ architecture="<auto>"
 dry_run=false
 no_path=false
 no_cdn=false
-azure_feed="https://dotnetcli.azureedge.net/dotnet"
-azure_secondary_feed="https://dotnetbuilds.azureedge.net/public"
-uncached_feed="https://dotnetcli.blob.core.windows.net/dotnet"
-uncached_secondary_feed="https://dotnetbuilds.blob.core.windows.net/public"
+feeds=(
+    "https://dotnetcli.azureedge.net/dotnetbad"
+    "https://dotnetbuilds.azureedge.net/public"
+)
+uncached_feeds=(
+    "https://dotnetcli.blob.core.windows.net/dotnetbad"
+    "https://dotnetbuilds.blob.core.windows.net/public"
+)
 feed_credential=""
 verbose=false
 runtime=""
@@ -1386,24 +1390,14 @@ do
             no_cdn=true
             non_dynamic_parameters+=" $name"
             ;;
-        --azure-feed|-[Aa]zure[Ff]eed)
+        --add-source|-[Aa]dd[Ss]ource|--azure-feed|-[Aa]zure[Ff]eed)
             shift
-            azure_feed="$1"
-            non_dynamic_parameters+=" $name "\""$1"\"""
-            ;;
-        --azure-secondary-feed|-[Aa]zure[Ss]econdary[Ff]eed)
-            shift
-            azure_secondary_feed="$1"
+            feeds=($1 "${feeds[@]}")
             non_dynamic_parameters+=" $name "\""$1"\"""
             ;;
         --uncached-feed|-[Uu]ncached[Ff]eed)
             shift
-            uncached_feed="$1"
-            non_dynamic_parameters+=" $name "\""$1"\"""
-            ;;
-        --uncached-secondary-feed|-[Uu]ncached[Ss]econdary[Ff]eed)
-            shift
-            uncached_secondary_feed="$1"
+            uncached_feeds=($1 "${uncached_feeds[@]}")
             non_dynamic_parameters+=" $name "\""$1"\"""
             ;;
         --feed-credential|-[Ff]eed[Cc]redential)
@@ -1481,12 +1475,7 @@ do
             echo "  --dry-run,-DryRun                  Do not perform installation. Display download link."
             echo "  --no-path, -NoPath                 Do not set PATH for the current process."
             echo "  --verbose,-Verbose                 Display diagnostics information."
-            echo "  --azure-feed,-AzureFeed            Azure feed location. Defaults to $azure_feed, This parameter typically is not changed by the user."
-            echo "  --azure-secondary-feed             Secondary Azure feed location. Defaults to $azure_secondary_feed, This parameter typically is not changed by the user."
-            echo "      -AzureSecondaryFeed"
-            echo "  --uncached-feed,-UncachedFeed      Uncached feed location. This parameter typically is not changed by the user."
-            echo "  --uncached-secondary-feed          Uncached secondary feed location. This parameter typically is not changed by the user."
-            echo "      -UncachedSecondaryFeed"
+            echo "  --add-source,-AddSource            Adds a source url that this script will prefer downloading dotnet from."
             echo "  --skip-non-versioned-files         Skips non-versioned files if they already exist, such as the dotnet executable."
             echo "      -SkipNonVersionedFiles"
             echo "  --no-cdn,-NoCdn                    Disable downloading from the Azure CDN, and use the uncached feed directly."
@@ -1519,8 +1508,7 @@ do
 done
 
 if [ "$no_cdn" = true ]; then
-    azure_feed="$uncached_feed"
-    azure_secondary_feed="$uncached_secondary_feed"
+    feeds=$uncached_feeds
 fi
 
 say "Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:"
@@ -1572,7 +1560,7 @@ main() {
         return 0
     fi
 
-    install_dotnet || return
+    install_dotnet
 
     bin_path="$(get_absolute_path "$(combine_paths "$install_root" "$bin_folder_relative_path")")"
     if [ "$no_path" = false ]; then
@@ -1593,15 +1581,18 @@ main() {
 # here we turn off error exit, then invoke main in a subshell that turns it back on
 # this lets us get the failing exit code from main correctly, without breaking error handling
 set +e
-(
-    set -e
-    main
-)
-result=$?
-if [ $result -ne 0 ]; then
-(
-    set -e
-    azure_feed=$azure_secondary_feed
-    main
-)
-fi
+for feed in "${feeds[@]}"
+do
+    say_verbose "Using Feed $feed"
+    azure_feed=$feed
+    (
+        set -e
+        main
+    )
+    result=$?
+    if [ $result -eq 0 ]; then
+        exit 0
+    fi
+    say_verbose "Installation failed, trying next feed"
+done
+exit 1
