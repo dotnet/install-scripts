@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("-nopath", "")]
         [InlineData("-verbose", "")]
         [InlineData("-nocdn", "")]
-        [InlineData("-azurefeed", "https://dotnetcli.azureedge.net/dotnet")]
+        [InlineData("-addsource", "https://dotnetcli.azureedge.net/dotnet")]
         [InlineData("-uncachedfeed", "https://dotnetcli.blob.core.windows.net/dotnet")]
         public void WhenVariousParametersArePassedToInstallScripts(string parameter, string value)
         {
