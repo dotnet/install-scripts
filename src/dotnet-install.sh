@@ -487,11 +487,11 @@ get_latest_version_info() {
 
     local version_file_url=null
     if [[ "$runtime" == "dotnet" ]]; then
-        version_file_url="$uncached_feed/Runtime/$channel/latest.version"
+        version_file_url="$azure_feed/Runtime/$channel/latest.version"
     elif [[ "$runtime" == "aspnetcore" ]]; then
-        version_file_url="$uncached_feed/aspnetcore/Runtime/$channel/latest.version"
+        version_file_url="$azure_feed/aspnetcore/Runtime/$channel/latest.version"
     elif [ -z "$runtime" ]; then
-         version_file_url="$uncached_feed/Sdk/$channel/latest.version"
+         version_file_url="$azure_feed/Sdk/$channel/latest.version"
     else
         say_err "Invalid value for \$runtime"
         return 1
