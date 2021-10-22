@@ -1309,11 +1309,11 @@ dry_run=false
 no_path=false
 no_cdn=false
 feeds=(
-    "https://dotnetcli.azureedge.net/dotnetbad"
+    "https://dotnetcli.azureedge.net/dotnet"
     "https://dotnetbuilds.azureedge.net/public"
 )
 uncached_feeds=(
-    "https://dotnetcli.blob.core.windows.net/dotnetbad"
+    "https://dotnetcli.blob.core.windows.net/dotnet"
     "https://dotnetbuilds.blob.core.windows.net/public"
 )
 feed_credential=""
