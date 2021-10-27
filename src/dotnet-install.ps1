@@ -975,50 +975,7 @@ $DownloadLink = $null
 $ScriptName = $MyInvocation.MyCommand.Name
 $boundParameters = $MyInvocation.BoundParameters
 
-function Main {
-    #try to get download location from aka.ms link
-    #not applicable when exact version is specified via command or json file
-    if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
-        $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Internal $Internal -Product $NormalizedProduct -Architecture $CLIArchitecture
-    
-        if ([string]::IsNullOrEmpty($AkaMsDownloadLink)){
-            if (-not [string]::IsNullOrEmpty($NormalizedQuality)) {
-                # if quality is specified - exit with error - there is no fallback approach
-                Say-Error "Failed to locate the latest version in the channel '$NormalizedChannel' with '$NormalizedQuality' quality for '$NormalizedProduct', os: 'win', architecture: '$CLIArchitecture'."
-                Say-Error "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support."
-                throw "aka.ms link resolution failure"
-            }
-            Say-Verbose "Falling back to latest.version file approach."
-        }
-        else {
-            Say-Verbose "Retrieved primary named payload URL from aka.ms link: '$AkaMsDownloadLink'."
-            $DownloadLink = $AkaMsDownloadLink
-            Say-Verbose  "Downloading using legacy url will not be attempted."
-            $LegacyDownloadLink = $null
-
-            #get version from the path
-            $pathParts = $DownloadLink.Split('/')
-            if ($pathParts.Length -ge 2) { 
-                $SpecificVersion = $pathParts[$pathParts.Length - 2]
-                Say-Verbose "Version: '$SpecificVersion'."
-            }
-            else {
-                Say-Error "Failed to extract the version from download link '$DownloadLink'."
-            }
-
-            #retrieve effective (product) version
-            $EffectiveVersion = Get-Product-Version -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -PackageDownloadLink $DownloadLink
-            Say-Verbose "Product version: '$EffectiveVersion'."
-        }
-    }
-
-    if ([string]::IsNullOrEmpty($DownloadLink)) {
-        $SpecificVersion = Get-Specific-Version-From-Version -AzureFeed $AzureFeed -Channel $Channel -Version $Version -JSonFile $JSonFile
-        $DownloadLink, $EffectiveVersion = Get-Download-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
-        $LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
-    }
-
-
+function Install-Dotnet {
     $InstallRoot = Resolve-Installation-Path $InstallDir
     Say-Verbose "InstallRoot: $InstallRoot"
 
@@ -1223,7 +1180,56 @@ function Main {
     Say "Note that the script does not resolve dependencies during installation."
     Say "To check the list of dependencies, go to https://docs.microsoft.com/dotnet/core/install/windows#dependencies"
     Say "Installation finished"
+}
 
+function Main {
+
+    $SpecificVersion = Get-Specific-Version-From-Version -AzureFeed $AzureFeed -Channel $Channel -Version $Version -JSonFile $JSonFile
+    $DownloadLink, $EffectiveVersion = Get-Download-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
+    $LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
+
+    Install-Dotnet
+}
+
+#try to get download location from aka.ms link
+#not applicable when exact version is specified via command or json file
+if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
+    $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Internal $Internal -Product $NormalizedProduct -Architecture $CLIArchitecture
+
+    if ([string]::IsNullOrEmpty($AkaMsDownloadLink)){
+        if (-not [string]::IsNullOrEmpty($NormalizedQuality)) {
+            # if quality is specified - exit with error - there is no fallback approach
+            Say-Error "Failed to locate the latest version in the channel '$NormalizedChannel' with '$NormalizedQuality' quality for '$NormalizedProduct', os: 'win', architecture: '$CLIArchitecture'."
+            Say-Error "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support."
+            throw "aka.ms link resolution failure"
+        }
+        Say-Verbose "Falling back to latest.version file approach."
+    }
+    else {
+        Say-Verbose "Retrieved primary named payload URL from aka.ms link: '$AkaMsDownloadLink'."
+        $DownloadLink = $AkaMsDownloadLink
+        Say-Verbose  "Downloading using legacy url will not be attempted."
+        $LegacyDownloadLink = $null
+
+        #get version from the path
+        $pathParts = $DownloadLink.Split('/')
+        if ($pathParts.Length -ge 2) { 
+            $SpecificVersion = $pathParts[$pathParts.Length - 2]
+            Say-Verbose "Version: '$SpecificVersion'."
+        }
+        else {
+            Say-Error "Failed to extract the version from download link '$DownloadLink'."
+        }
+
+        #retrieve effective (product) version
+        $EffectiveVersion = Get-Product-Version -SpecificVersion $SpecificVersion -PackageDownloadLink $DownloadLink
+        Say-Verbose "Product version: '$EffectiveVersion'."
+    }
+}
+
+if ($DownloadLink) {
+    Install-Dotnet
+    exit 0
 }
 
 foreach ($feed in $feeds) {
