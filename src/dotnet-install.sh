@@ -1176,7 +1176,9 @@ calculate_vars() {
             fi
     fi
 
-    if [[ ${specific_version=$(get_specific_version_from_version "$azure_feed" "$channel" "$normalized_architecture" "$version" "$json_file")} != 0 ]]; then
+    specific_version=$(get_specific_version_from_version "$azure_feed" "$channel" "$normalized_architecture" "$version" "$json_file") || specific_version='0'
+
+    if [[ "$specific_version" == '0' ]]; then
         say_err "Could not resolve version information."
         return 1
     fi
