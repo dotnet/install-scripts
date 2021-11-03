@@ -975,8 +975,8 @@ $DownloadLink = $null
 $ScriptName = $MyInvocation.MyCommand.Name
 $boundParameters = $MyInvocation.BoundParameters
 
-function Install-Dotnet {
-    $InstallRoot = Resolve-Installation-Path $InstallDir
+function Download-DotNet {
+    $script:InstallRoot = Resolve-Installation-Path $InstallDir
     Say-Verbose "InstallRoot: $InstallRoot"
 
     if ($DryRun) {
@@ -1012,24 +1012,24 @@ function Install-Dotnet {
             Say "NOTE: Due to finding a version manifest with this runtime, it would actually install with version '$EffectiveVersion'"
         }
 
-        return
+        exit 0
     }
 
     if ($Runtime -eq "dotnet") {
         $assetName = ".NET Core Runtime"
-        $dotnetPackageRelativePath = "shared\Microsoft.NETCore.App"
+        $script:dotnetPackageRelativePath = "shared\Microsoft.NETCore.App"
     }
     elseif ($Runtime -eq "aspnetcore") {
         $assetName = "ASP.NET Core Runtime"
-        $dotnetPackageRelativePath = "shared\Microsoft.AspNetCore.App"
+        $script:dotnetPackageRelativePath = "shared\Microsoft.AspNetCore.App"
     }
     elseif ($Runtime -eq "windowsdesktop") {
         $assetName = ".NET Core Windows Desktop Runtime"
-        $dotnetPackageRelativePath = "shared\Microsoft.WindowsDesktop.App"
+        $script:dotnetPackageRelativePath = "shared\Microsoft.WindowsDesktop.App"
     }
     elseif (-not $Runtime) {
         $assetName = ".NET Core SDK"
-        $dotnetPackageRelativePath = "sdk"
+        $script:dotnetPackageRelativePath = "sdk"
     }
     else {
         throw "Invalid value for `$Runtime"
@@ -1046,7 +1046,7 @@ function Install-Dotnet {
     if ($isAssetInstalled) {
         Say "$assetName version $SpecificVersion is already installed."
         Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot -BinFolderRelativePath $BinFolderRelativePath
-        return
+        exit 0
     }
 
     New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
@@ -1064,7 +1064,7 @@ function Install-Dotnet {
         throw "There is not enough disk space on drive ${installDrive}:"
     }
 
-    $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
+    $script:ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
     Say-Verbose "Zip path: $ZipPath"
 
     $DownloadFailed = $false
@@ -1100,7 +1100,7 @@ function Install-Dotnet {
 
         if ($LegacyDownloadLink) {
             $DownloadLink = $LegacyDownloadLink
-            $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
+            $script:ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
             Say-Verbose "Legacy zip path: $ZipPath"
             Say "Downloading legacy link $DownloadLink"
             try {
@@ -1133,21 +1133,19 @@ function Install-Dotnet {
     }
 
     if ($DownloadFailed) {
-        if (($PrimaryDownloadStatusCode -eq 404) -and ((-not $LegacyDownloadLink) -or ($LegacyDownloadStatusCode -eq 404))) {
-            throw "Could not find `"$assetName`" with version = $SpecificVersion`nRefer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
-        } else {
-            # 404-NotFound is an expected response if it goes from only one of the links, do not show that error.
-            # If primary path is available (not 404-NotFound) then show the primary error else show the legacy error.
-            if ($PrimaryDownloadStatusCode -ne 404) {
-                throw "Could not download `"$assetName`" with version = $SpecificVersion`r`n$PrimaryDownloadFailedMsg"
-            }
-            if (($LegacyDownloadLink) -and ($LegacyDownloadStatusCode -ne 404)) {
-                throw "Could not download `"$assetName`" with version = $SpecificVersion`r`n$LegacyDownloadFailedMsg"
-            }
-            throw "Could not download `"$assetName`" with version = $SpecificVersion"
+        # 404-NotFound is an expected response if it goes from only one of the links, do not show that error.
+        # If primary path is available (not 404-NotFound) then show the primary error else show the legacy error.
+        if ($PrimaryDownloadStatusCode -ne 404) {
+            throw "Could not download `"$assetName`" with version = $SpecificVersion from feed $AzureFeed`r`n$PrimaryDownloadFailedMsg"
         }
+        if (($LegacyDownloadLink) -and ($LegacyDownloadStatusCode -ne 404)) {
+            throw "Could not download `"$assetName`" with version = $SpecificVersion from feed $AzureFeed`r`n$LegacyDownloadFailedMsg"
+        }
+        throw "Could not download `"$assetName`" with version = $SpecificVersion from feed $AzureFeed"
     }
+}
 
+function Install-DotNet {
     Say "Extracting zip from $DownloadLink"
     Extract-Dotnet-Package -ZipPath $ZipPath -OutPath $InstallRoot
 
@@ -1180,15 +1178,6 @@ function Install-Dotnet {
     Say "Note that the script does not resolve dependencies during installation."
     Say "To check the list of dependencies, go to https://docs.microsoft.com/dotnet/core/install/windows#dependencies"
     Say "Installation finished"
-}
-
-function Main {
-
-    $SpecificVersion = Get-Specific-Version-From-Version -AzureFeed $AzureFeed -Channel $Channel -Version $Version -JSonFile $JSonFile
-    $DownloadLink, $EffectiveVersion = Get-Download-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
-    $LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
-
-    Install-Dotnet
 }
 
 #try to get download location from aka.ms link
@@ -1224,23 +1213,29 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
         #retrieve effective (product) version
         $EffectiveVersion = Get-Product-Version -SpecificVersion $SpecificVersion -PackageDownloadLink $DownloadLink
         Say-Verbose "Product version: '$EffectiveVersion'."
-    }
-}
 
-if ($DownloadLink) {
-    Install-Dotnet
-    exit 0
+        Download-DotNet
+        Install-DotNet
+        exit 0
+    }
 }
 
 foreach ($feed in $feeds) {
     $AzureFeed = $feed
     try {
         Say-Verbose "Using Feed $AzureFeed"
-        Main
-        exit 0
+
+        $SpecificVersion = Get-Specific-Version-From-Version -AzureFeed $AzureFeed -Channel $Channel -Version $Version -JSonFile $JSonFile
+        $DownloadLink, $EffectiveVersion = Get-Download-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
+        $LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
+
+        Download-DotNet
     }
     catch {
-        Say-Verbose "Installation failed, trying next feed: $_"
+        Say-Verbose "Download failed, trying next feed: $_"
+        continue
     }
+    Install-Dotnet
+    exit 0
 }
 exit 1
