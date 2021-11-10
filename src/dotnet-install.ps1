@@ -285,7 +285,7 @@ function Get-NormalizedProduct([string]$Runtime) {
 # Line 2: # 4-part version
 # For the aspnetcore runtime (1 line):
 # Line 1: # 4-part version
-function Get-Version-Info-From-Version-Text([string]$VersionText) {
+function Get-Version-From-LatestVersion-File-Content([string]$VersionText) {
     Say-Invocation $MyInvocation
 
     $Data = -split $VersionText
@@ -465,7 +465,7 @@ function Get-Latest-Version-Info([string]$AzureFeed, [string]$Channel) {
         default { throw "``$Response.Content.Headers.ContentType`` is an unknown .version file content type." }
     }
 
-    $VersionInfo = Get-Version-Info-From-Version-Text $VersionText
+    $VersionInfo = Get-Version-From-LatestVersion-File-Content $VersionText
 
     return $VersionInfo
 }
