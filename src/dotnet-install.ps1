@@ -129,8 +129,6 @@ if ($SharedRuntime -and (-not $Runtime)) {
     $Runtime = "dotnet"
 }
 
-# example path with regex: shared/1.0.0-beta-12345/somepath
-$VersionRegEx="/\d+\.\d+[^/]+/"
 $OverrideNonVersionedFiles = !$SkipNonVersionedFiles
 
 function Say($str) {
@@ -722,7 +720,8 @@ function Get-Absolute-Path([string]$RelativeOrAbsolutePath) {
 }
 
 function Get-Path-Prefix-With-Version($path) {
-    $match = [regex]::match($path, $VersionRegEx)
+    # example path with regex: shared/1.0.0-beta-12345/somepath
+    $match = [regex]::match($path, "/\d+\.\d+[^/]+/")
     if ($match.Success) {
         return $entry.FullName.Substring(0, $match.Index + $match.Length)
     }
