@@ -123,8 +123,6 @@ if ($NoCdn) {
     $AzureFeed = $UncachedFeed
 }
 
-$BinFolderRelativePath=""
-
 if ($SharedRuntime -and (-not $Runtime)) {
     $Runtime = "dotnet"
 }
@@ -840,8 +838,8 @@ function SafeRemoveFile($Path) {
     }
 }
 
-function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot, [string]$BinFolderRelativePath) {
-    $BinPath = Get-Absolute-Path $(Join-Path -Path $InstallRoot -ChildPath $BinFolderRelativePath)
+function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot) {
+    $BinPath = Get-Absolute-Path $(Join-Path -Path $InstallRoot -ChildPath "")
     if (-Not $NoPath) {
         $SuffixedBinPath = "$BinPath;"
         if (-Not $env:path.Contains($SuffixedBinPath)) {
@@ -1071,7 +1069,7 @@ if ($SpecificVersion -ne $EffectiveVersion)
 $isAssetInstalled = Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $SpecificVersion
 if ($isAssetInstalled) {
     Say "$assetName version $SpecificVersion is already installed."
-    Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot -BinFolderRelativePath $BinFolderRelativePath
+    Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
     return
 }
 
@@ -1201,7 +1199,7 @@ if (!$isAssetInstalled) {
 
 SafeRemoveFile -Path $ZipPath
 
-Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot -BinFolderRelativePath $BinFolderRelativePath
+Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
 
 Say "Note that the script does not resolve dependencies during installation."
 Say "To check the list of dependencies, go to https://docs.microsoft.com/dotnet/core/install/windows#dependencies"
