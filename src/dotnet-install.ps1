@@ -193,9 +193,7 @@ function Get-Machine-Architecture() {
     # To get the correct architecture, we need to use PROCESSOR_ARCHITEW6432.
     # PS x64 doesn't define this, so we fall back to PROCESSOR_ARCHITECTURE.
     # Possible values: amd64, x64, x86, arm64, arm
-
-    if( $ENV:PROCESSOR_ARCHITEW6432 -ne $null )
-    {    
+    if( $ENV:PROCESSOR_ARCHITEW6432 -ne $null ) {
         return $ENV:PROCESSOR_ARCHITEW6432
     }
 
@@ -205,8 +203,11 @@ function Get-Machine-Architecture() {
 function Get-CLIArchitecture-From-Architecture([string]$Architecture) {
     Say-Invocation $MyInvocation
 
+    if ($Architecture -eq "<auto>") {
+        $Architecture = Get-Machine-Architecture
+    }
+
     switch ($Architecture.ToLowerInvariant()) {
-        { $_ -eq "<auto>" } { return Get-CLIArchitecture-From-Architecture $(Get-Machine-Architecture) }
         { ($_ -eq "amd64") -or ($_ -eq "x64") } { return "x64" }
         { $_ -eq "x86" } { return "x86" }
         { $_ -eq "arm" } { return "arm" }
