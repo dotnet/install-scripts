@@ -225,7 +225,23 @@ function Get-CLIArchitecture-From-Architecture([string]$Architecture) {
     }
 }
 
-
+function ValidateFeedCredential()
+{
+    if ($Internal -and [string]::IsNullOrWhitespace($FeedCredential)) {
+        $message = "Provide credentials via -FeedCredential parameter."
+        if ($DryRun) {
+            Say-Warning "$message"
+        } else {
+            throw "$message"
+        }
+    }
+    
+    #FeedCredential should start with "?", for it to be added to the end of the link.
+    #adding "?" at the beginning of the FeedCredential if needed.
+    if ((![string]::IsNullOrWhitespace($FeedCredential)) -and ($FeedCredential[0] -ne '?')) {
+        $FeedCredential = "?" + $FeedCredential
+    }
+}
 function Get-NormalizedQuality([string]$Quality) {
     Say-Invocation $MyInvocation
 
@@ -932,21 +948,6 @@ Say "- The SDK needs to be installed without user interaction and without admin 
 Say "- The SDK installation doesn't need to persist across multiple CI runs."
 Say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.`r`n"
 
-if ($Internal -and [string]::IsNullOrWhitespace($FeedCredential)) {
-    $message = "Provide credentials via -FeedCredential parameter."
-    if ($DryRun) {
-        Say-Warning "$message"
-    } else {
-        throw "$message"
-    }
-}
-
-#FeedCredential should start with "?", for it to be added to the end of the link.
-#adding "?" at the beginning of the FeedCredential if needed.
-if ((![string]::IsNullOrWhitespace($FeedCredential)) -and ($FeedCredential[0] -ne '?')) {
-    $FeedCredential = "?" + $FeedCredential
-}
-
 $CLIArchitecture = Get-CLIArchitecture-From-Architecture $Architecture
 $NormalizedQuality = Get-NormalizedQuality $Quality
 Say-Verbose "Normalized quality: '$NormalizedQuality'"
@@ -954,6 +955,7 @@ $NormalizedChannel = Get-NormalizedChannel $Channel
 Say-Verbose "Normalized channel: '$NormalizedChannel'"
 $NormalizedProduct = Get-NormalizedProduct $Runtime
 Say-Verbose "Normalized product: '$NormalizedProduct'"
+ValidateFeedCredential
 $DownloadLink = $null
 
 #try to get download location from aka.ms link
