@@ -119,16 +119,6 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference="Stop"
 $ProgressPreference="SilentlyContinue"
 
-if ($NoCdn) {
-    $AzureFeed = $UncachedFeed
-}
-
-if ($SharedRuntime -and (-not $Runtime)) {
-    $Runtime = "dotnet"
-}
-
-$OverrideNonVersionedFiles = !$SkipNonVersionedFiles
-
 function Say($str) {
     try {
         Write-Host "dotnet-install: $str"
@@ -947,6 +937,16 @@ Say "Note that the intended use of this script is for Continuous Integration (CI
 Say "- The SDK needs to be installed without user interaction and without admin rights."
 Say "- The SDK installation doesn't need to persist across multiple CI runs."
 Say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.`r`n"
+
+if ($NoCdn) {
+    $AzureFeed = $UncachedFeed
+}
+
+if ($SharedRuntime -and (-not $Runtime)) {
+    $Runtime = "dotnet"
+}
+
+$OverrideNonVersionedFiles = !$SkipNonVersionedFiles
 
 $CLIArchitecture = Get-CLIArchitecture-From-Architecture $Architecture
 $NormalizedQuality = Get-NormalizedQuality $Quality
