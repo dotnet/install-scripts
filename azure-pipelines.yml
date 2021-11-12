@@ -35,11 +35,11 @@ stages:
         timeoutInMinutes: 90
         pool:
           ${{ if eq(variables._RunAsPublic, True) }}:
-            name: NetCorePublic-Pool
-            queue: BuildPool.Server.Amd64.VS2017.Arcade.Open
+            name: NetCore1ESPool-Public
+            demands: ImageOverride -equals Build.Server.Amd64.VS2019.Open
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCoreInternal-Pool
-            queue: BuildPool.Server.Amd64.VS2017.Arcade
+            name: NetCore1ESPool-Internal
+            demands: ImageOverride -equals Build.Server.Amd64.VS2019
         strategy:
           matrix:
             ${{ if eq(variables._RunAsInternal, True) }}:
