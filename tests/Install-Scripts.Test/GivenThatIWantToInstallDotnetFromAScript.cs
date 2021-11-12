@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("6.0", "6\\.0\\..*", Quality.Daily),
                 ("6.0", "6\\.0\\..*", Quality.None),
                 ("Current", "5\\.0\\..*", Quality.None),
-                ("LTS", "3\\.1\\..*", Quality.None),
+                ("LTS", "6\\.0\\..*", Quality.None),
             };
 
         /// <summary>
