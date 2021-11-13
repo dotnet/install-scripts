@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("5.0", "5\\.0\\..*", Quality.None),
                 ("6.0", "6\\.0\\..*", Quality.Daily),
                 ("6.0", "6\\.0\\..*", Quality.None),
-                ("Current", "5\\.0\\..*", Quality.None),
+                ("Current", "6\\.0\\..*", Quality.None),
                 ("LTS", "6\\.0\\..*", Quality.None),
             };
 
