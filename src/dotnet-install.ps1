@@ -427,7 +427,7 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
     }
 }
 
-function Get-Latest-Version-Info([string]$AzureFeed, [string]$Channel) {
+function Get-Version-From-LatestVersion-File([string]$AzureFeed, [string]$Channel) {
     Say-Invocation $MyInvocation
 
     $VersionFileUrl = $null
@@ -512,7 +512,7 @@ function Get-Specific-Version-From-Version([string]$AzureFeed, [string]$Channel,
 
     if (-not $JSonFile) {
         if ($Version.ToLowerInvariant() -eq "latest") {
-            $LatestVersionInfo = Get-Latest-Version-Info -AzureFeed $AzureFeed -Channel $Channel
+            $LatestVersionInfo = Get-Version-From-LatestVersion-File -AzureFeed $AzureFeed -Channel $Channel
             return $LatestVersionInfo.Version
         }
         else {
@@ -861,6 +861,41 @@ function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot) {
     }
 }
 
+function PrintDryRunOutput()
+{
+    Say "Payload URLs:"
+    Say "Primary named payload URL: ${DownloadLink}"
+    if ($LegacyDownloadLink) {
+        Say "Legacy named payload URL: ${LegacyDownloadLink}"
+    }
+    $RepeatableCommand = ".\$ScriptName -Version `"$SpecificVersion`" -InstallDir `"$InstallRoot`" -Architecture `"$CLIArchitecture`""
+    if ($Runtime -eq "dotnet") {
+       $RepeatableCommand+=" -Runtime `"dotnet`""
+    }
+    elseif ($Runtime -eq "aspnetcore") {
+       $RepeatableCommand+=" -Runtime `"aspnetcore`""
+    }
+
+    if (-not [string]::IsNullOrEmpty($NormalizedQuality))
+    {
+        $RepeatableCommand+=" -Quality `"$NormalizedQuality`""
+    }
+
+    foreach ($key in $MyInvocation.BoundParameters.Keys) {
+        if (-not (@("Architecture","Channel","DryRun","InstallDir","Runtime","SharedRuntime","Version","Quality","FeedCredential") -contains $key)) {
+            $RepeatableCommand+=" -$key `"$($MyInvocation.BoundParameters[$key])`""
+        }
+    }
+    if ($MyInvocation.BoundParameters.Keys -contains "FeedCredential") {
+        $RepeatableCommand+=" -FeedCredential `"<feedCredential>`""
+    }
+    Say "Repeatable invocation: $RepeatableCommand"
+    if ($SpecificVersion -ne $EffectiveVersion)
+    {
+        Say "NOTE: Due to finding a version manifest with this runtime, it would actually install with version '$EffectiveVersion'"
+    }
+}
+
 function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Internal, [string]$Product, [string]$Architecture) {
     Say-Invocation $MyInvocation 
 
@@ -1007,38 +1042,7 @@ Say-Verbose "InstallRoot: $InstallRoot"
 $ScriptName = $MyInvocation.MyCommand.Name
 
 if ($DryRun) {
-    Say "Payload URLs:"
-    Say "Primary named payload URL: ${DownloadLink}"
-    if ($LegacyDownloadLink) {
-        Say "Legacy named payload URL: ${LegacyDownloadLink}"
-    }
-    $RepeatableCommand = ".\$ScriptName -Version `"$SpecificVersion`" -InstallDir `"$InstallRoot`" -Architecture `"$CLIArchitecture`""
-    if ($Runtime -eq "dotnet") {
-       $RepeatableCommand+=" -Runtime `"dotnet`""
-    }
-    elseif ($Runtime -eq "aspnetcore") {
-       $RepeatableCommand+=" -Runtime `"aspnetcore`""
-    }
-
-    if (-not [string]::IsNullOrEmpty($NormalizedQuality))
-    {
-        $RepeatableCommand+=" -Quality `"$NormalizedQuality`""
-    }
-
-    foreach ($key in $MyInvocation.BoundParameters.Keys) {
-        if (-not (@("Architecture","Channel","DryRun","InstallDir","Runtime","SharedRuntime","Version","Quality","FeedCredential") -contains $key)) {
-            $RepeatableCommand+=" -$key `"$($MyInvocation.BoundParameters[$key])`""
-        }
-    }
-    if ($MyInvocation.BoundParameters.Keys -contains "FeedCredential") {
-        $RepeatableCommand+=" -FeedCredential `"<feedCredential>`""
-    }
-    Say "Repeatable invocation: $RepeatableCommand"
-    if ($SpecificVersion -ne $EffectiveVersion)
-    {
-        Say "NOTE: Due to finding a version manifest with this runtime, it would actually install with version '$EffectiveVersion'"
-    }
-
+    PrintDryRunOutput
     return
 }
 
