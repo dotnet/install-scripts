@@ -66,11 +66,13 @@
     Displays diagnostics information.
 .PARAMETER AzureFeed
     Default: https://dotnetcli.azureedge.net/dotnet
-    This parameter typically is not changed by the user.
-    It allows changing the URL for the Azure feed used by this installer.
+    For internal use only.
+    Allows using a different storage to download SDK archives from.
+    This parameter is only used if $NoCdn is false.
 .PARAMETER UncachedFeed
-    This parameter typically is not changed by the user.
-    It allows changing the URL for the Uncached feed used by this installer.
+    For internal use only.
+    Allows using a different storage to download SDK archives from.
+    This parameter is only used if $NoCdn is true.
 .PARAMETER ProxyAddress
     If set, the installer will use the proxy when making web requests
 .PARAMETER ProxyUseDefaultCredentials
@@ -101,11 +103,11 @@ param(
    [string]$Architecture="<auto>",
    [string]$Runtime,
    [Obsolete("This parameter may be removed in a future version of this script. The recommended alternative is '-Runtime dotnet'.")]
-   [switch]$SharedRuntime,
+   [Parameter(DontShow=$true)][switch]$SharedRuntime,
    [switch]$DryRun,
    [switch]$NoPath,
-   [string]$AzureFeed="https://dotnetcli.azureedge.net/dotnet",
-   [string]$UncachedFeed="https://dotnetcli.blob.core.windows.net/dotnet",
+   [Parameter(DontShow=$true)][string]$AzureFeed,
+   [Parameter(DontShow=$true)][string]$UncachedFeed,
    [string]$FeedCredential,
    [string]$ProxyAddress,
    [switch]$ProxyUseDefaultCredentials,
@@ -969,14 +971,35 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
 
 }
 
+function Get-Feeds-To-Use()
+{
+    $feeds = @(
+    "https://dotnetcli.azureedge.net/dotnet",
+    "https://dotnetbuilds.azureedge.net/public"
+    )
+
+    if (-not [string]::IsNullOrEmpty($AzureFeed)) {
+        $feeds = @($AddSource)
+    }
+
+    if ($NoCdn) {
+        $feeds = @(
+        "https://dotnetcli.blob.core.windows.net/dotnet",
+        "https://dotnetbuilds.blob.core.windows.net/public"
+        )
+
+        if (-not [string]::IsNullOrEmpty($UncachedFeed)) {
+            $feeds = @($UncachedFeed)
+        }
+    }
+
+    return $feeds
+}
+
 Say "Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:"
 Say "- The SDK needs to be installed without user interaction and without admin rights."
 Say "- The SDK installation doesn't need to persist across multiple CI runs."
 Say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.`r`n"
-
-if ($NoCdn) {
-    $AzureFeed = $UncachedFeed
-}
 
 if ($SharedRuntime -and (-not $Runtime)) {
     $Runtime = "dotnet"
