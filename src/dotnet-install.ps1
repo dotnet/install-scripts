@@ -740,7 +740,7 @@ function Get-List-Of-Directories-And-Versions-To-Unpack-From-Dotnet-Package([Sys
     $ret = @()
     foreach ($entry in $Zip.Entries) {
         $dir = Get-Path-Prefix-With-Version $entry.FullName
-        if ($dir -ne $null) {
+        if ($null -ne $dir) {
             $path = Get-Absolute-Path $(Join-Path -Path $OutPath -ChildPath $dir)
             if (-Not (Test-Path $path -PathType Container)) {
                 $ret += $dir
@@ -781,7 +781,7 @@ function Extract-Dotnet-Package([string]$ZipPath, [string]$OutPath) {
 
         foreach ($entry in $Zip.Entries) {
             $PathWithVersion = Get-Path-Prefix-With-Version $entry.FullName
-            if (($PathWithVersion -eq $null) -Or ($DirectoriesToUnpack -contains $PathWithVersion)) {
+            if (($null -eq $PathWithVersion) -Or ($DirectoriesToUnpack -contains $PathWithVersion)) {
                 $DestinationPath = Get-Absolute-Path $(Join-Path -Path $OutPath -ChildPath $entry.FullName)
                 $DestinationDir = Split-Path -Parent $DestinationPath
                 $OverrideFiles=$OverrideNonVersionedFiles -Or (-Not (Test-Path $DestinationPath))
@@ -793,7 +793,7 @@ function Extract-Dotnet-Package([string]$ZipPath, [string]$OutPath) {
         }
     }
     finally {
-        if ($Zip -ne $null) {
+        if ($null -ne $Zip) {
             $Zip.Dispose()
         }
     }
@@ -822,7 +822,7 @@ function DownloadFile($Source, [string]$OutPath) {
         $File.Close()
     }
     finally {
-        if ($Stream -ne $null) {
+        if ($null -ne $Stream) {
             $Stream.Dispose()
         }
     }
@@ -1098,7 +1098,7 @@ if ( ($diskInfo -ne $null) -and ($diskInfo.Free / 1MB -le 100)) {
 $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
 Say-Verbose "Zip path: $ZipPath"
 
-$DownloadFailed = $false
+$DownloadFailed = $true
 
 $PrimaryDownloadStatusCode = 0
 $LegacyDownloadStatusCode = 0
@@ -1109,10 +1109,9 @@ $LegacyDownloadFailedMsg = ""
 Say "Downloading primary link $DownloadLink"
 try {
     DownloadFile -Source $DownloadLink -OutPath $ZipPath
+    $DownloadFailed = $false
 }
 catch {
-    $DownloadFailed = $true
-
     if ($PSItem.Exception.Data.Contains("StatusCode")) {
         $PrimaryDownloadStatusCode = $PSItem.Exception.Data["StatusCode"]
     }
@@ -1140,6 +1139,7 @@ if ($DownloadFailed -and $LegacyDownloadLink) {
     Say "Downloading legacy link $DownloadLink"
     try {
         DownloadFile -Source $DownloadLink -OutPath $ZipPath
+        $DownloadFailed = $false
     }
     catch {
         if ($PSItem.Exception.Data.Contains("StatusCode")) {
@@ -1159,7 +1159,6 @@ if ($DownloadFailed -and $LegacyDownloadLink) {
         }
 
         SafeRemoveFile -Path $ZipPath
-        $DownloadFailed = $true
     }
 }
 
