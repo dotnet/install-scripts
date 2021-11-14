@@ -1111,6 +1111,8 @@ try {
     DownloadFile -Source $DownloadLink -OutPath $ZipPath
 }
 catch {
+    $DownloadFailed = $true
+
     if ($PSItem.Exception.Data.Contains("StatusCode")) {
         $PrimaryDownloadStatusCode = $PSItem.Exception.Data["StatusCode"]
     }
@@ -1128,37 +1130,35 @@ catch {
     }
 
     SafeRemoveFile -Path $ZipPath
+}
 
-    if ($LegacyDownloadLink) {
-        $DownloadLink = $LegacyDownloadLink
-        $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
-        Say-Verbose "Legacy zip path: $ZipPath"
-        Say "Downloading legacy link $DownloadLink"
-        try {
-            DownloadFile -Source $DownloadLink -OutPath $ZipPath
-        }
-        catch {
-            if ($PSItem.Exception.Data.Contains("StatusCode")) {
-                $LegacyDownloadStatusCode = $PSItem.Exception.Data["StatusCode"]
-            }
-
-            if ($PSItem.Exception.Data.Contains("ErrorMessage")) {
-                $LegacyDownloadFailedMsg = $PSItem.Exception.Data["ErrorMessage"]
-            } else {
-                $LegacyDownloadFailedMsg = $PSItem.Exception.Message
-            }
-
-            if ($LegacyDownloadStatusCode -eq 404) {
-                Say "The resource at $DownloadLink is not available."
-            } else {
-                Say $PSItem.Exception.Message
-            }
-
-            SafeRemoveFile -Path $ZipPath
-            $DownloadFailed = $true
-        }
+# Downloading primary link has failed. But we still have a legacy link to try.
+if ($DownloadFailed -and $LegacyDownloadLink) {
+    $DownloadLink = $LegacyDownloadLink
+    $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
+    Say-Verbose "Legacy zip path: $ZipPath"
+    Say "Downloading legacy link $DownloadLink"
+    try {
+        DownloadFile -Source $DownloadLink -OutPath $ZipPath
     }
-    else {
+    catch {
+        if ($PSItem.Exception.Data.Contains("StatusCode")) {
+            $LegacyDownloadStatusCode = $PSItem.Exception.Data["StatusCode"]
+        }
+
+        if ($PSItem.Exception.Data.Contains("ErrorMessage")) {
+            $LegacyDownloadFailedMsg = $PSItem.Exception.Data["ErrorMessage"]
+        } else {
+            $LegacyDownloadFailedMsg = $PSItem.Exception.Message
+        }
+
+        if ($LegacyDownloadStatusCode -eq 404) {
+            Say "The resource at $DownloadLink is not available."
+        } else {
+            Say $PSItem.Exception.Message
+        }
+
+        SafeRemoveFile -Path $ZipPath
         $DownloadFailed = $true
     }
 }
