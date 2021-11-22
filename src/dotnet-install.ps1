@@ -1095,8 +1095,7 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
         }
 
         #retrieve effective (product) version
-        # TODO don't use feed for this, get the address from aka.ms link
-        $EffectiveVersion = Get-Product-Version -AzureFeed $feed -SpecificVersion $SpecificVersion -PackageDownloadLink $AkaMsDownloadLink
+        $EffectiveVersion = Get-Product-Version -SpecificVersion $SpecificVersion -PackageDownloadLink $AkaMsDownloadLink
         Say-Verbose "Product version: '$EffectiveVersion'."
 
         $DownloadLinks += New-Object PSObject -Property @{downloadLink="$AkaMsDownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='aka.ms'}
@@ -1151,87 +1150,49 @@ Prepare-Install-Directory
 $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
 Say-Verbose "Zip path: $ZipPath"
 
-$DownloadFailed = $true
+$DownloadSucceeded = $false
 
-$PrimaryDownloadStatusCode = 0
-$LegacyDownloadStatusCode = 0
+$ErrorMessages = @()
 
-$PrimaryDownloadFailedMsg = ""
-$LegacyDownloadFailedMsg = ""
+foreach ($link in $DownloadLinks)
+{
+    Say "Downloading `"$($link.type)`" link $($link.downloadLink)"
 
-Say "Downloading primary link $DownloadLink"
-try {
-    DownloadFile -Source $DownloadLink -OutPath $ZipPath
-    $DownloadFailed = $false
-}
-catch {
-    if ($PSItem.Exception.Data.Contains("StatusCode")) {
-        $PrimaryDownloadStatusCode = $PSItem.Exception.Data["StatusCode"]
+    try {
+        DownloadFile -Source $DownloadLink -OutPath $ZipPath
+        $DownloadSucceeded = $true
+        break
+    }
+    catch {
+        $StatusCode = $null
+        $ErrorMessage = $null
+
+        if ($PSItem.Exception.Data.Contains("StatusCode")) {
+            $StatusCode = $PSItem.Exception.Data["StatusCode"]
+        }
+    
+        if ($PSItem.Exception.Data.Contains("ErrorMessage")) {
+            $ErrorMessage = $PSItem.Exception.Data["ErrorMessage"]
+        } else {
+            $ErrorMessage = $PSItem.Exception.Message
+        }
+
+        $ErrorMessages += "Downloading from `"$($link.type)`" link has failed with error:`nUri: $($link.downloadLink)`nStatusCode: $StatusCode`nError: $ErrorMessage"
     }
 
-    if ($PSItem.Exception.Data.Contains("ErrorMessage")) {
-        $PrimaryDownloadFailedMsg = $PSItem.Exception.Data["ErrorMessage"]
-    } else {
-        $PrimaryDownloadFailedMsg = $PSItem.Exception.Message
-    }
-
-    if ($PrimaryDownloadStatusCode -eq 404) {
-        Say "The resource at $DownloadLink is not available."
-    } else {
-        Say $PSItem.Exception.Message
-    }
-
+    # This link failed. Clean up before trying the next one.
     SafeRemoveFile -Path $ZipPath
 }
 
-# Downloading primary link has failed. But we still have a legacy link to try.
-if ($DownloadFailed -and $LegacyDownloadLink) {
-    $DownloadLink = $LegacyDownloadLink
-    $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
-    Say-Verbose "Legacy zip path: $ZipPath"
-    Say "Downloading legacy link $DownloadLink"
-    try {
-        DownloadFile -Source $DownloadLink -OutPath $ZipPath
-        $DownloadFailed = $false
+if (-not $DownloadSucceeded) {
+    foreach ($ErrorMessage in $ErrorMessages) {
+        Say-Error $ErrorMessages
     }
-    catch {
-        if ($PSItem.Exception.Data.Contains("StatusCode")) {
-            $LegacyDownloadStatusCode = $PSItem.Exception.Data["StatusCode"]
-        }
 
-        if ($PSItem.Exception.Data.Contains("ErrorMessage")) {
-            $LegacyDownloadFailedMsg = $PSItem.Exception.Data["ErrorMessage"]
-        } else {
-            $LegacyDownloadFailedMsg = $PSItem.Exception.Message
-        }
-
-        if ($LegacyDownloadStatusCode -eq 404) {
-            Say "The resource at $DownloadLink is not available."
-        } else {
-            Say $PSItem.Exception.Message
-        }
-
-        SafeRemoveFile -Path $ZipPath
-    }
+    throw "Could not find `"$assetName`" with version = $SpecificVersion`nRefer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
 }
 
-if ($DownloadFailed) {
-    if (($PrimaryDownloadStatusCode -eq 404) -and ((-not $LegacyDownloadLink) -or ($LegacyDownloadStatusCode -eq 404))) {
-        throw "Could not find `"$assetName`" with version = $SpecificVersion`nRefer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
-    } else {
-        # 404-NotFound is an expected response if it goes from only one of the links, do not show that error.
-        # If primary path is available (not 404-NotFound) then show the primary error else show the legacy error.
-        if ($PrimaryDownloadStatusCode -ne 404) {
-            throw "Could not download `"$assetName`" with version = $SpecificVersion`r`n$PrimaryDownloadFailedMsg"
-        }
-        if (($LegacyDownloadLink) -and ($LegacyDownloadStatusCode -ne 404)) {
-            throw "Could not download `"$assetName`" with version = $SpecificVersion`r`n$LegacyDownloadFailedMsg"
-        }
-        throw "Could not download `"$assetName`" with version = $SpecificVersion"
-    }
-}
-
-Say "Extracting zip from $DownloadLink"
+Say "Extracting the archive."
 Extract-Dotnet-Package -ZipPath $ZipPath -OutPath $InstallRoot
 
 #  Check if the SDK version is installed; if not, fail the installation.
