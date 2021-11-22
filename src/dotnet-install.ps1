@@ -326,7 +326,11 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
                     # Despite no proxy being explicitly specified, we may still be behind a default proxy
                     $DefaultProxy = [System.Net.WebRequest]::DefaultWebProxy;
                     if($DefaultProxy -and (-not $DefaultProxy.IsBypassed($Uri))) {
-                        $ProxyAddress = $DefaultProxy.GetProxy($Uri).OriginalString
+                        if ($null -ne $DefaultProxy.GetProxy($Uri)) {
+                            $ProxyAddress = $DefaultProxy.GetProxy($Uri).OriginalString
+                        } else {
+                            $ProxyAddress = $null
+                        }
                         $ProxyUseDefaultCredentials = $true
                     }
                 } catch {
@@ -455,7 +459,7 @@ function Get-Version-From-LatestVersion-File([string]$AzureFeed, [string]$Channe
         $Response = GetHTTPResponse -Uri $VersionFileUrl
     }
     catch {
-        Say-Error "Could not resolve version information."
+        Say-Verbose "Failed to download latest.version file."
         throw
     }
     $StringContent = $Response.Content.ReadAsStringAsync().Result
@@ -1099,6 +1103,7 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
         Say-Verbose "Product version: '$EffectiveVersion'."
 
         $DownloadLinks += New-Object PSObject -Property @{downloadLink="$AkaMsDownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='aka.ms'}
+        Say-Verbose "Generated aka.ms link $AkaMsDownloadLink with version $EffectiveVersion"
 
         if ($DryRun) {
             PrintDryRunOutput
@@ -1114,9 +1119,11 @@ foreach ($feed in $feeds) {
         $LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $feed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
         
         $DownloadLinks += New-Object PSObject -Property @{downloadLink="$DownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='primary'}
+        Say-Verbose "Generated primary link $DownloadLink with version $EffectiveVersion"
 
         if (-not [string]::IsNullOrEmpty($LegacyDownloadLink)) {
             $DownloadLinks += New-Object PSObject -Property @{downloadLink="$LegacyDownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='legacy'}
+            Say-Verbose "Generated legacy link $DownloadLink with version $EffectiveVersion"
         }
 
         if ($DryRun) {
@@ -1131,6 +1138,9 @@ foreach ($feed in $feeds) {
     }
 }
 
+if ($DownloadLinks.count -eq 0) {
+    throw "Failed to resolve the exact version number."
+}
 if ($SpecificVersion -ne $EffectiveVersion)
 {
    Say "Performing installation checks for effective version: $EffectiveVersion"
@@ -1159,7 +1169,7 @@ foreach ($link in $DownloadLinks)
     Say "Downloading `"$($link.type)`" link $($link.downloadLink)"
 
     try {
-        DownloadFile -Source $DownloadLink -OutPath $ZipPath
+        DownloadFile -Source $link.downloadLink -OutPath $ZipPath
         $DownloadSucceeded = $true
         break
     }
