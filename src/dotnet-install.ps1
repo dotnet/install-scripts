@@ -1102,6 +1102,13 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
         $EffectiveVersion = Get-Product-Version -SpecificVersion $SpecificVersion -PackageDownloadLink $AkaMsDownloadLink
         Say-Verbose "Product version: '$EffectiveVersion'."
 
+        if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
+        {
+            Say "$assetName version $EffectiveVersion is already installed."
+            Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
+            return
+        }
+
         $DownloadLinks += New-Object PSObject -Property @{downloadLink="$AkaMsDownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='aka.ms'}
         Say-Verbose "Generated aka.ms link $AkaMsDownloadLink with version $EffectiveVersion"
 
@@ -1126,6 +1133,14 @@ foreach ($feed in $feeds) {
             Say-Verbose "Generated legacy link $DownloadLink with version $EffectiveVersion"
         }
 
+        Say-Verbose "Checking if the version $EffectiveVersion is already installed"
+        if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
+        {
+            Say "$assetName version $EffeciveVersion is already installed."
+            Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
+            return
+        }
+
         if ($DryRun) {
             PrintDryRunOutput
             return
@@ -1141,19 +1156,6 @@ foreach ($feed in $feeds) {
 if ($DownloadLinks.count -eq 0) {
     throw "Failed to resolve the exact version number."
 }
-if ($SpecificVersion -ne $EffectiveVersion)
-{
-   Say "Performing installation checks for effective version: $EffectiveVersion"
-   $SpecificVersion = $EffectiveVersion
-}
-
-#  Check if the SDK version is already installed.
-$isAssetInstalled = Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $SpecificVersion
-if ($isAssetInstalled) {
-    Say "$assetName version $SpecificVersion is already installed."
-    Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
-    return
-}
 
 Prepare-Install-Directory
 
@@ -1161,16 +1163,18 @@ $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO
 Say-Verbose "Zip path: $ZipPath"
 
 $DownloadSucceeded = $false
-
+$DownloadedLink = $null
 $ErrorMessages = @()
 
 foreach ($link in $DownloadLinks)
 {
-    Say "Downloading `"$($link.type)`" link $($link.downloadLink)"
+    Say-Verbose "Downloading `"$($link.type)`" link $($link.downloadLink)"
 
     try {
         DownloadFile -Source $link.downloadLink -OutPath $ZipPath
+        Say-Verbose "Download succeeded."
         $DownloadSucceeded = $true
+        $DownloadedLink = $link
         break
     }
     catch {
@@ -1187,6 +1191,7 @@ foreach ($link in $DownloadLinks)
             $ErrorMessage = $PSItem.Exception.Message
         }
 
+        Say-Verbose "Download failed with status code $StatusCode. Error message: $ErrorMessage"
         $ErrorMessages += "Downloading from `"$($link.type)`" link has failed with error:`nUri: $($link.downloadLink)`nStatusCode: $StatusCode`nError: $ErrorMessage"
     }
 
@@ -1199,7 +1204,7 @@ if (-not $DownloadSucceeded) {
         Say-Error $ErrorMessages
     }
 
-    throw "Could not find `"$assetName`" with version = $SpecificVersion`nRefer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support"
+    throw "Could not find `"$assetName`" with version = $($DownloadLinks[0].effectiveVersion)`nRefer to: https://aka.ms/dotnet-os-lifecycle for information on .NET support"
 }
 
 Say "Extracting the archive."
@@ -1209,22 +1214,22 @@ Extract-Dotnet-Package -ZipPath $ZipPath -OutPath $InstallRoot
 $isAssetInstalled = $false
 
 # if the version contains "RTM" or "servicing"; check if a 'release-type' SDK version is installed.
-if ($SpecificVersion -Match "rtm" -or $SpecificVersion -Match "servicing") {
-    $ReleaseVersion = $SpecificVersion.Split("-")[0]
+if ($DownloadedLink.effectiveVersion -Match "rtm" -or $DownloadedLink.effectiveVersion -Match "servicing") {
+    $ReleaseVersion = $DownloadedLink.effectiveVersion.Split("-")[0]
     Say-Verbose "Checking installation: version = $ReleaseVersion"
     $isAssetInstalled = Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $ReleaseVersion
 }
 
 #  Check if the SDK version is installed.
 if (!$isAssetInstalled) {
-    Say-Verbose "Checking installation: version = $SpecificVersion"
-    $isAssetInstalled = Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $SpecificVersion
+    Say-Verbose "Checking installation: version = $($DownloadedLink.effectiveVersion)"
+    $isAssetInstalled = Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $DownloadedLink.effectiveVersion
 }
 
 # Version verification failed. More likely something is wrong either with the downloaded content or with the verification algorithm.
 if (!$isAssetInstalled) {
-    Say-Error "Failed to verify the version of installed `"$assetName`".`nInstallation source: $DownloadLink.`nInstallation location: $InstallRoot.`nReport the bug at https://github.com/dotnet/install-scripts/issues."
-    throw "`"$assetName`" with version = $SpecificVersion failed to install with an unknown error."
+    Say-Error "Failed to verify the version of installed `"$assetName`".`nInstallation source: $($DownloadedLink.downloadLink).`nInstallation location: $InstallRoot.`nReport the bug at https://github.com/dotnet/install-scripts/issues."
+    throw "`"$assetName`" with version = $($DownloadedLink.effectiveVersion) failed to install with an unknown error."
 }
 
 SafeRemoveFile -Path $ZipPath
