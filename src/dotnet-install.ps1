@@ -867,7 +867,7 @@ function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot) {
     }
 }
 
-function PrintDryRunOutput()
+function PrintDryRunOutput($Invocation, [string] $DownloadLink, [string] $LegacyDownloadLink, [string] $SpecificVersion, [string] $EffectiveVersion)
 {
     Say "Payload URLs:"
     Say "Primary named payload URL: ${DownloadLink}"
@@ -882,17 +882,12 @@ function PrintDryRunOutput()
        $RepeatableCommand+=" -Runtime `"aspnetcore`""
     }
 
-    if (-not [string]::IsNullOrEmpty($NormalizedQuality))
-    {
-        $RepeatableCommand+=" -Quality `"$NormalizedQuality`""
-    }
-
-    foreach ($key in $MyInvocation.BoundParameters.Keys) {
+    foreach ($key in $Invocation.BoundParameters.Keys) {
         if (-not (@("Architecture","Channel","DryRun","InstallDir","Runtime","SharedRuntime","Version","Quality","FeedCredential") -contains $key)) {
-            $RepeatableCommand+=" -$key `"$($MyInvocation.BoundParameters[$key])`""
+            $RepeatableCommand+=" -$key `"$($Invocation.BoundParameters[$key])`""
         }
     }
-    if ($MyInvocation.BoundParameters.Keys -contains "FeedCredential") {
+    if ($Invocation.BoundParameters.Keys -contains "FeedCredential") {
         $RepeatableCommand+=" -FeedCredential `"<feedCredential>`""
     }
     Say "Repeatable invocation: $RepeatableCommand"
@@ -1101,19 +1096,20 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
         #retrieve effective (product) version
         $EffectiveVersion = Get-Product-Version -SpecificVersion $SpecificVersion -PackageDownloadLink $AkaMsDownloadLink
         Say-Verbose "Product version: '$EffectiveVersion'."
+        
+        $DownloadLinks += New-Object PSObject -Property @{downloadLink="$AkaMsDownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='aka.ms'}
+        Say-Verbose "Generated aka.ms link $AkaMsDownloadLink with version $EffectiveVersion"
+        
+        if ($DryRun) {
+            PrintDryRunOutput $MyInvocation $AkaMsDownloadLink $null $SpecificVersion $EffectiveVersion
+            return
+        }
 
+        Say-Verbose "Checking if the version $EffectiveVersion is already installed"
         if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
         {
             Say "$assetName version $EffectiveVersion is already installed."
             Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
-            return
-        }
-
-        $DownloadLinks += New-Object PSObject -Property @{downloadLink="$AkaMsDownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='aka.ms'}
-        Say-Verbose "Generated aka.ms link $AkaMsDownloadLink with version $EffectiveVersion"
-
-        if ($DryRun) {
-            PrintDryRunOutput
             return
         }
     }
@@ -1133,6 +1129,11 @@ foreach ($feed in $feeds) {
             Say-Verbose "Generated legacy link $DownloadLink with version $EffectiveVersion"
         }
 
+        if ($DryRun) {
+            PrintDryRunOutput $MyInvocation $DownloadLink $LegacyDownloadLink $SpecificVersion $EffectiveVersion
+            return
+        }
+
         Say-Verbose "Checking if the version $EffectiveVersion is already installed"
         if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
         {
@@ -1140,12 +1141,6 @@ foreach ($feed in $feeds) {
             Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
             return
         }
-
-        if ($DryRun) {
-            PrintDryRunOutput
-            return
-        }
-        break
     }
     catch
     {
