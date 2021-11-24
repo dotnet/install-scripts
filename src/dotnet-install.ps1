@@ -972,6 +972,42 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
 
 }
 
+function Get-AkaMsLink-And-Version([string] $NormalizedChannel, [string] $NormalizedQuality, [bool] $Internal, [string] $ProductName, [string] $Architecture) {
+    $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Internal $Internal -Product $ProductName -Architecture $Architecture
+   
+    if ([string]::IsNullOrEmpty($AkaMsDownloadLink)){
+        if (-not [string]::IsNullOrEmpty($NormalizedQuality)) {
+            # if quality is specified - exit with error - there is no fallback approach
+            Say-Error "Failed to locate the latest version in the channel '$NormalizedChannel' with '$NormalizedQuality' quality for '$ProductName', os: 'win', architecture: '$Architecture'."
+            Say-Error "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support."
+            throw "aka.ms link resolution failure"
+        }
+        Say-Verbose "Falling back to latest.version file approach."
+        return ($null, $null, $null)
+    }
+    else {
+        Say-Verbose "Retrieved primary named payload URL from aka.ms link: '$AkaMsDownloadLink'."
+        Say-Verbose  "Downloading using legacy url will not be attempted."
+
+        #get version from the path
+        $pathParts = $AkaMsDownloadLink.Split('/')
+        if ($pathParts.Length -ge 2) { 
+            $SpecificVersion = $pathParts[$pathParts.Length - 2]
+            Say-Verbose "Version: '$SpecificVersion'."
+        }
+        else {
+            Say-Error "Failed to extract the version from download link '$AkaMsDownloadLink'."
+            return ($null, $null, $null)
+        }
+
+        #retrieve effective (product) version
+        $EffectiveVersion = Get-Product-Version -SpecificVersion $SpecificVersion -PackageDownloadLink $AkaMsDownloadLink
+        Say-Verbose "Product version: '$EffectiveVersion'."
+
+        return ($AkaMsDownloadLink, $SpecificVersion, $EffectiveVersion);
+    }
+}
+
 function Get-Feeds-To-Use()
 {
     $feeds = @(
@@ -1067,43 +1103,16 @@ $ScriptName = $MyInvocation.MyCommand.Name
 $feeds = Get-Feeds-To-Use
 $DownloadLinks = @()
 
-#try to get download location from aka.ms link
-#not applicable when exact version is specified via command or json file
+# aka.ms links can only be used if the user did not request a specific version via the command line or a global.json file.
 if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
-    $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Internal $Internal -Product $NormalizedProduct -Architecture $CLIArchitecture
-   
-    if ([string]::IsNullOrEmpty($AkaMsDownloadLink)){
-        if (-not [string]::IsNullOrEmpty($NormalizedQuality)) {
-            # if quality is specified - exit with error - there is no fallback approach
-            Say-Error "Failed to locate the latest version in the channel '$NormalizedChannel' with '$NormalizedQuality' quality for '$NormalizedProduct', os: 'win', architecture: '$CLIArchitecture'."
-            Say-Error "Refer to: https://aka.ms/dotnet-os-lifecycle for information on .NET Core support."
-            throw "aka.ms link resolution failure"
-        }
-        Say-Verbose "Falling back to latest.version file approach."
-    }
-    else {
-        Say-Verbose "Retrieved primary named payload URL from aka.ms link: '$AkaMsDownloadLink'."
-        Say-Verbose  "Downloading using legacy url will not be attempted."
-
-        #get version from the path
-        $pathParts = $AkaMsDownloadLink.Split('/')
-        if ($pathParts.Length -ge 2) { 
-            $SpecificVersion = $pathParts[$pathParts.Length - 2]
-            Say-Verbose "Version: '$SpecificVersion'."
-        }
-        else {
-            Say-Error "Failed to extract the version from download link '$AkaMsDownloadLink'."
-        }
-
-        #retrieve effective (product) version
-        $EffectiveVersion = Get-Product-Version -SpecificVersion $SpecificVersion -PackageDownloadLink $AkaMsDownloadLink
-        Say-Verbose "Product version: '$EffectiveVersion'."
-        
-        $DownloadLinks += New-Object PSObject -Property @{downloadLink="$AkaMsDownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='aka.ms'}
-        Say-Verbose "Generated aka.ms link $AkaMsDownloadLink with version $EffectiveVersion"
+    ($DownloadLink, $SpecificVersion, $EffectiveVersion) = Get-AkaMsLink-And-Version $NormalizedChannel $NormalizedQuality $Internal $NormalizedProduct $CLIArchitecture
+    
+    if ($null -ne $DownloadLink) {
+        $DownloadLinks += New-Object PSObject -Property @{downloadLink="$DownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='aka.ms'}
+        Say-Verbose "Generated aka.ms link $DownloadLink with version $EffectiveVersion"
         
         if ($DryRun) {
-            PrintDryRunOutput $MyInvocation $AkaMsDownloadLink $null $SpecificVersion $EffectiveVersion
+            PrintDryRunOutput $MyInvocation $DownloadLink $null $SpecificVersion $EffectiveVersion
             return
         }
 
@@ -1117,42 +1126,48 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
     }
 }
 
-foreach ($feed in $feeds) {
-    try {
-        $SpecificVersion = Get-Specific-Version-From-Version -AzureFeed $feed -Channel $Channel -Version $Version -JSonFile $JSonFile
-        $DownloadLink, $EffectiveVersion = Get-Download-Link -AzureFeed $feed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
-        $LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $feed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
-        
-        $DownloadLinks += New-Object PSObject -Property @{downloadLink="$DownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='primary'}
-        Say-Verbose "Generated primary link $DownloadLink with version $EffectiveVersion"
-
-        if (-not [string]::IsNullOrEmpty($LegacyDownloadLink)) {
-            $DownloadLinks += New-Object PSObject -Property @{downloadLink="$LegacyDownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='legacy'}
-            Say-Verbose "Generated legacy link $DownloadLink with version $EffectiveVersion"
+# Primary and legacy links cannot be used if a quality was specified.
+# If we already have an aka.ms link, no need to search the blob feeds.
+if ([string]::IsNullOrEmpty($NormalizedQuality) -and 0 -eq $DownloadLinks.count)
+{
+    foreach ($feed in $feeds) {
+        try {
+            $SpecificVersion = Get-Specific-Version-From-Version -AzureFeed $feed -Channel $Channel -Version $Version -JSonFile $JSonFile
+            $DownloadLink, $EffectiveVersion = Get-Download-Link -AzureFeed $feed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
+            $LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $feed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
+            
+            $DownloadLinks += New-Object PSObject -Property @{downloadLink="$DownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='primary'}
+            Say-Verbose "Generated primary link $DownloadLink with version $EffectiveVersion"
+    
+            if (-not [string]::IsNullOrEmpty($LegacyDownloadLink)) {
+                $DownloadLinks += New-Object PSObject -Property @{downloadLink="$LegacyDownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='legacy'}
+                Say-Verbose "Generated legacy link $DownloadLink with version $EffectiveVersion"
+            }
+    
+            if ($DryRun) {
+                PrintDryRunOutput $MyInvocation $DownloadLink $LegacyDownloadLink $SpecificVersion $EffectiveVersion
+                return
+            }
+    
+            Say-Verbose "Checking if the version $EffectiveVersion is already installed"
+            if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
+            {
+                Say "$assetName version $EffeciveVersion is already installed."
+                Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
+                return
+            }
         }
-
-        if ($DryRun) {
-            PrintDryRunOutput $MyInvocation $DownloadLink $LegacyDownloadLink $SpecificVersion $EffectiveVersion
-            return
-        }
-
-        Say-Verbose "Checking if the version $EffectiveVersion is already installed"
-        if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
+        catch
         {
-            Say "$assetName version $EffeciveVersion is already installed."
-            Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
-            return
+            Say-Verbose "Failed to acquire download links from feed $feed. Exception: $_"
         }
-    }
-    catch
-    {
-        Say-Verbose "Failed to acquire download links from feed $feed. Exception: $_"
     }
 }
 
 if ($DownloadLinks.count -eq 0) {
     throw "Failed to resolve the exact version number."
 }
+
 
 Prepare-Install-Directory
 
