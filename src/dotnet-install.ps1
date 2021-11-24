@@ -218,7 +218,7 @@ function Get-CLIArchitecture-From-Architecture([string]$Architecture) {
     }
 }
 
-function ValidateFeedCredential()
+function ValidateFeedCredential([string] $FeedCredential)
 {
     if ($Internal -and [string]::IsNullOrWhitespace($FeedCredential)) {
         $message = "Provide credentials via -FeedCredential parameter."
@@ -234,6 +234,8 @@ function ValidateFeedCredential()
     if ((![string]::IsNullOrWhitespace($FeedCredential)) -and ($FeedCredential[0] -ne '?')) {
         $FeedCredential = "?" + $FeedCredential
     }
+
+    return $FeedCredential
 }
 function Get-NormalizedQuality([string]$Quality) {
     Say-Invocation $MyInvocation
@@ -1055,7 +1057,7 @@ $NormalizedChannel = Get-NormalizedChannel $Channel
 Say-Verbose "Normalized channel: '$NormalizedChannel'"
 $NormalizedProduct = Get-NormalizedProduct $Runtime
 Say-Verbose "Normalized product: '$NormalizedProduct'"
-ValidateFeedCredential
+$FeedCredential = ValidateFeedCredential $FeedCredential
 
 $InstallRoot = Resolve-Installation-Path $InstallDir
 Say-Verbose "InstallRoot: $InstallRoot"
