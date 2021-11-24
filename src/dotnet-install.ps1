@@ -980,7 +980,7 @@ function Get-Feeds-To-Use()
     )
 
     if (-not [string]::IsNullOrEmpty($AzureFeed)) {
-        $feeds = @($AddSource)
+        $feeds = @($AzureFeed)
     }
 
     if ($NoCdn) {
