@@ -12,6 +12,16 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Azure.Kusto.Ingest" Version="8.1.3" />
     <PackageReference Include="Microsoft.NET.Sdk.Functions" Version="3.0.9" />
+    
+    <!-- This package has vulnerabilities below version 4.5.1.
+      We do not need to directly reference this package, but it is one of the dependencies of Microsoft.NET.Sdk.Functions.
+      Latest version of Microsoft.NET.Sdk.Functions package today is 4.0.1,
+      which depends on version 4.5.0 of System.Text.Encodings.Web (a version that is known to have vulnerabilities).
+      To force the project to use 4.5.1 instead of 4.5.0, we need to add this package reference explicitly. -->
+    <PackageReference Include="System.Text.Encodings.Web" Version="4.5.1" />
+    <!-- Same scenario above also applies to Microsoft.AspNetCore.Http, where vulnerable 2.1.0 version is referenced. -->
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.1.22" />
+
   </ItemGroup>
 
 </Project>
