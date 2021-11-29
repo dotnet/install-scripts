@@ -192,6 +192,26 @@ stages:
       inputs: 
         command: test
 
+  - job: MacOSTests
+    timeoutInMinutes: 30
+    pool: 
+      vmImage: 'macOS-latest'
+    steps:
+    - checkout: self
+      displayName: Checkout Self
+      clean: true
+    - task: UseDotNet@2
+      displayName: Get .NET Core SDK
+      inputs:
+        version: 3.x
+    - script: |
+        chmod u+x src/dotnet-install.sh
+      displayName: 'Add permission to execute'
+    - task: DotNetCoreCLI@2
+      displayName: Run Tests
+      inputs: 
+        command: test
+
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
