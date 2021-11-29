@@ -205,8 +205,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 .CaptureStdErr()
                 .Execute();
 
-            string installPath = " [" + Path.Combine(_sdkInstallationDirectory, "sdk") + "]";
-            string regex = Regex.Escape("  ") + versionRegex + Regex.Escape(installPath);
+            // On MacOS, installation directory has an extra /private at the beginning.
+            string installPathRegex = "\\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "sdk")) + "\\]";
+            string regex = Regex.Escape("  ") + versionRegex + Regex.Escape(" ") + installPathRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
             commandResult.Should().NotHaveStdErr();
         }
@@ -233,9 +234,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 .CaptureStdErr()
                 .Execute();
 
-            string lineStart = " Microsoft.NETCore.App ";
-            string lineEnd = " [" + Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.NETCore.App") + "]";
-            string regex = Regex.Escape(lineStart) + versionRegex + Regex.Escape(lineEnd);
+            string lineStartRegex = Regex.Escape(" Microsoft.NETCore.App ");
+            string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.NETCore.App")) + "\\]";
+            string regex = lineStartRegex + versionRegex + lineEndRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
             commandResult.Should().NotHaveStdErr();
         }
@@ -269,9 +270,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 .CaptureStdErr()
                 .Execute();
 
-            string lineStart = " Microsoft.AspNetCore.App ";
-            string lineEnd = " [" + Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.AspNetCore.App") + "]";
-            string regex = Regex.Escape(lineStart) + versionRegex + Regex.Escape(lineEnd);
+            string lineStartRegex = Regex.Escape(" Microsoft.AspNetCore.App ");
+            string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.AspNetCore.App")) + "\\]";
+            string regex = lineStartRegex + versionRegex + lineEndRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
             commandResult.Should().NotHaveStdErr();
         }
