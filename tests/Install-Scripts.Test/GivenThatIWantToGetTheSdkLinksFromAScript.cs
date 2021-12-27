@@ -7,11 +7,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
     public class GivenThatIWantToGetTheSdkLinksFromAScript : TestBase
     {
+        public GivenThatIWantToGetTheSdkLinksFromAScript(ITestOutputHelper testOutputHelper)
+            : base(testOutputHelper)
+        {
+        }
+
         [Theory]
         [InlineData("InstallationScriptTests.json")]
         [InlineData("InstallationScriptTestsWithMultipleSdkFields.json")]
@@ -33,6 +39,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdOutContaining("jsonfile");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
             commandResult.Should().HaveStdOutContaining("\"1.0.0-beta.19463.3\"");
+
+            PopulateTestLoggerOutput(commandResult);
         }
 
         [Theory]
@@ -61,6 +69,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             //  Non-dynamic input parameters should always be on the ouput line
             commandResult.Should().HaveStdOutContainingIgnoreCase(parameter);
+
+            PopulateTestLoggerOutput(commandResult);
         }
 
         [Theory]
@@ -88,6 +98,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             //  Runtime should resolve to the correct 'type'
             commandResult.Should().HaveStdOutContainingIgnoreCase("-runtime");
             commandResult.Should().HaveStdOutContainingIgnoreCase(runtimeType);
+
+            PopulateTestLoggerOutput(commandResult);
         }
 
         [Theory]
@@ -169,6 +181,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             {
                 commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
             }
+
+            PopulateTestLoggerOutput(commandResult);
         }
 
         [Theory]
@@ -244,6 +258,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             {
                 commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
             }
+
+            PopulateTestLoggerOutput(commandResult);
         }
 
         [Theory]
@@ -264,6 +280,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().Pass().And.HaveStdOutContaining(expectedLinkLog);
+
+            PopulateTestLoggerOutput(commandResult);
         }
 
         [Theory]
@@ -285,6 +303,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdOutContaining("Repeatable invocation:");
             commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
             commandResult.Should().NotHaveStdErrContainingIgnoreCase(feedCredentials);
+
+            PopulateTestLoggerOutput(commandResult);
         }
 
         [Fact]
@@ -313,6 +333,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             {
                 commandResult.Should().HaveStdOutContainingIgnoreCase("-install-dir \"installation_path\"");
             }
+
+            PopulateTestLoggerOutput(commandResult);
         }
     }
 }

@@ -3,11 +3,23 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.DotNet.Cli.Utils;
 using System.Collections.Generic;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
     public abstract class TestBase
     {
+        private const string TraceLogMarker = "#ISCO-TRACE";
+        private const string ErrorLogMarker = "#ISCO-ERROR";
+        private const string LogMarkerDelimiter = "!!";
+
+        private readonly ITestOutputHelper outputHelper;
+
+        public TestBase(ITestOutputHelper testOutputHelper)
+        {
+            outputHelper = testOutputHelper;
+        }
+
         protected static Command CreateInstallCommand(IEnumerable<string> args)
         {
             string path;
@@ -43,5 +55,22 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             }
             return directory;
         }
+
+        // Transfers information to custom test adapter. E.g. install-scripts-monitoring -> TestLogger
+        protected void PopulateTestLoggerOutput(CommandResult commandResult)
+        {
+            if(!string.IsNullOrEmpty(commandResult.StdOut))
+            {
+                outputHelper.WriteLine(GetFormattedLogOutput(TraceLogMarker, commandResult.StdOut));
+            }
+
+            if(!string.IsNullOrEmpty(commandResult.StdErr))
+            {
+                outputHelper.WriteLine(GetFormattedLogOutput(ErrorLogMarker, commandResult.StdErr));
+            }
+        }
+
+        private string GetFormattedLogOutput(string logMarker, string message) =>
+            $"{logMarker}-START{LogMarkerDelimiter}:{message}{logMarker}-END-{LogMarkerDelimiter}";
     }
 }
