@@ -6,17 +6,11 @@ using System.Collections.Generic;
 using Microsoft.NET.TestFramework.Assertions;
 using FluentAssertions;
 using System.Text.RegularExpressions;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
     public class AkaMsLinksTests : TestBase
     {
-        public AkaMsLinksTests(ITestOutputHelper testOutputHelper)
-            : base(testOutputHelper)
-        {
-        }
-
         /// <summary>
         /// Test verifies E2E the aka.ms resolution for SDK
         /// </summary>
@@ -81,8 +75,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().HaveStdOutContainingIgnoreCase("-version");
             commandResult.Should().NotHaveStdOutContaining("Falling back to latest.version file approach.");
             commandResult.Should().NotHaveStdOutContaining("Legacy named payload URL: ");
-
-            PopulateTestLoggerOutput(commandResult);
         }
 
         /// <summary>
@@ -175,8 +167,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().HaveStdOutContainingIgnoreCase("-version");
             commandResult.Should().NotHaveStdOutContaining("Falling back to latest.version file approach.");
             commandResult.Should().NotHaveStdOutContaining("Legacy named payload URL: ");
-
-            PopulateTestLoggerOutput(commandResult);
         }
 
         [Theory]
@@ -239,9 +229,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             {
                 commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
             }
-
-            PopulateTestLoggerOutput(commandResult);
-
         }
 
         [Theory]
@@ -328,8 +315,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             {
                 commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
             }
-
-            PopulateTestLoggerOutput(commandResult);
         }
 
         [Theory]
@@ -376,8 +361,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             commandResult.Should().HaveStdOutContaining("Specifying quality for current or LTS channel is not supported, the quality will be ignored.");
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
-
-            PopulateTestLoggerOutput(commandResult);
         }
 
         [Theory]
@@ -408,8 +391,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             commandResult.Should().Fail();
             commandResult.Should().HaveStdErrContaining("Failed to locate the latest version in the channel");
-
-            PopulateTestLoggerOutput(commandResult);
         }
 
         [Fact]
@@ -426,8 +407,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("Retrieving primary payload URL from aka.ms link for channel");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
-
-            PopulateTestLoggerOutput(commandResult);
         }
 
         [Fact]
@@ -446,8 +425,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("Retrieving primary payload URL from aka.ms link for channel");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
-
-            PopulateTestLoggerOutput(commandResult);
         }
     }
 }

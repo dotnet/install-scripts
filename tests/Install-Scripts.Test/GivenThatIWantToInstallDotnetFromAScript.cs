@@ -12,11 +12,13 @@ using FluentAssertions;
 using System.Text.RegularExpressions;
 using System.Linq;
 using Install_Scripts.Test.Utils;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
     public class GivenThatIWantToInstallDotnetFromAScript : IDisposable
     {
+
         /// <summary>
         /// All the channels that will be tested.
         /// </summary>
@@ -142,12 +144,16 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         /// </summary>
         private readonly string _sdkInstallationDirectory;
 
+        private readonly ITestOutputHelper outputHelper;
+
         /// <summary>
         /// Instantiates a GivenThatIWantToInstallTheSdkFromAScript instance.
         /// </summary>
         /// <remarks>This constructor is called once for each of the tests to run.</remarks>
-        public GivenThatIWantToInstallDotnetFromAScript()
+        public GivenThatIWantToInstallDotnetFromAScript(ITestOutputHelper testOutputHelper)
         {
+            outputHelper = testOutputHelper;
+
             _sdkInstallationDirectory = Path.Combine(
                 Path.GetTempPath(),
                 "InstallScript-Tests",
@@ -184,6 +190,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
+        [Trait("MonitoringTest", "true")]
         [MemberData(nameof(InstallSdkFromChannelTestCases))]
         public void WhenInstallingTheSdk(string channel, string? quality, string versionRegex)
         {
@@ -210,9 +217,12 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string regex = Regex.Escape("  ") + versionRegex + Regex.Escape(" ") + installPathRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
             commandResult.Should().NotHaveStdErr();
+
+            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
         }
 
         [Theory]
+        [Trait("MonitoringTest", "true")]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingDotnetRuntime(string channel, string? quality, string versionRegex)
         {
@@ -239,9 +249,12 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string regex = lineStartRegex + versionRegex + lineEndRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
             commandResult.Should().NotHaveStdErr();
+
+            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
         }
 
         [Theory]
+        [Trait("MonitoringTest", "true")]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingAspNetCoreRuntime(string channel, string? quality, string versionRegex)
         {
@@ -275,11 +288,14 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string regex = lineStartRegex + versionRegex + lineEndRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
             commandResult.Should().NotHaveStdErr();
+
+            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
         }
 
         [Theory]
+        [Trait("MonitoringTest", "true")]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
-        public void WhenInstallingWindowsdesktopRuntime(string channel, string? quality, string versionRegex)
+        public void WhenInstallingWindowsdesktopRuntime(string channel, string? quality)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -312,6 +328,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Installation finished");
+
+            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
 
             // Dotnet CLI is not included in the windowsdesktop runtime. Therefore, version validation cannot be tested.
             // Add the validation once the becomes available in the artifacts.
