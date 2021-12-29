@@ -295,7 +295,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [Theory]
         [Trait("MonitoringTest", "true")]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
-        public void WhenInstallingWindowsdesktopRuntime(string channel, string? quality)
+        public void WhenInstallingWindowsdesktopRuntime(string channel, string? quality, string versionRegex)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
