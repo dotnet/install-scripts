@@ -12,6 +12,7 @@ variables:
 resources:
   containers:
   - container: LinuxContainer
+    image: ubuntu-latest
 
 stages:
 - stage: build
@@ -171,10 +172,10 @@ stages:
     pool:
       ${{ if eq(variables._RunAsPublic, True) }}:
         name: NetCore1ESPool-Public
-        demands: ImageOverride -equals Build.Ubuntu-20.04.Amd64.Open
+        demands: ImageOverride -equals Build.Ubuntu.1604.Amd64.Open
       ${{ if eq(variables._RunAsInternal, True) }}:
         name: NetCore1ESPool-Internal
-        demands: ImageOverride -equals Build.Ubuntu-20.04.Amd64
+        demands: ImageOverride -equals Build.Ubuntu.1604.Amd64
     steps:
     - checkout: self
       displayName: Checkout Self
