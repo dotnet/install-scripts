@@ -135,6 +135,31 @@ get_legacy_os_name_from_platform() {
     return 1
 }
 
+get_legacy_os_name() {
+    eval $invocation
+
+    local uname=$(uname)
+    if [ "$uname" = "Darwin" ]; then
+        echo "osx"
+        return 0
+    elif [ -n "$runtime_id" ]; then
+        echo $(get_legacy_os_name_from_platform "${runtime_id%-*}" || echo "${runtime_id%-*}")
+        return 0
+    else
+        if [ -e /etc/os-release ]; then
+            . /etc/os-release
+            os=$(get_legacy_os_name_from_platform "$ID${VERSION_ID:+.${VERSION_ID}}" || echo "")
+            if [ -n "$os" ]; then
+                echo "$os"
+                return 0
+            fi
+        fi
+    fi
+
+    say_verbose "Distribution specific OS name and version could not be detected: UName = $uname"
+    return 1
+}
+
 get_linux_platform_name() {
     eval $invocation
 
@@ -196,38 +221,12 @@ get_current_os_name() {
     return 1
 }
 
-get_legacy_os_name() {
-    eval $invocation
-
-    local uname=$(uname)
-    if [ "$uname" = "Darwin" ]; then
-        echo "osx"
-        return 0
-    elif [ -n "$runtime_id" ]; then
-        echo $(get_legacy_os_name_from_platform "${runtime_id%-*}" || echo "${runtime_id%-*}")
-        return 0
-    else
-        if [ -e /etc/os-release ]; then
-            . /etc/os-release
-            os=$(get_legacy_os_name_from_platform "$ID${VERSION_ID:+.${VERSION_ID}}" || echo "")
-            if [ -n "$os" ]; then
-                echo "$os"
-                return 0
-            fi
-        fi
-    fi
-
-    say_verbose "Distribution specific OS name and version could not be detected: UName = $uname"
-    return 1
-}
-
 machine_has() {
     eval $invocation
 
     command -v "$1" > /dev/null 2>&1
     return $?
 }
-
 
 check_min_reqs() {
     local hasMinimum=false
@@ -321,11 +320,13 @@ get_normalized_architecture_from_architecture() {
     eval $invocation
 
     local architecture="$(to_lowercase "$1")"
+
+    if [[ $architecture == \<auto\> ]]; then
+        echo "$(get_machine_architecture)"
+        return 0
+    fi
+
     case "$architecture" in
-        \<auto\>)
-            echo "$(get_normalized_architecture_from_architecture "$(get_machine_architecture)")"
-            return 0
-            ;;
         amd64|x64)
             echo "x64"
             return 0
@@ -446,7 +447,7 @@ get_normalized_product() {
 
 # args:
 # version_text - stdin
-get_version_from_version_info() {
+get_version_from_latestversion_file_content() {
     eval $invocation
 
     cat | tail -n 1 | sed 's/\r$//'
@@ -478,7 +479,7 @@ is_dotnet_package_installed() {
 # azure_feed - $1
 # channel - $2
 # normalized_architecture - $3
-get_latest_version_info() {
+get_version_from_latestversion_file() {
     eval $invocation
 
     local azure_feed="$1"
@@ -496,7 +497,7 @@ get_latest_version_info() {
         say_err "Invalid value for \$runtime"
         return 1
     fi
-    say_verbose "get_latest_version_info: latest url: $version_file_url"
+    say_verbose "get_version_from_latestversion_file: latest url: $version_file_url"
 
     download "$version_file_url" || return $?
     return 0
@@ -504,7 +505,7 @@ get_latest_version_info() {
 
 # args:
 # json_file - $1
-parse_jsonfile_for_version() {
+parse_globaljson_file_for_version() {
     eval $invocation
 
     local json_file="$1"
@@ -560,9 +561,9 @@ get_specific_version_from_version() {
     if [ -z "$json_file" ]; then
         if [[ "$version" == "latest" ]]; then
             local version_info
-            version_info="$(get_latest_version_info "$azure_feed" "$channel" "$normalized_architecture" false)" || return 1
+            version_info="$(get_version_from_latestversion_file "$azure_feed" "$channel" "$normalized_architecture" false)" || return 1
             say_verbose "get_specific_version_from_version: version_info=$version_info"
-            echo "$version_info" | get_version_from_version_info
+            echo "$version_info" | get_version_from_latestversion_file_content
             return 0
         else
             echo "$version"
@@ -570,7 +571,7 @@ get_specific_version_from_version() {
         fi
     else
         local version_info
-        version_info="$(parse_jsonfile_for_version "$json_file")" || return 1
+        version_info="$(parse_globaljson_file_for_version "$json_file")" || return 1
         echo "$version_info"
         return 0
     fi
@@ -1119,6 +1120,33 @@ get_download_link_from_aka_ms() {
     fi
 }
 
+get-feeds-to-use()
+{
+    feeds=(
+    "https://dotnetcli.azureedge.net/dotnet"
+    "https://dotnetbuilds.azureedge.net/public"
+    )
+
+    if [[ -n "$azure_feed" && "$azure_feed" != "" ]]; then
+        feeds=("$azure_feed")
+    fi
+
+    if [[ "$no_cdn" == "true" ]]; then
+        feeds=(
+        "https://dotnetcli.blob.core.windows.net/dotnet",
+        "https://dotnetbuilds.blob.core.windows.net/public"
+        )
+
+        if [[ -n "$uncached_feed" && "$uncached_feed" != "" ]]; then
+            feeds=("$uncached_feed")
+        fi
+    fi
+}
+
+generate_urls() {
+
+}
+
 calculate_vars() {
     eval $invocation
     valid_legacy_download_link=true
@@ -1500,22 +1528,18 @@ do
             echo "  --dry-run,-DryRun                  Do not perform installation. Display download link."
             echo "  --no-path, -NoPath                 Do not set PATH for the current process."
             echo "  --verbose,-Verbose                 Display diagnostics information."
-            echo "  --azure-feed,-AzureFeed            Azure feed location. Defaults to $azure_feed, This parameter typically is not changed by the user."
-            echo "  --uncached-feed,-UncachedFeed      Uncached feed location. This parameter typically is not changed by the user."
+            echo "  --azure-feed,-AzureFeed            For internal use only."
+            echo "                                     Allows using a different storage to download SDK archives from."
+            echo "                                     This parameter is only used if --no-cdn is false."
+            echo "  --uncached-feed,-UncachedFeed      For internal use only."
+            echo "                                     Allows using a different storage to download SDK archives from."
+            echo "                                     This parameter is only used if --no-cdn is true."
             echo "  --skip-non-versioned-files         Skips non-versioned files if they already exist, such as the dotnet executable."
             echo "      -SkipNonVersionedFiles"
             echo "  --no-cdn,-NoCdn                    Disable downloading from the Azure CDN, and use the uncached feed directly."
             echo "  --jsonfile <JSONFILE>              Determines the SDK version from a user specified global.json file."
             echo "                                     Note: global.json must have a value for 'SDK:Version'"
             echo "  -?,--?,-h,--help,-Help             Shows this help message"
-            echo ""
-            echo "Obsolete parameters:"
-            echo "  --shared-runtime                   The recommended alternative is '--runtime dotnet'."
-            echo "                                     This parameter is obsolete and may be removed in a future version of this script."
-            echo "                                     Installs just the shared runtime bits, not the entire SDK."
-            echo "  --runtime-id                       Installs the .NET Tools for the given platform (use linux-x64 for portable linux)."
-            echo "      -RuntimeId"                    The parameter is obsolete and may be removed in a future version of this script. Should be used only for versions below 2.1.
-            echo "                                     For primary links to override OS or/and architecture, use --os and --architecture option instead."
             echo ""
             echo "Install Location:"
             echo "  Location is chosen in following order:"
