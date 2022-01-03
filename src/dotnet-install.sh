@@ -1162,6 +1162,8 @@ calculate_vars() {
     say_verbose "Normalized channel: '$normalized_channel'."
     normalized_product="$(get_normalized_product "$runtime")"
     say_verbose "Normalized product: '$normalized_product'."
+    install_root="$(resolve_installation_path "$install_dir")"
+    say_verbose "InstallRoot: '$install_root'."
 
     #try to get download location from aka.ms link
     #not applicable when exact version is specified via command or json file
@@ -1197,9 +1199,6 @@ calculate_vars() {
                 #Retrieve product specific version
                 specific_product_version="$(get_specific_product_version "$azure_feed" "$specific_version" "$download_link")"
                 say_verbose "Product specific version: '$specific_product_version'."
-  
-                install_root="$(resolve_installation_path "$install_dir")"
-                say_verbose "InstallRoot: '$install_root'."
                 return 
             fi
     fi
@@ -1224,9 +1223,6 @@ calculate_vars() {
     else
         say_verbose "Cound not construct a legacy_download_link; omitting..."
     fi
-
-    install_root="$(resolve_installation_path "$install_dir")"
-    say_verbose "InstallRoot: $install_root"
 }
 
 install_dotnet() {
