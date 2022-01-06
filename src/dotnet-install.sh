@@ -489,11 +489,11 @@ get_version_from_latestversion_file() {
 
     local version_file_url=null
     if [[ "$runtime" == "dotnet" ]]; then
-        version_file_url="$uncached_feed/Runtime/$channel/latest.version"
+        version_file_url="$azure_feed/Runtime/$channel/latest.version"
     elif [[ "$runtime" == "aspnetcore" ]]; then
-        version_file_url="$uncached_feed/aspnetcore/Runtime/$channel/latest.version"
+        version_file_url="$azure_feed/aspnetcore/Runtime/$channel/latest.version"
     elif [ -z "$runtime" ]; then
-         version_file_url="$uncached_feed/Sdk/$channel/latest.version"
+         version_file_url="$azure_feed/Sdk/$channel/latest.version"
     else
         say_err "Invalid value for \$runtime"
         return 1
@@ -1201,7 +1201,7 @@ generate_akams_links() {
         download_links+=($download_link)
         specific_versions+=($specific_version)
         effective_versions+=($effective_version)
-        link_types+="aka.ms"
+        link_types+=("aka.ms")
 
         if [[ "$dry_run" == true ]]; then
             print_dry_run "$download_link" "" "$effective_version"
@@ -1252,7 +1252,7 @@ generate_regular_links() {
     download_links+=($download_link)
     specific_versions+=($specific_version)
     effective_versions+=($effective_version)
-    link_types+="primary"
+    link_types+=("primary")
 
     legacy_download_link="$(construct_legacy_download_link "$feed" "$channel" "$normalized_architecture" "$specific_version")" || valid_legacy_download_link=false
 
@@ -1262,7 +1262,7 @@ generate_regular_links() {
         download_links+=($download_link)
         specific_versions+=($specific_version)
         effective_versions+=($effective_version)
-        link_types+="legacy"
+        link_types+=("legacy")
     else
         legacy_download_link=""
         say_verbose "Cound not construct a legacy_download_link; omitting..."
@@ -1366,6 +1366,7 @@ install_dotnet() {
         say "Attempting to download using $link_type link $download_link"
 
         # The download function will set variables $http_code and $download_error_msg in case of failure.
+        download_failed=false
         download "$download_link" "$zip_path" 2>&1 || download_failed=true
 
         if [ "$download_failed" = true ]; then
@@ -1407,14 +1408,14 @@ install_dotnet() {
     fi
 
     #  Check if the standard SDK version is installed.
-    say_verbose "Checking installation: version = $specific_product_version"
-    if is_dotnet_package_installed "$install_root" "$asset_relative_path" "$specific_product_version"; then
+    say_verbose "Checking installation: version = $effective_version"
+    if is_dotnet_package_installed "$install_root" "$asset_relative_path" "$effective_version"; then
         return 0
     fi
 
     # Version verification failed. More likely something is wrong either with the downloaded content or with the verification algorithm.
     say_err "Failed to verify the version of installed \`$asset_name\`.\nInstallation source: $download_link.\nInstallation location: $install_root.\nReport the bug at https://github.com/dotnet/install-scripts/issues."
-    say_err "\`$asset_name\` with version = $specific_product_version failed to install with an error."
+    say_err "\`$asset_name\` with version = $effective_version failed to install with an error."
     return 1
 }
 
