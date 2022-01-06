@@ -1001,9 +1001,9 @@ downloadcurl() {
     local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
     local failed=false
     if [ -z "$out_path" ]; then
-        curl $curl_options "$remote_path_with_credential" || failed=true
+        curl $curl_options "$remote_path_with_credential" 2>&1 || failed=true
     else
-        curl $curl_options -o "$out_path" "$remote_path_with_credential" || failed=true
+        curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>&1 || failed=true
     fi
     if [ "$failed" = true ]; then
         local disable_feed_credential=false
@@ -1035,20 +1035,20 @@ downloadwget() {
     local wget_result=''
 
     if [ -z "$out_path" ]; then
-        wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential"
+        wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential" 2>&1
         wget_result=$?
     else
-        wget $wget_options $wget_options_extra -O "$out_path" "$remote_path_with_credential"
+        wget $wget_options $wget_options_extra -O "$out_path" "$remote_path_with_credential" 2>&1
         wget_result=$?
     fi
 
     if [[ $wget_result == 2 ]]; then
         # Parsing of the command has failed. Exclude potentially unrecognized options and retry.
         if [ -z "$out_path" ]; then
-            wget -q $wget_options -O - "$remote_path_with_credential"
+            wget -q $wget_options -O - "$remote_path_with_credential" 2>&1
             wget_result=$?
         else
-            wget $wget_options -O "$out_path" "$remote_path_with_credential"
+            wget $wget_options -O "$out_path" "$remote_path_with_credential" 2>&1
             wget_result=$?
         fi
     fi

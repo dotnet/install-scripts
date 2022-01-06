@@ -151,14 +151,14 @@ namespace Microsoft.NET.TestFramework.Assertions
         public AndConstraint<CommandResultAssertions> NotHaveStdOut()
         {
             Execute.Assertion.ForCondition(string.IsNullOrEmpty(_commandResult.StdOut))
-                .FailWith(AppendDiagnosticsTo($"Expected command to not output to stdout but it was not:"));
+                .FailWith(AppendDiagnosticsTo($"Expected command to not output to stdout but it did:"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         public AndConstraint<CommandResultAssertions> NotHaveStdErr()
         {
             Execute.Assertion.ForCondition(string.IsNullOrEmpty(_commandResult.StdErr))
-                .FailWith(AppendDiagnosticsTo("Expected command to not output to stderr but it was not:"));
+                .FailWith(AppendDiagnosticsTo("Expected command to not output to stderr but it did:"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
