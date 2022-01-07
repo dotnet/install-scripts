@@ -1134,7 +1134,7 @@ get_feeds_to_use()
 
     if [[ "$no_cdn" == "true" ]]; then
         feeds=(
-        "https://dotnetcli.blob.core.windows.net/dotnet",
+        "https://dotnetcli.blob.core.windows.net/dotnet"
         "https://dotnetbuilds.blob.core.windows.net/public"
         )
 
@@ -1184,6 +1184,8 @@ generate_akams_links() {
 
     if [[ "$valid_aka_ms_link" == true ]]; then
         say_verbose "Retrieved primary payload URL from aka.ms link: '$aka_ms_download_link'."
+        say_verbose "Downloading using legacy url will not be attempted."
+
         download_link=$aka_ms_download_link
 
         #get version from the path
