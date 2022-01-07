@@ -1162,9 +1162,15 @@ generate_download_links() {
         done
     fi
 
-    for link in ${download_links[@]}
+    if [[ "${#download_links[@]}" -eq 0 ]]; then
+        say_err "Failed to resolve the exact version number."
+        return 1
+    fi
+
+    say_verbose "Generated ${#download_links[@]} links."
+    for link_index in ${!download_links[@]}
     do
-        echo "Link: $link"
+        say_verbose "Link $link_index: ${link_types[$link_index]}, ${effective_versions[$link_index]}, ${download_links[$link_index]}"
     done
 }
 
