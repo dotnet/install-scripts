@@ -637,7 +637,7 @@ get_specific_product_version() {
 
         if machine_has "curl"
         then
-            specific_product_version=$(curl -s --fail "${download_link}${feed_credential}")
+            specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1)
             if [ $? = 0 ]; then
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
@@ -909,7 +909,7 @@ get_http_header_curl() {
     fi
 
     curl_options="-I -sSL --retry 5 --retry-delay 2 --connect-timeout 15 "
-    curl $curl_options "$remote_path_with_credential" || return 1
+    curl $curl_options "$remote_path_with_credential" 2>&1 || return 1
     return 0
 }
 
