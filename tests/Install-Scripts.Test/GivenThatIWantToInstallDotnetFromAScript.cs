@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("6.0.1xx-preview2", "6\\.0\\.1.*", Quality.Daily | Quality.Signed),
                 ("6.0.1xx-preview3", "6\\.0\\.1.*", Quality.Daily),
                 ("6.0.1xx-preview4", "6\\.0\\.1.*", Quality.Daily),
-                ("7.0.1xx", "6\\.0\\..*", Quality.Daily),
+                ("7.0.1xx", "7\\.0\\..*", Quality.Daily),
             };
 
         public static IEnumerable<object?[]> InstallSdkFromChannelTestCases
@@ -376,10 +376,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [Trait("MonitoringTest", "true")]
-        [InlineData("5.0.404-servicing.21560.14")]
+        [InlineData("5.0.404-servicing.21560.14", "5.0.404")]
         [InlineData("6.0.100-preview.6.21364.34")]
         [InlineData("7.0.100-alpha.1.22054.9")]
-        public void WhenInstallingASpecificVersionOfTheSdk(string version)
+        public void WhenInstallingASpecificVersionOfTheSdk(string version, string? effectiveVersion = null)
         {
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel:null, runtime: null, quality:null, _sdkInstallationDirectory, version: version);
@@ -401,7 +401,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             // On MacOS, installation directory has an extra /private at the beginning.
             string installPathRegex = "\\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "sdk")) + "\\]";
-            string regex = Regex.Escape("  " + version + " ") + installPathRegex;
+            string regex = Regex.Escape("  " + (effectiveVersion ?? version) + " ") + installPathRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
             commandResult.Should().NotHaveStdErr();
 
@@ -446,7 +446,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [Trait("MonitoringTest", "true")]
         [InlineData("5.0.13-servicing.21552.32", "5.0.13")]
         [InlineData("6.0.0-preview.4.21176.7")]
-        [InlineData("7.0.0-alpha.1.21528.8")]
+        [InlineData("7.0.0-alpha.1.21567.15")]
         public void WhenInstallingASpecificVersionOfAspNetCoreRuntime(string version, string? effectiveVersion = null)
         {
             // Run install script to download and install.
