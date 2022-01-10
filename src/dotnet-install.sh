@@ -1128,7 +1128,7 @@ get_feeds_to_use()
     "https://dotnetbuilds.azureedge.net/public"
     )
 
-    if [[ -n "$azure_feed" && "$azure_feed" != "" ]]; then
+    if [[ -n "$azure_feed" ]]; then
         feeds=("$azure_feed")
     fi
 
@@ -1138,7 +1138,7 @@ get_feeds_to_use()
         "https://dotnetbuilds.blob.core.windows.net/public"
         )
 
-        if [[ -n "$uncached_feed" && "$uncached_feed" != "" ]]; then
+        if [[ -n "$uncached_feed" ]]; then
             feeds=("$uncached_feed")
         fi
     fi
@@ -1175,7 +1175,7 @@ generate_download_links() {
 }
 
 # returns:
-#   0 - if operation succeded and the execution should continue as normal
+#   0 - if operation succeeded and the execution should continue as normal
 #   1 - if the script has reached a concluding state and the execution should stop.
 generate_akams_links() {
     local valid_aka_ms_link=true;
