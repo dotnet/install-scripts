@@ -1119,7 +1119,7 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
         Say-Verbose "Checking if the version $EffectiveVersion is already installed"
         if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
         {
-            Say "$assetName version $EffectiveVersion is already installed."
+            Say "$assetName with version '$EffectiveVersion' is already installed."
             Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
             return
         }
@@ -1152,7 +1152,7 @@ if ([string]::IsNullOrEmpty($NormalizedQuality) -and 0 -eq $DownloadLinks.count)
             Say-Verbose "Checking if the version $EffectiveVersion is already installed"
             if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
             {
-                Say "$assetName version $EffeciveVersion is already installed."
+                Say "$assetName with version '$EffectiveVersion' is already installed."
                 Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
                 return
             }

@@ -1176,7 +1176,8 @@ generate_download_links() {
 
 # returns:
 #   0 - if operation succeeded and the execution should continue as normal
-#   1 - if the script has reached a concluding state and the execution should stop.
+#   n - if there was an error generating the links that requires termination of the execution.
+#   127 - if the script has reached a concluding state without running into any errors and the execution should stop.
 generate_akams_links() {
     local valid_aka_ms_link=true;
 
@@ -1213,13 +1214,13 @@ generate_akams_links() {
 
         if [[ "$dry_run" == true ]]; then
             print_dry_run "$download_link" "" "$effective_version"
-            return 1
+            return 127
         fi
 
         #  Check if the SDK version is already installed.
         if is_dotnet_package_installed "$install_root" "$asset_relative_path" "$effective_version"; then
             say "$asset_name with version '$effective_version' is already installed."
-            return 1
+            return 127
         fi
 
         return 0
@@ -1237,8 +1238,9 @@ generate_akams_links() {
 # args:
 # feed - $1
 # returns:
-#   0 - if operation succeded and the execution should continue as normal
-#   1 - if the script has reached a concluding state and the execution should stop
+#   0 - if operation succeded and the execution should continue as normal.
+#   n - if there was an error generating the links that requires termination of the execution.
+#   127 - if the script has reached a concluding state without running into any errors and the execution should stop.
 generate_regular_links() {
     local feed="$1"
     local valid_legacy_download_link=true
@@ -1278,13 +1280,13 @@ generate_regular_links() {
 
     if [[ "$dry_run" == true ]]; then
         print_dry_run "$download_link" "$legacy_download_link" "$effective_version"
-        return 1
+        return 127
     fi
 
     #  Check if the SDK version is already installed.
     if is_dotnet_package_installed "$install_root" "$asset_relative_path" "$effective_version"; then
         say "$asset_name with version '$effective_version' is already installed."
-        return 1
+        return 127
     fi
 }
 
@@ -1321,7 +1323,6 @@ print_dry_run() {
     fi
 
     say "Repeatable invocation: $repeatable_command"
-    exit 0
 }
 
 calculate_vars() {
@@ -1648,12 +1649,18 @@ fi
 
 check_min_reqs
 calculate_vars
-generate_download_links
+if ! generate_download_links; then
+    error_code=$?
+    # If requested version is already installed, return success.
+    [[ $error_code -eq 127 ]] && exit 0
+    # Otherwise, return the original error code.
+    exit $error_code
+fi
 
 
 if [ "$dry_run" = true ]; then
     # Don't continue to installation step in dry_run mode.
-    return
+    exit 0
 fi
 
 install_dotnet
