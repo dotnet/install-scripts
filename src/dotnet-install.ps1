@@ -869,12 +869,12 @@ function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot) {
     }
 }
 
-function PrintDryRunOutput($Invocation, [string] $DownloadLink, [string] $LegacyDownloadLink, [string] $SpecificVersion, [string] $EffectiveVersion)
+function PrintDryRunOutput($Invocation, $DownloadLinks)
 {
     Say "Payload URLs:"
-    Say "Primary named payload URL: ${DownloadLink}"
-    if ($LegacyDownloadLink) {
-        Say "Legacy named payload URL: ${LegacyDownloadLink}"
+    
+    for ($linkIndex=0; $linkIndex -lt $DownloadLinks.count; $linkIndex++) {
+        Say "URL #$linkIndex - $($DownloadLinks[$linkIndex].type): $($DownloadLinks[$linkIndex].downloadLink)"
     }
     $RepeatableCommand = ".\$ScriptName -Version `"$SpecificVersion`" -InstallDir `"$InstallRoot`" -Architecture `"$CLIArchitecture`""
     if ($Runtime -eq "dotnet") {
@@ -1111,17 +1111,14 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
         $DownloadLinks += New-Object PSObject -Property @{downloadLink="$DownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='aka.ms'}
         Say-Verbose "Generated aka.ms link $DownloadLink with version $EffectiveVersion"
         
-        if ($DryRun) {
-            PrintDryRunOutput $MyInvocation $DownloadLink $null $SpecificVersion $EffectiveVersion
-            return
-        }
-
-        Say-Verbose "Checking if the version $EffectiveVersion is already installed"
-        if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
-        {
-            Say "$assetName with version '$EffectiveVersion' is already installed."
-            Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
-            return
+        if (-Not $DryRun) {
+            Say-Verbose "Checking if the version $EffectiveVersion is already installed"
+            if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
+            {
+                Say "$assetName with version '$EffectiveVersion' is already installed."
+                Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
+                return
+            }
         }
     }
 }
@@ -1141,20 +1138,17 @@ if ([string]::IsNullOrEmpty($NormalizedQuality) -and 0 -eq $DownloadLinks.count)
     
             if (-not [string]::IsNullOrEmpty($LegacyDownloadLink)) {
                 $DownloadLinks += New-Object PSObject -Property @{downloadLink="$LegacyDownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='legacy'}
-                Say-Verbose "Generated legacy link $DownloadLink with version $EffectiveVersion"
+                Say-Verbose "Generated legacy link $LegacyDownloadLink with version $EffectiveVersion"
             }
     
-            if ($DryRun) {
-                PrintDryRunOutput $MyInvocation $DownloadLink $LegacyDownloadLink $SpecificVersion $EffectiveVersion
-                return
-            }
-    
-            Say-Verbose "Checking if the version $EffectiveVersion is already installed"
-            if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
-            {
-                Say "$assetName with version '$EffectiveVersion' is already installed."
-                Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
-                return
+            if (-Not $DryRun) {
+                Say-Verbose "Checking if the version $EffectiveVersion is already installed"
+                if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
+                {
+                    Say "$assetName with version '$EffectiveVersion' is already installed."
+                    Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
+                    return
+                }
             }
         }
         catch
@@ -1168,6 +1162,10 @@ if ($DownloadLinks.count -eq 0) {
     throw "Failed to resolve the exact version number."
 }
 
+if ($DryRun) {
+    PrintDryRunOutput $MyInvocation $DownloadLinks
+    return
+}
 
 Prepare-Install-Directory
 

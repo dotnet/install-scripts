@@ -562,7 +562,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().NotHaveStdOutContaining("Installation finished");
-            commandResult.Should().HaveStdOutContaining($"'{effectiveVersion ?? version}' is already installed.");
+            commandResult.Should().HaveStdOutContaining($"with version '{effectiveVersion ?? version}' is already installed.");
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().Pass();
         }
