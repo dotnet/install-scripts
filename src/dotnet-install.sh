@@ -1144,7 +1144,7 @@ get_feeds_to_use()
     fi
 }
 
-# THIS FUNCTION MAY EXIT!
+# THIS FUNCTION MAY EXIT (if the determined version is already installed).
 generate_download_links() {
 
     download_links=()
@@ -1153,12 +1153,14 @@ generate_download_links() {
     link_types=()
 
     # If generate_akams_links returns false, no fallback to old links. Just terminate.
+    # This function may also 'exit' (if the determined version is already installed).
     generate_akams_links || return
 
     # Check other feeds only if we haven't been able to find an aka.ms link.
     if [[ "${#download_links[@]}" -lt 1 ]]; then
         for feed in ${feeds[@]}
         do
+            # generate_regular_links may also 'exit' (if the determined version is already installed).
             generate_regular_links $feed || return
         done
     fi
@@ -1175,7 +1177,7 @@ generate_download_links() {
     done
 }
 
-# THIS FUNCTION MAY EXIT!
+# THIS FUNCTION MAY EXIT (if the determined version is already installed).
 generate_akams_links() {
     local valid_aka_ms_link=true;
 
@@ -1228,7 +1230,7 @@ generate_akams_links() {
     say_verbose "Falling back to latest.version file approach."
 }
 
-# THIS FUNCTION MAY EXIT!
+# THIS FUNCTION MAY EXIT (if the determined version is already installed)
 # args:
 # feed - $1
 generate_regular_links() {
@@ -1630,6 +1632,7 @@ fi
 
 check_min_reqs
 calculate_vars
+# generate_regular_links call below will 'exit' if the determined version is already installed.
 generate_download_links
 
 if [[ "$dry_run" = true ]]; then
