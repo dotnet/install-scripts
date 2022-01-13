@@ -1649,18 +1649,13 @@ fi
 
 check_min_reqs
 calculate_vars
-if ! generate_download_links; then
-    error_code=$?
-    # If requested version is already installed, return success.
-    [[ $error_code -eq 127 ]] && exit 0
+linkgen_error=0
+generate_download_links || linkgen_error=$?
+if [[ $linkgen_error -ne 0 ]]; then
+    # If requested version is already installed or we are just doing dry-run, return success.
+    [[ $linkgen_error -eq 127 ]] && exit 0
     # Otherwise, return the original error code.
-    exit $error_code
-fi
-
-
-if [ "$dry_run" = true ]; then
-    # Don't continue to installation step in dry_run mode.
-    exit 0
+    exit $linkgen_error
 fi
 
 install_dotnet
