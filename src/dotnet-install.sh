@@ -1144,6 +1144,7 @@ get_feeds_to_use()
     fi
 }
 
+# THIS FUNCTION MAY EXIT (if the determined version is already installed).
 generate_download_links() {
 
     download_links=()
@@ -1152,12 +1153,14 @@ generate_download_links() {
     link_types=()
 
     # If generate_akams_links returns false, no fallback to old links. Just terminate.
+    # This function may also 'exit' (if the determined version is already installed).
     generate_akams_links || return
 
     # Check other feeds only if we haven't been able to find an aka.ms link.
     if [[ "${#download_links[@]}" -lt 1 ]]; then
         for feed in ${feeds[@]}
         do
+            # generate_regular_links may also 'exit' (if the determined version is already installed).
             generate_regular_links $feed || return
         done
     fi
@@ -1174,9 +1177,7 @@ generate_download_links() {
     done
 }
 
-# returns:
-#   0 - if operation succeeded and the execution should continue as normal
-#   1 - if the script has reached a concluding state and the execution should stop.
+# THIS FUNCTION MAY EXIT (if the determined version is already installed).
 generate_akams_links() {
     local valid_aka_ms_link=true;
 
@@ -1211,15 +1212,10 @@ generate_akams_links() {
         effective_versions+=($effective_version)
         link_types+=("aka.ms")
 
-        if [[ "$dry_run" == true ]]; then
-            print_dry_run "$download_link" "" "$effective_version"
-            return 1
-        fi
-
         #  Check if the SDK version is already installed.
-        if is_dotnet_package_installed "$install_root" "$asset_relative_path" "$effective_version"; then
+        if [[ "$dry_run" != true ]] && is_dotnet_package_installed "$install_root" "$asset_relative_path" "$effective_version"; then
             say "$asset_name with version '$effective_version' is already installed."
-            return 1
+            exit 0
         fi
 
         return 0
@@ -1234,11 +1230,9 @@ generate_akams_links() {
     say_verbose "Falling back to latest.version file approach."
 }
 
+# THIS FUNCTION MAY EXIT (if the determined version is already installed)
 # args:
 # feed - $1
-# returns:
-#   0 - if operation succeded and the execution should continue as normal
-#   1 - if the script has reached a concluding state and the execution should stop
 generate_regular_links() {
     local feed="$1"
     local valid_legacy_download_link=true
@@ -1276,33 +1270,24 @@ generate_regular_links() {
         say_verbose "Cound not construct a legacy_download_link; omitting..."
     fi
 
-    if [[ "$dry_run" == true ]]; then
-        print_dry_run "$download_link" "$legacy_download_link" "$effective_version"
-        return 1
-    fi
-
     #  Check if the SDK version is already installed.
-    if is_dotnet_package_installed "$install_root" "$asset_relative_path" "$effective_version"; then
+    if [[ "$dry_run" != true ]] && is_dotnet_package_installed "$install_root" "$asset_relative_path" "$effective_version"; then
         say "$asset_name with version '$effective_version' is already installed."
-        return 1
+        exit 0
     fi
 }
 
-# args:
-# download_link - $1
-# legacy_download_link - $2 - can be empty
-# specific_version
 print_dry_run() {
-    local download_link="$1"
-    local legacy_download_link="$2"
-    local specific_version="$3"
 
     say "Payload URLs:"
-    say "Primary named payload URL: ${download_link}"
-    if [ -n "$legacy_download_link" ]; then
-        say "Legacy named payload URL: ${legacy_download_link}"
-    fi
-    repeatable_command="./$script_name --version "\""$specific_version"\"" --install-dir "\""$install_root"\"" --architecture "\""$normalized_architecture"\"" --os "\""$normalized_os"\"""
+
+    for link_index in "${!download_links[@]}"
+        do
+            say "URL #$link_index - ${link_types[$link_index]}: ${download_links[$link_index]}"
+    done
+
+    resolved_version=${specific_versions[0]}
+    repeatable_command="./$script_name --version "\""$resolved_version"\"" --install-dir "\""$install_root"\"" --architecture "\""$normalized_architecture"\"" --os "\""$normalized_os"\"""
     
     if [ ! -z "$normalized_quality" ]; then
         repeatable_command+=" --quality "\""$normalized_quality"\"""
@@ -1321,7 +1306,6 @@ print_dry_run() {
     fi
 
     say "Repeatable invocation: $repeatable_command"
-    exit 0
 }
 
 calculate_vars() {
@@ -1648,12 +1632,12 @@ fi
 
 check_min_reqs
 calculate_vars
+# generate_regular_links call below will 'exit' if the determined version is already installed.
 generate_download_links
 
-
-if [ "$dry_run" = true ]; then
-    # Don't continue to installation step in dry_run mode.
-    return
+if [[ "$dry_run" = true ]]; then
+    print_dry_run
+    exit 0
 fi
 
 install_dotnet
