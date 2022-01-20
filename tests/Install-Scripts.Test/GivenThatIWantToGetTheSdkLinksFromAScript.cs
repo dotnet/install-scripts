@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdOutContaining("jsonfile");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
             commandResult.Should().HaveStdOutContaining("\"1.0.0-beta.19463.3\"");
+            commandResult.Should().HaveStdOutMatching(@"URL\s#0\s-\s(legacy|primary|aka\.ms):\shttps://");
         }
 
         [Theory]
@@ -58,6 +59,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
+            commandResult.Should().HaveStdOutMatching(@"URL\s#0\s-\s(legacy|primary|aka\.ms):\shttps://");
 
             //  Non-dynamic input parameters should always be on the ouput line
             commandResult.Should().HaveStdOutContainingIgnoreCase(parameter);
@@ -84,6 +86,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
+            commandResult.Should().HaveStdOutMatching(@"URL\s#0\s-\s(legacy|primary|aka\.ms):\shttps://");
 
             //  Runtime should resolve to the correct 'type'
             commandResult.Should().HaveStdOutContainingIgnoreCase("-runtime");
@@ -161,6 +164,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
+            commandResult.Should().HaveStdOutMatching(@"URL\s#0\s-\s(legacy|primary|aka\.ms):\shttps://");
 
             //  Channel should be translated to a specific Runtime version
             commandResult.Should().HaveStdOutContainingIgnoreCase("-version");
@@ -236,6 +240,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
+            commandResult.Should().HaveStdOutMatching(@"URL\s#0\s-\s(legacy|primary|aka\.ms):\shttps://");
 
             //  Channel should be translated to a specific SDK version
             commandResult.Should().HaveStdOutContainingIgnoreCase("-version");
@@ -282,6 +287,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             //  Standard 'dryrun' criterium
             commandResult.Should().Fail();
+            commandResult.Should().HaveStdErrContaining("Failed to resolve the exact version number.");
             commandResult.Should().NotHaveStdOutContaining("Repeatable invocation:");
             commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
             commandResult.Should().NotHaveStdErrContainingIgnoreCase(feedCredentials);
@@ -299,7 +305,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
-            
+            commandResult.Should().HaveStdOutMatching(@"URL\s#0\s-\s(legacy|primary|aka\.ms):\shttps://");
+
             // -i shouldn't be considered ambiguous on powershell.
             commandResult.Should().NotHaveStdOutContaining("the parameter name 'i' is ambiguous");
             // bash doesn't give error on ambiguity. The first occurance of the alias wins.
