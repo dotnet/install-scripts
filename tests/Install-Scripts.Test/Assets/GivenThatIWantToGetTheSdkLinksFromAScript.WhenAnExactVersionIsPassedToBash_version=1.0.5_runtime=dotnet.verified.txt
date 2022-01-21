@@ -4,8 +4,8 @@ dotnet-install: - The SDK needs to be installed without user interaction and wit
 dotnet-install: - The SDK installation doesn't need to persist across multiple CI runs.
 dotnet-install: To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.
 dotnet-install: Payload URLs:
-dotnet-install: URL #0 - primary: https://dotnetcli.azureedge.net/dotnet/Runtime/1.0.5/dotnet-runtime-1.0.5-linux-x64.tar.gz
-dotnet-install: URL #1 - legacy: https://dotnetcli.azureedge.net/dotnet/Runtime/1.0.5/dotnet-centos-x64.1.0.5.tar.gz
-dotnet-install: URL #2 - primary: https://dotnetbuilds.azureedge.net/public/Runtime/1.0.5/dotnet-runtime-1.0.5-linux-x64.tar.gz
-dotnet-install: URL #3 - legacy: https://dotnetbuilds.azureedge.net/public/Runtime/1.0.5/dotnet-centos-x64.1.0.5.tar.gz
-dotnet-install: Repeatable invocation: ./dotnet-install.sh --version "1.0.5" --install-dir "/home/bozturk/.dotnet" --architecture "x64" --os "linux" --runtime "dotnet" -runtimeid "centos.7"
+dotnet-install: URL #0 - primary: https://dotnetcli.azureedge.net/dotnet/Runtime/1.0.5/dotnet-runtime-1.0.5-osx-x64.tar.gz
+dotnet-install: URL #1 - legacy: https://dotnetcli.azureedge.net/dotnet/Runtime/1.0.5/dotnet-osx-x64.1.0.5.tar.gz
+dotnet-install: URL #2 - primary: https://dotnetbuilds.azureedge.net/public/Runtime/1.0.5/dotnet-runtime-1.0.5-osx-x64.tar.gz
+dotnet-install: URL #3 - legacy: https://dotnetbuilds.azureedge.net/public/Runtime/1.0.5/dotnet-osx-x64.1.0.5.tar.gz
+dotnet-install: Repeatable invocation: ./dotnet-install.sh --version "1.0.5" --install-dir "dotnet-sdk" --architecture "x64" --os "osx" --runtime "dotnet" -runtimeid "osx"

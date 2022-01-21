@@ -4,6 +4,6 @@ dotnet-install: - The SDK needs to be installed without user interaction and wit
 dotnet-install: - The SDK installation doesn't need to persist across multiple CI runs.
 dotnet-install: To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.
 dotnet-install: Payload URLs:
-dotnet-install: URL #0 - primary: https://dotnetcli.azureedge.net/dotnet/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-linux-x64.tar.gz
-dotnet-install: URL #1 - primary: https://dotnetbuilds.azureedge.net/public/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-linux-x64.tar.gz
-dotnet-install: Repeatable invocation: ./dotnet-install.sh --version "2.1.0" --install-dir "/home/bozturk/.dotnet" --architecture "x64" --os "linux" --runtime "aspnetcore" -runtimeid "centos.7"
+dotnet-install: URL #0 - primary: https://dotnetcli.azureedge.net/dotnet/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-osx-x64.tar.gz
+dotnet-install: URL #1 - primary: https://dotnetbuilds.azureedge.net/public/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-osx-x64.tar.gz
+dotnet-install: Repeatable invocation: ./dotnet-install.sh --version "2.1.0" --install-dir "dotnet-sdk" --architecture "x64" --os "osx" --runtime "aspnetcore" -runtimeid "osx"

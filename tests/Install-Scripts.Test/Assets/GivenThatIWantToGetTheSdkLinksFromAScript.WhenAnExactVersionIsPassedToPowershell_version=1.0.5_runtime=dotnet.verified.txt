@@ -7,4 +7,4 @@ dotnet-install: URL #0 - primary: https://dotnetcli.azureedge.net/dotnet/Runtime
 dotnet-install: URL #1 - legacy: https://dotnetcli.azureedge.net/dotnet/Runtime/1.0.5/dotnet-win-x64.1.0.5.zip
 dotnet-install: URL #2 - primary: https://dotnetbuilds.azureedge.net/public/Runtime/1.0.5/dotnet-runtime-1.0.5-win-x64.zip
 dotnet-install: URL #3 - legacy: https://dotnetbuilds.azureedge.net/public/Runtime/1.0.5/dotnet-win-x64.1.0.5.zip
-dotnet-install: Repeatable invocation: .\dotnet-install.ps1 -Version "1.0.5" -InstallDir "C:\Users\bozturk\AppData\Local\Microsoft\dotnet" -Architecture "x64" -Runtime "dotnet"
+dotnet-install: Repeatable invocation: .\dotnet-install.ps1 -Version "1.0.5" -InstallDir "dotnet-sdk" -Architecture "x64" -Runtime "dotnet"

@@ -342,11 +342,22 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             
             if( string.IsNullOrWhiteSpace(runtime))
             {
-                args = new string[] { "-version", version, "-runtimeid", "centos.7", "-dryrun" };
+                args = new string[] {
+                    "-version", version,
+                    "-runtimeid", "osx", 
+                    "--os", "osx",
+                    "-installdir", "dotnet-sdk",
+                    "-dryrun" };
             }
             else
             {
-                args = new string[] { "-version", version, "-runtimeid", "centos.7", "-runtime", runtime, "-dryrun" };
+                args = new string[] { 
+                    "-version", version,
+                    "-runtimeid", "osx",
+                    "-runtime", runtime,
+                    "--os", "osx",
+                    "-installdir", "dotnet-sdk",
+                    "-dryrun" };
             }
 
             var commandResult = CreateInstallCommand(args)
@@ -374,11 +385,18 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             
             if( string.IsNullOrWhiteSpace(runtime))
             {
-                args = new string[] { "-version", version, "-dryrun" };
+                args = new string[] { 
+                    "-version", version,
+                    "-installdir", "dotnet-sdk",
+                    "-dryrun" };
             }
             else
             {
-                args = new string[] { "-version", version, "-runtime", runtime, "-dryrun" };
+                args = new string[] { 
+                    "-version", version, 
+                    "-runtime", runtime, 
+                    "-installdir", "dotnet-sdk",
+                    "-dryrun" };
             }
 
             var commandResult = CreateInstallCommand(args)

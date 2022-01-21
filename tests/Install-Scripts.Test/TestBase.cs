@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
     public abstract class TestBase : VerifyBase
     {
         protected TestBase(VerifySettings settings = null, [CallerFilePath] string sourceFile = "")
-            : base(settings, Path.Combine(Path.GetDirectoryName(sourceFile), "Assets", "foo.cs")) { }
+            : base(settings, Path.Combine(Path.GetDirectoryName(sourceFile) ?? "", "Assets", "foo.cs")) { }
 
         protected static Command CreateInstallCommand(IEnumerable<string> args)
         {
