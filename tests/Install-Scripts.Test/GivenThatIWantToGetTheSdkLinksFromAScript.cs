@@ -6,12 +6,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
+using VerifyTests;
 using Xunit;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
     public class GivenThatIWantToGetTheSdkLinksFromAScript : TestBase
     {
+        public GivenThatIWantToGetTheSdkLinksFromAScript(VerifySettings settings = null) 
+            : base(settings) { }
+
         [Theory]
         [InlineData("InstallationScriptTests.json")]
         [InlineData("InstallationScriptTestsWithMultipleSdkFields.json")]
@@ -320,6 +325,88 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             {
                 commandResult.Should().HaveStdOutContainingIgnoreCase("-install-dir \"installation_path\"");
             }
+        }
+
+        [Theory]
+        [InlineData("1.0.5", "dotnet")]
+        [InlineData("2.1.0", "aspnetcore")]
+        [InlineData("6.0.100", null)]
+        public async Task WhenAnExactVersionIsPassedToBash(string version, string runtime)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                //do not run bash test on Windows environment
+                return;
+            }
+            string[] args;
+            
+            if( string.IsNullOrWhiteSpace(runtime))
+            {
+                args = new string[] {
+                    "-version", version,
+                    "-runtimeid", "osx", 
+                    "--os", "osx",
+                    "-installdir", "dotnet-sdk",
+                    "-dryrun" };
+            }
+            else
+            {
+                args = new string[] { 
+                    "-version", version,
+                    "-runtimeid", "osx",
+                    "-runtime", runtime,
+                    "--os", "osx",
+                    "-installdir", "dotnet-sdk",
+                    "-dryrun" };
+            }
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
+            await Verify(commandResult.StdOut).UseParameters(version,runtime);
+        }
+
+        [Theory]
+        [InlineData("1.0.5", "dotnet")]
+        [InlineData("2.1.0", "aspnetcore")]
+        [InlineData("6.0.100", null)]
+        public async Task WhenAnExactVersionIsPassedToPowershell(string version, string? runtime)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                //do not run powershell test on Linux environment
+                return;
+            }
+            string[] args;
+            
+            if( string.IsNullOrWhiteSpace(runtime))
+            {
+                args = new string[] { 
+                    "-version", version,
+                    "-installdir", "dotnet-sdk",
+                    "-dryrun" };
+            }
+            else
+            {
+                args = new string[] { 
+                    "-version", version, 
+                    "-runtime", runtime, 
+                    "-installdir", "dotnet-sdk",
+                    "-dryrun" };
+            }
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
+            await Verify(commandResult.StdOut).UseParameters(version, runtime);
         }
     }
 }
