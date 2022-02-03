@@ -23,7 +23,7 @@ Network and CDN changes to the Azure storages in order to improve download speed
 |Requirement|Design|Estimate|
 |:---|:---|:---|
 |Define the part is degrading the speed the most|Benchmark install-scripts run for Windows environment, prepare a document with measurements results|1 person day|
-|Investigate and suggest new ways to improve speed for Windows machines| Look thorough internals of existing methods, define soft spots and search for alternative solutions. Need to go to previous step if requirements are not met|3 person day|
+|Investigate and suggest new ways to improve speed for Windows machines| Look thorough internals of existing methods, define soft spots and search for alternative solutions.|3 person day|
 |Implementing the determined improvements|Apply changes to the script|4 person day|
 |Collect metrics after applied changes|Need to go to the second step if requirements are not met|1 person day|
 |[NTH] Add performance tests|?? No idea how to approach this thing right now||
