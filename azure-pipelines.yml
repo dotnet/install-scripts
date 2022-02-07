@@ -27,7 +27,6 @@ stages:
           manifests: true
       enableMicrobuild: true
       enablePublishUsingPipelines: true
-      useBuildManifest: ${{ variables['_UseBuildManifest'] }}
       workspace:
         clean: all
       jobs:
@@ -240,4 +239,3 @@ stages:
         -TsaRepositoryName "Install-Scripts"
         -TsaCodebaseName "Install-Scripts"
         -TsaPublish $True'
-      useBuildManifest: ${{ variables['_UseBuildManifest'] }}
