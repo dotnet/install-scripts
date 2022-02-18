@@ -1210,6 +1210,7 @@ generate_akams_links() {
         download_links+=($download_link)
         specific_versions+=($specific_version)
         effective_versions+=($effective_version)
+        say_verbose "!!!!!! Effective version ${effective_version} aka.ms"
         link_types+=("aka.ms")
 
         #  Check if the SDK version is already installed.
@@ -1254,6 +1255,7 @@ generate_regular_links() {
     download_links+=($download_link)
     specific_versions+=($specific_version)
     effective_versions+=($effective_version)
+    say_verbose "!!!!!! Effective version $effective_version PRIMARY"
     link_types+=("primary")
 
     legacy_download_link="$(construct_legacy_download_link "$feed" "$channel" "$normalized_architecture" "$specific_version")" || valid_legacy_download_link=false
@@ -1264,6 +1266,7 @@ generate_regular_links() {
         download_links+=($legacy_download_link)
         specific_versions+=($specific_version)
         effective_versions+=($effective_version)
+            say_verbose "!!!!!! Effective version $effective_version  LEGACY"
         link_types+=("legacy")
     else
         legacy_download_link=""
@@ -1353,6 +1356,7 @@ install_dotnet() {
         download_link="${download_links[$link_index]}"
         specific_version="${specific_versions[$link_index]}"
         effective_version="${effective_versions[$link_index]}"
+        say_verbose "!!!!!! Effective version ${effective_versions[$link_index]} ${link_types[$link_index]}"
         link_type="${link_types[$link_index]}"
 
         say "Attempting to download using $link_type link $download_link"
