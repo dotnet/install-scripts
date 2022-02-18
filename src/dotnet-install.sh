@@ -1253,7 +1253,9 @@ generate_regular_links() {
 
     # Add link info to arrays
     download_links+=($download_link)
+    say_verbose "!!!!!! Download link $download_link PRIMARY"
     specific_versions+=($specific_version)
+    say_verbose "!!!!!! Specific version $specific_version PRIMARY"
     effective_versions+=($effective_version)
     say_verbose "!!!!!! Effective version $effective_version PRIMARY"
     link_types+=("primary")
@@ -1264,7 +1266,9 @@ generate_regular_links() {
         say_verbose "Constructed legacy named payload URL: $legacy_download_link"
     
         download_links+=($legacy_download_link)
+        say_verbose "!!!!!! Download link $legacy_download_link LEGACY"
         specific_versions+=($specific_version)
+        say_verbose "!!!!!! Specific version $specific_version LEGACY"
         effective_versions+=($effective_version)
             say_verbose "!!!!!! Effective version $effective_version  LEGACY"
         link_types+=("legacy")
