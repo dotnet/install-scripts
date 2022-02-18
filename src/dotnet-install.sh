@@ -650,6 +650,9 @@ get_specific_product_version() {
                 return 0
             fi
         fi
+        else
+         say_verbose "!!!!!!!!!!!!!! specific_product_version remains null"
+        fi
     done
     
     # Getting the version number with productVersion.txt has failed. Try parsing the download link for a version number.
