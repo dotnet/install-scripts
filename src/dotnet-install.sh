@@ -1173,7 +1173,7 @@ generate_download_links() {
     say_verbose "Generated ${#download_links[@]} links."
     for link_index in ${!download_links[@]}
     do
-        say_verbose "Link $link_index: ${link_types[$link_index]}, ${effective_versions[$link_index]}, ${download_links[$link_index]}"
+        say_verbose "Link $link_index: ${link_types[$link_index]}, ${download_links[$link_index]}"
     done
 }
 
@@ -1253,11 +1253,11 @@ generate_regular_links() {
 
     # Add link info to arrays
     download_links+=($download_link)
-    say_verbose "!!!!!! Download link $download_link PRIMARY"
+    say_verbose "!!!!!! Download link $download_link PRIMARY!"
     specific_versions+=($specific_version)
-    say_verbose "!!!!!! Specific version $specific_version PRIMARY"
+    say_verbose "!!!!!! Specific version $specific_version PRIMARY!"
     effective_versions+=($effective_version)
-    say_verbose "!!!!!! Effective version $effective_version PRIMARY"
+    say_verbose "!!!!!! Effective version $effective_version PRIMARY!"
     link_types+=("primary")
 
     legacy_download_link="$(construct_legacy_download_link "$feed" "$channel" "$normalized_architecture" "$specific_version")" || valid_legacy_download_link=false
@@ -1266,11 +1266,11 @@ generate_regular_links() {
         say_verbose "Constructed legacy named payload URL: $legacy_download_link"
     
         download_links+=($legacy_download_link)
-        say_verbose "!!!!!! Download link $legacy_download_link LEGACY"
+        say_verbose "!!!!!! Download link $legacy_download_link LEGACY!"
         specific_versions+=($specific_version)
-        say_verbose "!!!!!! Specific version $specific_version LEGACY"
+        say_verbose "!!!!!! Specific version $specific_version LEGACY!"
         effective_versions+=($effective_version)
-            say_verbose "!!!!!! Effective version $effective_version  LEGACY"
+            say_verbose "!!!!!! Effective version $effective_version  LEGACY!"
         link_types+=("legacy")
     else
         legacy_download_link=""
