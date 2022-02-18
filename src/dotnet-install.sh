@@ -649,7 +649,6 @@ get_specific_product_version() {
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
             fi
-        fi
         else
          say_verbose "!!!!!!!!!!!!!! specific_product_version remains null"
         fi
