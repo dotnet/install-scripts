@@ -650,7 +650,7 @@ get_specific_product_version() {
                 return 0
             fi
         else
-         say_verbose "!!!!!!!!!!!!!! specific_product_version remains null"
+            echo "!!!!!!!!!!!!!! specific_product_version remains null"
         fi
     done
     
