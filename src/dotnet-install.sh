@@ -638,7 +638,7 @@ get_specific_product_version() {
         if machine_has "curl"
         then
             say_verbose "!!!!!!!!!!!!!! dl ${download_link} fc ${feed_credential}"
-            specific_product_version=$(curl --fail "${download_link}${feed_credential}" --verbose 2>&1)
+            specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" --verbose 2>&1)
 
             if [ $? -ne 0 ]; then
                 say_verbose "Error: ""$specific_product_version"
