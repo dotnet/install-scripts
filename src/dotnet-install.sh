@@ -641,7 +641,7 @@ get_specific_product_version() {
             specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1)
             say_verbose "!!!!!!!!!!!!!! BEFORE $? = 0"
             if [ $? -ne 0 ] ; then
-                say_verbose "Error: ""$m"
+                say_verbose "Error: ""$specific_product_version"
             fi
             if [ $? = 0 ]; then
                 say_verbose "!!!!!!!!!!!!!! curl ${specific_product_version//[$'\t\r\n']}"
