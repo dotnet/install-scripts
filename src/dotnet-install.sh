@@ -639,6 +639,7 @@ get_specific_product_version() {
         then
             specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1)
             if [ $? = 0 ]; then
+                say_verbose "!!!!!!!!!!!!!! curl ${specific_product_version//[$'\t\r\n']}"
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
             fi
@@ -646,6 +647,7 @@ get_specific_product_version() {
         then
             specific_product_version=$(wget -qO- "${download_link}${feed_credential}" 2>&1)
             if [ $? = 0 ]; then
+                say_verbose "!!!!!!!!!!!!!! wget ${specific_product_version//[$'\t\r\n']} "
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
             fi
