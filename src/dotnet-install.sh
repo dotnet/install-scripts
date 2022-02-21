@@ -639,12 +639,9 @@ get_specific_product_version() {
         then
             say_verbose "!!!!!!!!!!!!!! dl ${download_link}"
             specific_product_version=$(curl --fail "${download_link}${feed_credential}" --verbose 2>&1)
-            say_verbose "!!!!!!!!!!!!!!"
-            local err = $?
-            if [ err -ne 0 ] ; then
-                say_verbose "Error: ${err}"
-            fi
-            if [ err = 0 ]; then
+            if [ $? -ne 0 ] ; then
+                say_verbose "Error: ${specific_product_version}"
+            else then
                 say_verbose "!!!!!!!!!!!!!! curl ${specific_product_version//[$'\t\r\n']}"
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
