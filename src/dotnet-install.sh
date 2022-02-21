@@ -637,7 +637,9 @@ get_specific_product_version() {
 
         if machine_has "curl"
         then
+            say_verbose "!!!!!!!!!!!!!! dl ${download_link} fc ${feed_credential}"
             specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1)
+            say_verbose "!!!!!!!!!!!!!! BEFORE $? = 0"
             if [ $? = 0 ]; then
                 say_verbose "!!!!!!!!!!!!!! curl ${specific_product_version//[$'\t\r\n']}"
                 echo "${specific_product_version//[$'\t\r\n']}"
