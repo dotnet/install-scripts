@@ -638,7 +638,8 @@ get_specific_product_version() {
         if machine_has "curl"
         then
             say_verbose "!!!!!!!!!!!!!! dl ${download_link} fc ${feed_credential}"
-            specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1)
+            specific_product_version=$(curl --fail "${download_link}${feed_credential}" --verbose 2>&1)
+            say_verbose "!!!!!!!!!!!!!! BEFORE $? = 0"
             say_verbose "!!!!!!!!!!!!!! BEFORE $? = 0"
             if [ $? -ne 0 ] ; then
                 say_verbose "Error: ""$specific_product_version"
@@ -1255,6 +1256,7 @@ generate_regular_links() {
     fi
 
     effective_version="$(get_specific_product_version "$feed" "$specific_version")"
+    say_verbose "effective_version=$effective_version"
     say_verbose "specific_version=$specific_version"
 
     download_link="$(construct_download_link "$feed" "$channel" "$normalized_architecture" "$specific_version" "$normalized_os")"
