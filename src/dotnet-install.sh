@@ -638,6 +638,7 @@ get_specific_product_version() {
         if machine_has "curl"
         then
             specific_product_version="$(get_specific_product_version_from_curl "$download_link")"
+            say_verbose "!!!!!!!!!specific_product_version from CURL ${specific_product_version}"
             if [ $? = 0 ]; then
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
@@ -665,11 +666,14 @@ get_specific_product_version_from_curl() {
     eval $invocation
 
     local download_link="$1"
-    local specific_product_version=null
-    say_verbose "!!!!!!!!!Before curl call"
-    specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1)
-    echo "$specific_product_version"
-    return 0
+    local specific_product_version=""
+     if [ -z "$download_link" ]; then
+        say_verbose "!!!!!!!!!Before curl call ${download_link}${feed_credential}"
+        specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1)
+        say_verbose "!!!!!!!!!specific_product_version ${specific_product_version}"
+        echo "$specific_product_version"
+        return 0
+    fi
 }
 
 # args:
