@@ -638,9 +638,11 @@ get_specific_product_version() {
         if machine_has "curl"
         then
             specific_product_version="$(get_specific_product_version_from_curl "$download_link")"
-            if [! -z "$specific_product_version"]; then
+            if [ ! -z "$specific_product_version"]; then
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
+            else
+                break
             fi
         elif machine_has "wget"
         then
