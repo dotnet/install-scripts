@@ -637,12 +637,8 @@ get_specific_product_version() {
 
         if machine_has "curl"
         then
-            say_verbose "!!!!!!!!!!!!!! dl ${download_link} fc ${feed_credential}"
-            specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" --verbose 2>&1)
-
-            if [ $? -ne 0 ]; then
-                say_verbose "Error: ""$specific_product_version"
-                say_verbose "!!!!!!!!!!!!!! curl ${specific_product_version//[$'\t\r\n']}"
+            specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1)
+            if [ $? = 0 ]; then
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
             fi
@@ -650,12 +646,9 @@ get_specific_product_version() {
         then
             specific_product_version=$(wget -qO- "${download_link}${feed_credential}" 2>&1)
             if [ $? = 0 ]; then
-                say_verbose "!!!!!!!!!!!!!! wget ${specific_product_version//[$'\t\r\n']} "
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
             fi
-        else
-            say_verbose "!!!!!!!!!!!!!! specific_product_version remains null"
         fi
     done
     
@@ -1180,7 +1173,7 @@ generate_download_links() {
     say_verbose "Generated ${#download_links[@]} links."
     for link_index in ${!download_links[@]}
     do
-        say_verbose "Link $link_index: ${link_types[$link_index]}, ${download_links[$link_index]}"
+        say_verbose "Link $link_index: ${link_types[$link_index]}, ${effective_versions[$link_index]}, ${download_links[$link_index]}"
     done
 }
 
@@ -1217,7 +1210,6 @@ generate_akams_links() {
         download_links+=($download_link)
         specific_versions+=($specific_version)
         effective_versions+=($effective_version)
-        say_verbose "!!!!!! Effective version ${effective_version} aka.ms"
         link_types+=("aka.ms")
 
         #  Check if the SDK version is already installed.
@@ -1253,7 +1245,6 @@ generate_regular_links() {
     fi
 
     effective_version="$(get_specific_product_version "$feed" "$specific_version")"
-    say_verbose "effective_version=$effective_version"
     say_verbose "specific_version=$specific_version"
 
     download_link="$(construct_download_link "$feed" "$channel" "$normalized_architecture" "$specific_version" "$normalized_os")"
@@ -1261,11 +1252,8 @@ generate_regular_links() {
 
     # Add link info to arrays
     download_links+=($download_link)
-    say_verbose "!!!!!! Download link $download_link PRIMARY!"
     specific_versions+=($specific_version)
-    say_verbose "!!!!!! Specific version $specific_version PRIMARY!"
     effective_versions+=($effective_version)
-    say_verbose "!!!!!! Effective version $effective_version PRIMARY!"
     link_types+=("primary")
 
     legacy_download_link="$(construct_legacy_download_link "$feed" "$channel" "$normalized_architecture" "$specific_version")" || valid_legacy_download_link=false
@@ -1274,11 +1262,8 @@ generate_regular_links() {
         say_verbose "Constructed legacy named payload URL: $legacy_download_link"
     
         download_links+=($legacy_download_link)
-        say_verbose "!!!!!! Download link $legacy_download_link LEGACY!"
         specific_versions+=($specific_version)
-        say_verbose "!!!!!! Specific version $specific_version LEGACY!"
         effective_versions+=($effective_version)
-            say_verbose "!!!!!! Effective version $effective_version  LEGACY!"
         link_types+=("legacy")
     else
         legacy_download_link=""
@@ -1368,7 +1353,6 @@ install_dotnet() {
         download_link="${download_links[$link_index]}"
         specific_version="${specific_versions[$link_index]}"
         effective_version="${effective_versions[$link_index]}"
-        say_verbose "!!!!!! Effective version ${effective_versions[$link_index]} ${link_types[$link_index]}"
         link_type="${link_types[$link_index]}"
 
         say "Attempting to download using $link_type link $download_link"
