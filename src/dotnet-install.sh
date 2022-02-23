@@ -640,7 +640,7 @@ get_specific_product_version() {
         if machine_has "curl"
         then
             say_verbose "!!! Before CURL invocation ${download_link}"
-            specific_product_version="$get_specific_product_version_from_curl "$download_link""
+            specific_product_version="$(get_specific_product_version_from_curl "$download_link")"
             say_verbose "!!! After CURL invocation"
             if [ $? = 0 ]; then
                 echo "${specific_product_version//[$'\t\r\n']}"
