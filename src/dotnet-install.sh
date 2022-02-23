@@ -614,6 +614,7 @@ construct_download_link() {
 # specific_version - $2
 # download link - $3 (optional)
 get_specific_product_version() {
+    say_verbose "!!! in get_specific_product_version"
     # If we find a 'productVersion.txt' at the root of any folder, we'll use its contents
     # to resolve the version of what's in the folder, superseding the specified version.
     # if 'productVersion.txt' is missing but download link is already available, product version will be taken from download link
@@ -626,11 +627,11 @@ get_specific_product_version() {
         local package_download_link="$3"
     fi
     local specific_product_version=null
-
+    say_verbose "!!! before dl"
     # Try to get the version number, using the productVersion.txt file located next to the installer file.
     local download_links=($(get_specific_product_version_url "$azure_feed" "$specific_version" true "$package_download_link")
         $(get_specific_product_version_url "$azure_feed" "$specific_version" false "$package_download_link"))
-
+    say_verbose "!!! after dl ${download_links[0]}"
     for download_link in "${download_links[@]}"
     do
         say_verbose "Checking for the existence of $download_link"
@@ -665,6 +666,7 @@ get_specific_product_version() {
 # is_flattened - $3
 # download link - $4 (optional)
 get_specific_product_version_url() {
+    say_verbose "!!! in get_specific_product_version_url"
     eval $invocation
 
     local azure_feed="$1"
