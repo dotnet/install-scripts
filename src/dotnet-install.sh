@@ -642,10 +642,10 @@ get_specific_product_version() {
             say_verbose "!!! Before CURL invocation ${download_link}"
             specific_product_version="$(get_specific_product_version_from_curl "$download_link")"
             say_verbose "!!! After CURL invocation"
-            if [ $? = 0 ]; then
-                echo "${specific_product_version//[$'\t\r\n']}"
-                return 0
-            fi
+            # if [ $? = 0 ]; then
+            #     echo "${specific_product_version//[$'\t\r\n']}"
+            #     return 0
+            # fi
         elif machine_has "wget"
         then
             specific_product_version=$(wget -qO- "${download_link}${feed_credential}" 2>&1)
@@ -666,7 +666,6 @@ get_specific_product_version() {
 # args:
 # download link - $1
 get_specific_product_version_from_curl() {
-
     eval $invocation
 
     local download_link="$1"
