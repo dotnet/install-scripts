@@ -614,7 +614,6 @@ construct_download_link() {
 # specific_version - $2
 # download link - $3 (optional)
 get_specific_product_version() {
-    say_verbose "!!! in get_specific_product_version"
     # If we find a 'productVersion.txt' at the root of any folder, we'll use its contents
     # to resolve the version of what's in the folder, superseding the specified version.
     # if 'productVersion.txt' is missing but download link is already available, product version will be taken from download link
@@ -631,23 +630,17 @@ get_specific_product_version() {
     # Try to get the version number, using the productVersion.txt file located next to the installer file.
     local download_links=($(get_specific_product_version_url "$azure_feed" "$specific_version" true "$package_download_link")
         $(get_specific_product_version_url "$azure_feed" "$specific_version" false "$package_download_link"))
-    say_verbose "!!! after dl ${download_links[0]}"
-    echo "${download_links[*]}"
+
     for download_link in "${download_links[@]}"
     do
         say_verbose "Checking for the existence of $download_link"
 
         if machine_has "curl"
         then
-            say_verbose "!!! Before CURL invocation ${download_link}"
             specific_product_version="$(get_specific_product_version_from_curl "$download_link")"
             if [ $? = 0 ]; then
-                say_verbose "!!! After SUCCESSUL CURL invocation"
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
-            else 
-                say_verbose "!!! After FAILED CURL invocation"
-                break
             fi
         elif machine_has "wget"
         then
@@ -673,6 +666,7 @@ get_specific_product_version_from_curl() {
 
     local download_link="$1"
     local specific_product_version=null
+    say_verbose "!!!!!!!!!Before curl call"
     specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1)
     echo "$specific_product_version"
     return 0
@@ -684,7 +678,6 @@ get_specific_product_version_from_curl() {
 # is_flattened - $3
 # download link - $4 (optional)
 get_specific_product_version_url() {
-    say_verbose "!!! in get_specific_product_version_url"
     eval $invocation
 
     local azure_feed="$1"
