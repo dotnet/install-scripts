@@ -642,9 +642,12 @@ get_specific_product_version() {
             say_verbose "!!! Before CURL invocation ${download_link}"
             specific_product_version="$(get_specific_product_version_from_curl "$download_link")"
             if [ $? = 0 ]; then
-                say_verbose "!!! After CURL invocation"
+                say_verbose "!!! After SUCCESSUL CURL invocation"
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
+            else 
+                say_verbose "!!! After FAILED CURL invocation"
+                break
             fi
         elif machine_has "wget"
         then
