@@ -667,7 +667,7 @@ get_specific_product_version_from_curl() {
 
     local download_link="$1"
     local specific_product_version=""
-     if [ -z "$download_link" ]; then
+     if [ !-z "$download_link" ]; then
         say_verbose "!!!!!!!!!Before curl call ${download_link}${feed_credential}"
         specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1)
         say_verbose "!!!!!!!!!specific_product_version ${specific_product_version}"
