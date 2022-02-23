@@ -639,9 +639,9 @@ get_specific_product_version() {
 
         if machine_has "curl"
         then
-            say_verbose "!!! Before CURL invocation"
-            specific_product_version=$(curl --fail "${download_link}${feed_credential}" 2>&1)
-             say_verbose "!!! After CURL invocation"
+            say_verbose "!!! Before CURL invocation ${download_link}"
+            specific_product_version=$(curl --fail --verbose "${download_link}${feed_credential}" 2>&1)
+            say_verbose "!!! After CURL invocation"
             if [ $? = 0 ]; then
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
