@@ -627,7 +627,7 @@ get_specific_product_version() {
         local package_download_link="$3"
     fi
     local specific_product_version=null
-    say_verbose "!!! before dl"
+
     # Try to get the version number, using the productVersion.txt file located next to the installer file.
     local download_links=($(get_specific_product_version_url "$azure_feed" "$specific_version" true "$package_download_link")
         $(get_specific_product_version_url "$azure_feed" "$specific_version" false "$package_download_link"))
@@ -641,11 +641,11 @@ get_specific_product_version() {
         then
             say_verbose "!!! Before CURL invocation ${download_link}"
             specific_product_version="$(get_specific_product_version_from_curl "$download_link")"
-            say_verbose "!!! After CURL invocation"
-            # if [ $? = 0 ]; then
-            #     echo "${specific_product_version//[$'\t\r\n']}"
-            #     return 0
-            # fi
+            if [ $? = 0 ]; then
+                say_verbose "!!! After CURL invocation"
+                echo "${specific_product_version//[$'\t\r\n']}"
+                return 0
+            fi
         elif machine_has "wget"
         then
             specific_product_version=$(wget -qO- "${download_link}${feed_credential}" 2>&1)
