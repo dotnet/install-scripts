@@ -642,6 +642,7 @@ get_specific_product_version() {
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
             else
+                say_verbose "In Else statement"
                 break
             fi
         elif machine_has "wget"
@@ -654,6 +655,7 @@ get_specific_product_version() {
         fi
     done
     
+    say_verbose "Failed for ${download_link}"
     # Getting the version number with productVersion.txt has failed. Try parsing the download link for a version number.
     say_verbose "Failed to get the version using productVersion.txt file. Download link will be parsed instead."
     specific_product_version="$(get_product_specific_version_from_download_link "$package_download_link" "$specific_version")"
