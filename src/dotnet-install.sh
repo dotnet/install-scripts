@@ -933,8 +933,9 @@ get_http_header_wget() {
     wget $wget_options $wget_options_extra "$remote_path_with_credential" 2>&1
     wget_result=$?
 
-    if [[ $wget_result == 2 ]]; then
+    if [[ $wget_result == 2  ]] || [[ $wget_result == 1 ]]; then
         # Parsing of the command has failed. Exclude potentially unrecognized options and retry.
+        say_verbose "wget parsing failed. trying again with fewer options.."
         wget $wget_options "$remote_path_with_credential" 2>&1
         return $?
     fi
@@ -1042,8 +1043,9 @@ downloadwget() {
         wget_result=$?
     fi
 
-    if [[ $wget_result == 2 ]]; then
+    if [[ $wget_result == 2  ]] || [[ $wget_result == 1 ]]; then
         # Parsing of the command has failed. Exclude potentially unrecognized options and retry.
+        say_verbose "wget parsing failed. trying again with fewer options.."
         if [ -z "$out_path" ]; then
             wget -q $wget_options -O - "$remote_path_with_credential" 2>&1
             wget_result=$?
