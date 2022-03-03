@@ -926,7 +926,7 @@ get_http_header_wget() {
     local wget_result=''
 
     # Test for options that aren't supported on all wget implementations.
-    wget -h 2>&1 | grep "xwaitretry" >null && wget -h 2>&1 | grep "connect-timeout" >null
+    wget -h 2>&1 | grep "waitretry" >/dev/null && wget -h 2>&1 | grep "connect-timeout" >/dev/null
     if [ $? = 0 ]; then
         wget_options_extra="--waitretry 2 --connect-timeout 15 "
     fi
@@ -1042,7 +1042,7 @@ downloadwget() {
     local wget_result=''
 
     # Test for options that aren't supported on all wget implementations.
-    wget -h 2>&1 | grep "xwaitretry" >null && wget -h 2>&1 | grep "connect-timeout" >null
+    wget -h 2>&1 | grep "waitretry" >/dev/null && wget -h 2>&1 | grep "connect-timeout" >/dev/null
     if [ $? = 0 ]; then
         wget_options_extra="--waitretry 2 --connect-timeout 15 "
     fi
