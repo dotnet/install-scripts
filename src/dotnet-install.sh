@@ -637,14 +637,13 @@ get_specific_product_version() {
 
         if machine_has "curl"
         then
-            specific_product_version="$(get_specific_product_version_from_curl "$download_link")"
-            if [ ! -z "$specific_product_version" ]; then
+            if ! specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1); then
+                break
+            else
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
-            else
-                say_verbose "In Else statement"
-                break
             fi
+
         elif machine_has "wget"
         then
             specific_product_version=$(wget -qO- "${download_link}${feed_credential}" 2>&1)
@@ -655,28 +654,11 @@ get_specific_product_version() {
         fi
     done
     
-    say_verbose "Failed for ${download_link}"
     # Getting the version number with productVersion.txt has failed. Try parsing the download link for a version number.
     say_verbose "Failed to get the version using productVersion.txt file. Download link will be parsed instead."
     specific_product_version="$(get_product_specific_version_from_download_link "$package_download_link" "$specific_version")"
     echo "${specific_product_version//[$'\t\r\n']}"
     return 0
-}
-
-# args:
-# download link - $1
-get_specific_product_version_from_curl() {
-    eval $invocation
-
-    local download_link="$1"
-    local specific_product_version=""
-     if [ ! -z "$download_link" ]; then
-        say_verbose "!!!!!!!!!Before curl call ${download_link}${feed_credential}"
-        specific_product_version=$(curl -sf -L -s --fail "${download_link}${feed_credential}" 2>&1)
-        say_verbose "!!!!!!!!!specific_product_version ${specific_product_version}"
-        echo "$specific_product_version"
-        return 0
-    fi
 }
 
 # args:
