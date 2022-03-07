@@ -925,7 +925,7 @@ get_http_header_wget() {
     local wget_options_extra=''
 
     # Test for options that aren't supported on all wget implementations.
-    if ! wget -h 2>&1 | grep "waitretry" >/dev/null && wget -h 2>&1 | grep "connect-timeout" >/dev/null; then
+    if wget -h 2>&1 | grep "waitretry" >/dev/null && wget -h 2>&1 | grep "connect-timeout" >/dev/null; then
         say 'wget extra options are unavailable for this environment'
     else
         wget_options_extra="--waitretry 2 --connect-timeout 15 "
@@ -1034,7 +1034,7 @@ downloadwget() {
     local wget_result=''
 
     # Test for options that aren't supported on all wget implementations.
-    if ! wget -h 2>&1 | grep "waitretry" >/dev/null && wget -h 2>&1 | grep "connect-timeout" >/dev/null; then
+    if wget -h 2>&1 | grep "waitretry" >/dev/null && wget -h 2>&1 | grep "connect-timeout" >/dev/null; then
         say 'wget extra options are unavaiable for this environment'
     else
         wget_options_extra="--waitretry 2 --connect-timeout 15 "
