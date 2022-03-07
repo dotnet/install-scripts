@@ -637,11 +637,13 @@ get_specific_product_version() {
 
         if machine_has "curl"
         then
-            specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1)
-            if [ $? = 0 ]; then
+            if ! specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1); then
+                continue
+            else
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
             fi
+
         elif machine_has "wget"
         then
             specific_product_version=$(wget -qO- "${download_link}${feed_credential}" 2>&1)
