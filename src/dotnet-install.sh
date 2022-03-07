@@ -936,7 +936,9 @@ get_http_header_wget() {
         remote_path_with_credential+="$feed_credential"
     fi
 
-    return wget $wget_options $wget_options_extra "$remote_path_with_credential" 2>&1
+    wget $wget_options $wget_options_extra "$remote_path_with_credential" 2>&1
+
+    return $?
 }
 
 # args:
