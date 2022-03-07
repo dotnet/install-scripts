@@ -923,11 +923,11 @@ get_http_header_wget() {
     local wget_options="-q -S --spider --tries 5 "
 
     local wget_options_extra=''
-    local wget_result=''
 
     # Test for options that aren't supported on all wget implementations.
-    wget -h 2>&1 | grep "waitretry" >/dev/null && wget -h 2>&1 | grep "connect-timeout" >/dev/null
-    if [ $? = 0 ]; then
+    if ! wget -h 2>&1 | grep "waitretry" >/dev/null && wget -h 2>&1 | grep "connect-timeout" >/dev/null; then
+        say 'wget extra options are unavaiable for this environment'
+    else
         wget_options_extra="--waitretry 2 --connect-timeout 15 "
     fi
 
@@ -937,16 +937,8 @@ get_http_header_wget() {
     fi
 
     wget $wget_options $wget_options_extra "$remote_path_with_credential" 2>&1
-    wget_result=$?
 
-    if [[ $wget_result == 1 ]] || [[ $wget_result == 2 ]]; then
-        # Parsing of the command has failed. Exclude potentially unrecognized options and retry.
-        say_verbose "wget parsing failed. trying again with fewer options.."
-        wget $wget_options "$remote_path_with_credential" 2>&1
-        return $?
-    fi
-
-    return $wget_result
+    return $?
 }
 
 # args:
