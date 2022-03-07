@@ -936,9 +936,7 @@ get_http_header_wget() {
         remote_path_with_credential+="$feed_credential"
     fi
 
-    wget $wget_options $wget_options_extra "$remote_path_with_credential" 2>&1
-
-    return $?
+    return wget $wget_options $wget_options_extra "$remote_path_with_credential" 2>&1
 }
 
 # args:
@@ -1034,8 +1032,9 @@ downloadwget() {
     local wget_result=''
 
     # Test for options that aren't supported on all wget implementations.
-    wget -h 2>&1 | grep "waitretry" >/dev/null && wget -h 2>&1 | grep "connect-timeout" >/dev/null
-    if [ $? = 0 ]; then
+    if ! wget -h 2>&1 | grep "waitretry" >/dev/null && wget -h 2>&1 | grep "connect-timeout" >/dev/null; then
+        say 'wget extra options are unavaiable for this environment'
+    else
         wget_options_extra="--waitretry 2 --connect-timeout 15 "
     fi
 
@@ -1045,18 +1044,6 @@ downloadwget() {
     else
         wget $wget_options $wget_options_extra -O "$out_path" "$remote_path_with_credential" 2>&1
         wget_result=$?
-    fi
-
-    if [[ $wget_result == 1 ]] || [[ $wget_result == 2 ]]; then
-        # Parsing of the command has failed. Exclude potentially unrecognized options and retry.
-        say_verbose "wget parsing failed. trying again with fewer options.."
-        if [ -z "$out_path" ]; then
-            wget -q $wget_options -O - "$remote_path_with_credential" 2>&1
-            wget_result=$?
-        else
-            wget $wget_options -O "$out_path" "$remote_path_with_credential" 2>&1
-            wget_result=$?
-        fi
     fi
 
     if [[ $wget_result != 0 ]]; then
