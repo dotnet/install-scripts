@@ -371,11 +371,19 @@ get_normalized_os() {
 
 # args:
 # quality - $1
+# version - $2
 get_normalized_quality() {
     eval $invocation
-
+    
     local quality="$(to_lowercase "$1")"
+    local version="$(to_lowercase "$2")"
+
     if [ ! -z "$quality" ]; then
+        if [ ! -z "$version" ] ; then
+            say_err "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#:~:text=valid%20for%20Windows.)-,%2DQuality%7C%2D%2Dquality%20%3CQUALITY%3E,-Downloads%20the%20latest for details."
+            return 1
+        fi
+    else
         case "$quality" in
             daily | signed | validated | preview)
                 echo "$quality"
@@ -389,9 +397,9 @@ get_normalized_quality() {
                 say_err "'$quality' is not a supported value for --quality option. Supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues."
                 return 1
                 ;;
-        esac
+            esac
+        return 0
     fi
-    return 0
 }
 
 # args:
@@ -1316,7 +1324,7 @@ calculate_vars() {
     say_verbose "Normalized architecture: '$normalized_architecture'."
     normalized_os="$(get_normalized_os "$user_defined_os")"
     say_verbose "Normalized OS: '$normalized_os'."
-    normalized_quality="$(get_normalized_quality "$quality")"
+    normalized_quality="$(get_normalized_quality "$quality", "$version")"
     say_verbose "Normalized quality: '$normalized_quality'."
     normalized_channel="$(get_normalized_channel "$channel")"
     say_verbose "Normalized channel: '$normalized_channel'."
@@ -1395,6 +1403,7 @@ install_dotnet() {
         unset IFS;
         say_verbose "Checking installation: version = $release_version"
         if is_dotnet_package_installed "$install_root" "$asset_relative_path" "$release_version"; then
+            say "Installed version is $effective_version"
             return 0
         fi
     fi
@@ -1402,6 +1411,7 @@ install_dotnet() {
     #  Check if the standard SDK version is installed.
     say_verbose "Checking installation: version = $effective_version"
     if is_dotnet_package_installed "$install_root" "$asset_relative_path" "$effective_version"; then
+        say "Installed version is $effective_version"
         return 0
     fi
 
@@ -1555,7 +1565,7 @@ do
             echo "  -v,--version <VERSION>         Use specific VERSION, Defaults to \`$version\`."
             echo "      -Version"
             echo "          Possible values:"
-            echo "          - latest - most latest build on specific channel"
+            echo "          - latest - the latest build on specific channel"
             echo "          - 3-part version in a format A.B.C - represents specific version of build"
             echo "              examples: 2.0.0-preview2-006120; 1.1.0"
             echo "  -q,--quality <quality>         Download the latest build of specified quality in the channel."

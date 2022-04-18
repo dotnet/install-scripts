@@ -29,7 +29,7 @@
 .PARAMETER Version
     Default: latest
     Represents a build version on specific channel. Possible values:
-    - latest - most latest build on specific channel
+    - latest - the latest build on specific channel
     - 3-part version in a format A.B.C - represents specific version of build
           examples: 2.0.0-preview2-006120, 1.1.0
 .PARAMETER Internal
@@ -242,6 +242,10 @@ function Get-NormalizedQuality([string]$Quality) {
 
     if ([string]::IsNullOrEmpty($Quality)) {
         return ""
+    }
+
+    if (![string]::IsNullOrEmpty($Version)) {
+        throw "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#:~:text=valid%20for%20Windows.)-,%2DQuality%7C%2D%2Dquality%20%3CQUALITY%3E,-Downloads%20the%20latest for details."
     }
 
     switch ($Quality) {
@@ -1248,4 +1252,5 @@ Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
 
 Say "Note that the script does not resolve dependencies during installation."
 Say "To check the list of dependencies, go to https://docs.microsoft.com/dotnet/core/install/windows#dependencies"
+Say "Installed version is $($DownloadedLink.effectiveVersion)"
 Say "Installation finished"
