@@ -244,10 +244,6 @@ function Get-NormalizedQuality([string]$Quality) {
         return ""
     }
 
-    if ($Version -ne "latest") {
-        throw "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script for details."
-    }
-
     switch ($Quality) {
         { @("daily", "signed", "validated", "preview") -contains $_ } { return $Quality.ToLowerInvariant() }
         #ga quality is available without specifying quality, so normalizing it to empty
@@ -1163,6 +1159,11 @@ if ([string]::IsNullOrEmpty($NormalizedQuality) -and 0 -eq $DownloadLinks.count)
 }
 
 if ($DownloadLinks.count -eq 0) {
+
+    if ($Version.ToLowerInvariant() -ne "latest" -and -ne [string]::IsNullOrEmpty($Quality)) {
+        throw "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script for details."
+    }
+
     throw "Failed to resolve the exact version number."
 }
 

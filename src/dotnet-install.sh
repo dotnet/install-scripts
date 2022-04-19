@@ -379,11 +379,6 @@ get_normalized_quality() {
     local version="$(to_lowercase "$2")"
 
     if [ ! -z "$quality" ]; then
-        if [ "$version" != "Latest" ] ; then
-            say_err "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script for details."
-            return 1
-        fi
-    else
         case "$quality" in
             daily | signed | validated | preview)
                 echo "$quality"
@@ -1174,6 +1169,10 @@ generate_download_links() {
     fi
 
     if [[ "${#download_links[@]}" -eq 0 ]]; then
+        if [[ "$normalized_version" != "latest" ]] && ! [ -z "$normalized_quality" ]; then
+            say_err "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script for details."
+            return 1
+        fi
         say_err "Failed to resolve the exact version number."
         return 1
     fi
