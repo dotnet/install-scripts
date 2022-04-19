@@ -244,8 +244,8 @@ function Get-NormalizedQuality([string]$Quality) {
         return ""
     }
 
-    if (![string]::IsNullOrEmpty($Version)) {
-        throw "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#:~:text=valid%20for%20Windows.)-,%2DQuality%7C%2D%2Dquality%20%3CQUALITY%3E,-Downloads%20the%20latest for details."
+    if ($Version -ne "latest") {
+        throw "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script for details."
     }
 
     switch ($Quality) {

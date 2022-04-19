@@ -379,8 +379,8 @@ get_normalized_quality() {
     local version="$(to_lowercase "$2")"
 
     if [ ! -z "$quality" ]; then
-        if [ ! -z "$version" ] ; then
-            say_err "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#:~:text=valid%20for%20Windows.)-,%2DQuality%7C%2D%2Dquality%20%3CQUALITY%3E,-Downloads%20the%20latest for details."
+        if [ "$version" != "Latest" ] ; then
+            say_err "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script for details."
             return 1
         fi
     else
