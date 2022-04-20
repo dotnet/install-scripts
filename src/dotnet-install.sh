@@ -371,13 +371,10 @@ get_normalized_os() {
 
 # args:
 # quality - $1
-# version - $2
 get_normalized_quality() {
     eval $invocation
     
     local quality="$(to_lowercase "$1")"
-    local version="$(to_lowercase "$2")"
-
     if [ ! -z "$quality" ]; then
         case "$quality" in
             daily | signed | validated | preview)
@@ -392,9 +389,9 @@ get_normalized_quality() {
                 say_err "'$quality' is not a supported value for --quality option. Supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues."
                 return 1
                 ;;
-            esac
-        return 0
+        esac
     fi
+    return 0
 }
 
 # args:
@@ -1323,7 +1320,7 @@ calculate_vars() {
     say_verbose "Normalized architecture: '$normalized_architecture'."
     normalized_os="$(get_normalized_os "$user_defined_os")"
     say_verbose "Normalized OS: '$normalized_os'."
-    normalized_quality="$(get_normalized_quality "$quality", "$version")"
+    normalized_quality="$(get_normalized_quality "$quality")"
     say_verbose "Normalized quality: '$normalized_quality'."
     normalized_channel="$(get_normalized_channel "$channel")"
     say_verbose "Normalized channel: '$normalized_channel'."

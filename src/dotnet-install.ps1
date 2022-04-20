@@ -1160,7 +1160,7 @@ if ([string]::IsNullOrEmpty($NormalizedQuality) -and 0 -eq $DownloadLinks.count)
 
 if ($DownloadLinks.count -eq 0) {
 
-    if ($Version.ToLowerInvariant() -ne "latest" -and -ne [string]::IsNullOrEmpty($Quality)) {
+    if ($Version.ToLowerInvariant() -ne "latest" -and -not [string]::IsNullOrEmpty($Quality)) {
         throw "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script for details."
     }
 
