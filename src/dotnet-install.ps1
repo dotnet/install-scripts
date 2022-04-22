@@ -361,7 +361,10 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
             # Defaulting to 20 minutes allows it to work over much slower connections.
             $HttpClient.Timeout = New-TimeSpan -Seconds $DownloadTimeout
 
-            if ($HeaderOnly){
+            $isZip = $Uri -like "*.zip"
+
+            # Zips are big, we want to report progress on them, so we grab headers first, and then we read the stream while reporting progress.
+            if ($HeaderOnly -or $isZip){
                 $completionOption = [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead
             }
             else {
@@ -375,8 +378,51 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
                 $UriWithCredential = "${Uri}${FeedCredential}"
             }
 
-            $Task = $HttpClient.GetAsync("$UriWithCredential", $completionOption).ConfigureAwait("false");
+            $Task = $HttpClient.GetAsync("$UriWithCredential", $completionOption).ConfigureAwait($false);
             $Response = $Task.GetAwaiter().GetResult();
+            if ($isZip -and $null -ne $Response -and $Response.IsSuccessStatusCode) {
+                # We got the header, check how big the zip is and then start downloading it, with progress reporting.
+                # If the response did not succeed just continue to the next if to report the error.
+                # & {} Adds another scope to ensure that $ProgressPreference does not leak to the rest of the script,
+                # because the rest of the script uses SilentlyContinue to suppress progress in other tasks.
+                & {
+                    $ProgressPreference = "Continue"
+
+                    $size = $Response.Content.Headers.ContentLength
+                    try {
+                        $file = Split-Path -Leaf $Uri
+                        $content = $Response.Content.ReadAsStreamAsync().GetAwaiter().GetResult();
+                        $data = New-Object System.IO.MemoryStream
+                        $read = 0;
+                        $buffer = New-Object byte[] -ArgumentList 1MB
+                        $hasMore = $true
+                        $reportedMB = 0
+                        do {
+                            $bytesRead = $content.ReadAsync($buffer, $cts.Token).GetAwaiter().GetResult()
+                            if (0 -eq $bytesRead) {
+                                $hasMore = $false
+                                continue;
+                            }
+
+                            $read += $bytesRead
+                            $data.Write($buffer, 0, $bytesRead)
+
+                            $readMB = [int]($read / 1MB)
+                            # Be careful to report only on every new MB so we don't overwhelm PowerShell with updates, not a problem in recent PowerShell, but it is a problem in older versions, because Progress does no throttling there.
+                            if ($readMB -ne $reportedMB) {
+                                $reportedMB = $readMB
+                                # Report 1 at minimum, otherwise we 100% when we report 0 percent for some reason, I guess a bug in the progress bar.
+                                $percent = if (0 -eq $size) { 1 } else { [math]::Max(1,[math]::Round(($read / $size) * 100, 0))}
+                                Write-Progress -Activity "Downloading $file" -PercentComplete $percent -Status "${readMB}MB / $([int]($size / 1MB))MB"
+                            }
+                        } while ($hasMore)
+                    }
+                    finally {
+                        try { $data.Dispose() } catch { }
+                        try { $content.Dispose() } catch { }
+                    }
+                }
+            }
 
             if (($null -eq $Response) -or ((-not $HeaderOnly) -and (-not ($Response.IsSuccessStatusCode)))) {
                 # The feed credential is potentially sensitive info. Do not log FeedCredential to console output.
