@@ -371,19 +371,10 @@ get_normalized_os() {
 
 # args:
 # quality - $1
-# version - $2
 get_normalized_quality() {
     eval $invocation
-    
     local quality="$(to_lowercase "$1")"
-    local version="$(to_lowercase "$2")"
-
     if [ ! -z "$quality" ]; then
-        if [ ! -z "$version" ] ; then
-            say_err "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#:~:text=valid%20for%20Windows.)-,%2DQuality%7C%2D%2Dquality%20%3CQUALITY%3E,-Downloads%20the%20latest for details."
-            return 1
-        fi
-    else
         case "$quality" in
             daily | signed | validated | preview)
                 echo "$quality"
@@ -397,9 +388,9 @@ get_normalized_quality() {
                 say_err "'$quality' is not a supported value for --quality option. Supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues."
                 return 1
                 ;;
-            esac
-        return 0
+        esac
     fi
+    return 0
 }
 
 # args:
@@ -645,11 +636,13 @@ get_specific_product_version() {
 
         if machine_has "curl"
         then
-            specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1)
-            if [ $? = 0 ]; then
+            if ! specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1); then
+                continue
+            else
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
             fi
+
         elif machine_has "wget"
         then
             specific_product_version=$(wget -qO- "${download_link}${feed_credential}" 2>&1)
@@ -918,6 +911,7 @@ get_http_header_curl() {
 
     curl_options="-I -sSL --retry 5 --retry-delay 2 --connect-timeout 15 "
     curl $curl_options "$remote_path_with_credential" 2>&1 || return 1
+    
     return 0
 }
 
@@ -929,9 +923,15 @@ get_http_header_wget() {
     local remote_path="$1"
     local disable_feed_credential="$2"
     local wget_options="-q -S --spider --tries 5 "
-    # Store options that aren't supported on all wget implementations separately.
-    local wget_options_extra="--waitretry 2 --connect-timeout 15 "
-    local wget_result=''
+
+    local wget_options_extra=''
+
+    # Test for options that aren't supported on all wget implementations.
+    if [[ $(wget -h 2>&1 | grep -E 'waitretry|connect-timeout') ]]; then
+        wget_options_extra="--waitretry 2 --connect-timeout 15 "
+    else
+        say "wget extra options are unavailable for this environment"
+    fi
 
     remote_path_with_credential="$remote_path"
     if [ "$disable_feed_credential" = false ]; then
@@ -939,15 +939,8 @@ get_http_header_wget() {
     fi
 
     wget $wget_options $wget_options_extra "$remote_path_with_credential" 2>&1
-    wget_result=$?
 
-    if [[ $wget_result == 2 ]]; then
-        # Parsing of the command has failed. Exclude potentially unrecognized options and retry.
-        wget $wget_options "$remote_path_with_credential" 2>&1
-        return $?
-    fi
-
-    return $wget_result
+    return $?
 }
 
 # args:
@@ -1001,6 +994,7 @@ downloadcurl() {
     eval $invocation
     unset http_code
     unset download_error_msg
+    unset curl_output_msg
     local remote_path="$1"
     local out_path="${2:-}"
     # Append feed_credential as late as possible before calling curl to avoid logging feed_credential
@@ -1009,17 +1003,24 @@ downloadcurl() {
     local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
     local failed=false
     if [ -z "$out_path" ]; then
-        curl $curl_options "$remote_path_with_credential" 2>&1 || failed=true
+        curl_output_msg=$(curl $curl_options "$remote_path_with_credential" 2>&1) || failed=true
     else
-        curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>&1 || failed=true
+        curl_output_msg=$(curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>&1) || failed=true
     fi
-    if [ "$failed" = true ]; then
-        local disable_feed_credential=false
-        local response=$(get_http_header_curl $remote_path $disable_feed_credential)
-        http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
-        download_error_msg="Unable to download $remote_path."
-        if  [[ $http_code != 2* ]]; then
+    
+    if [[ "$failed" = true ]]; then
+        # Check for curl timeout codes
+        if [[ $curl_output_msg == *"curl: (7)"* || $curl_output_msg == *"curl: (28)"* ]]; then
+            http_code="408"
             download_error_msg+=" Returned HTTP status code: $http_code."
+        else
+            local disable_feed_credential=false
+            local response=$(get_http_header_curl $remote_path $disable_feed_credential)
+            http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
+            download_error_msg="Unable to download $remote_path."
+            if  [[ ! -z $http_code && $http_code != 2* ]]; then
+                download_error_msg+=" Returned HTTP status code: $http_code."
+            fi
         fi
         say_verbose "$download_error_msg"
         return 1
@@ -1038,9 +1039,16 @@ downloadwget() {
     # Append feed_credential as late as possible before calling wget to avoid logging feed_credential
     local remote_path_with_credential="${remote_path}${feed_credential}"
     local wget_options="--tries 20 "
-    # Store options that aren't supported on all wget implementations separately.
-    local wget_options_extra="--waitretry 2 --connect-timeout 15 "
+
+    local wget_options_extra=''
     local wget_result=''
+
+    # Test for options that aren't supported on all wget implementations.
+    if [[ $(wget -h 2>&1 | grep -E 'waitretry|connect-timeout') ]]; then
+        wget_options_extra="--waitretry 2 --connect-timeout 15 "
+    else
+        say "wget extra options are unavailable for this environment"
+    fi
 
     if [ -z "$out_path" ]; then
         wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential" 2>&1
@@ -1050,23 +1058,16 @@ downloadwget() {
         wget_result=$?
     fi
 
-    if [[ $wget_result == 2 ]]; then
-        # Parsing of the command has failed. Exclude potentially unrecognized options and retry.
-        if [ -z "$out_path" ]; then
-            wget -q $wget_options -O - "$remote_path_with_credential" 2>&1
-            wget_result=$?
-        else
-            wget $wget_options -O "$out_path" "$remote_path_with_credential" 2>&1
-            wget_result=$?
-        fi
-    fi
-
     if [[ $wget_result != 0 ]]; then
         local disable_feed_credential=false
         local response=$(get_http_header_wget $remote_path $disable_feed_credential)
         http_code=$( echo "$response" | awk '/^  HTTP/{print $2}' | tail -1 )
         download_error_msg="Unable to download $remote_path."
-        if  [[ $http_code != 2* ]]; then
+        if  [[ ! -z $http_code && $http_code != 2* ]]; then
+            download_error_msg+=" Returned HTTP status code: $http_code."
+        # wget exit code 4 stands for network-issue
+        elif [[ $wget_result == 4 ]]; then
+            http_code="408"
             download_error_msg+=" Returned HTTP status code: $http_code."
         fi
         say_verbose "$download_error_msg"
@@ -1174,6 +1175,10 @@ generate_download_links() {
     fi
 
     if [[ "${#download_links[@]}" -eq 0 ]]; then
+        if [[ "$normalized_version" != "latest" ]] && ! [ -z "$normalized_quality" ]; then
+            say_err "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script for details."
+            return 1
+        fi
         say_err "Failed to resolve the exact version number."
         return 1
     fi
@@ -1324,7 +1329,7 @@ calculate_vars() {
     say_verbose "Normalized architecture: '$normalized_architecture'."
     normalized_os="$(get_normalized_os "$user_defined_os")"
     say_verbose "Normalized OS: '$normalized_os'."
-    normalized_quality="$(get_normalized_quality "$quality", "$version")"
+    normalized_quality="$(get_normalized_quality "$quality")"
     say_verbose "Normalized quality: '$normalized_quality'."
     normalized_channel="$(get_normalized_channel "$channel")"
     say_verbose "Normalized channel: '$normalized_channel'."

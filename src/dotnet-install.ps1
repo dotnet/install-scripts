@@ -171,6 +171,7 @@ function Say-Invocation($Invocation) {
 
 function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [System.Threading.CancellationToken]$cancellationToken = [System.Threading.CancellationToken]::None, [int]$MaxAttempts = 3, [int]$SecondsBetweenAttempts = 1) {
     $Attempts = 0
+    $StartTime = $(get-date)
 
     while ($true) {
         try {
@@ -182,7 +183,12 @@ function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [System.Threading.Cancella
                 Start-Sleep $SecondsBetweenAttempts
             }
             else {
-                throw
+                $elapsedTime = $(get-date) - $StartTime
+                if (($elapsedTime.Seconds - $DownloadTimeout) -gt 0 -and -not $cancellationToken.IsCancellationRequested)
+                {
+                    throw New-Object System.TimeoutException("Script downloading timeout: default timeout is $DownloadTimeout second(s)");
+                }
+                throw;
             }
         }
     }
@@ -242,10 +248,6 @@ function Get-NormalizedQuality([string]$Quality) {
 
     if ([string]::IsNullOrEmpty($Quality)) {
         return ""
-    }
-
-    if (![string]::IsNullOrEmpty($Version)) {
-        throw "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#:~:text=valid%20for%20Windows.)-,%2DQuality%7C%2D%2Dquality%20%3CQUALITY%3E,-Downloads%20the%20latest for details."
     }
 
     switch ($Quality) {
@@ -1163,6 +1165,11 @@ if ([string]::IsNullOrEmpty($NormalizedQuality) -and 0 -eq $DownloadLinks.count)
 }
 
 if ($DownloadLinks.count -eq 0) {
+
+    if ($Version.ToLowerInvariant() -ne "latest" -and -not [string]::IsNullOrEmpty($Quality)) {
+        throw "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script for details."
+    }
+
     throw "Failed to resolve the exact version number."
 }
 
