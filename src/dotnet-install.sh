@@ -1184,7 +1184,7 @@ generate_download_links() {
 
     if [[ "${#download_links[@]}" -eq 0 ]]; then
         if [[ "$normalized_version" != "latest" ]] && ! [ -z "$normalized_quality" ]; then
-            say_err "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script for details."
+            say_err "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options for details."
             return 1
         fi
         say_err "Failed to resolve the exact version number."
