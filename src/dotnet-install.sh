@@ -1074,8 +1074,7 @@ downloadwget() {
             download_error_msg+=" Returned HTTP status code: $http_code."
         # wget exit code 4 stands for network-issue
         elif [[ $wget_result == 4 ]]; then
-            http_code="408"
-            download_error_msg+=" Returned HTTP status code: $http_code."
+            download_error_msg+=" Failed to reach the server: connection timeout."
         fi
         say_verbose "$download_error_msg"
         return 1
