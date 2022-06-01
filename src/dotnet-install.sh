@@ -373,6 +373,7 @@ get_normalized_os() {
 # quality - $1
 get_normalized_quality() {
     eval $invocation
+
     local quality="$(to_lowercase "$1")"
     if [ ! -z "$quality" ]; then
         case "$quality" in
@@ -911,7 +912,6 @@ get_http_header_curl() {
 
     curl_options="-I -sSL --retry 5 --retry-delay 2 --connect-timeout 15 "
     curl $curl_options "$remote_path_with_credential" 2>&1 || return 1
-    
     return 0
 }
 
@@ -994,7 +994,6 @@ downloadcurl() {
     eval $invocation
     unset http_code
     unset download_error_msg
-    unset curl_output_msg
     local remote_path="$1"
     local out_path="${2:-}"
     # Append feed_credential as late as possible before calling curl to avoid logging feed_credential
@@ -1002,22 +1001,31 @@ downloadcurl() {
     local remote_path_with_credential="${remote_path}${feed_credential}"
     local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
     local failed=false
+    local curl_exit_code=0;
     if [ -z "$out_path" ]; then
-        curl_output_msg=$(curl $curl_options "$remote_path_with_credential" 2>&1) || failed=true
+        curl $curl_options "$remote_path_with_credential" 2>&1
+        curl_exit_code=$?
+        if [ $curl_exit_code -gt 0 ]; then
+            failed=true
+        fi
     else
-        curl_output_msg=$(curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>&1) || failed=true
+        curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>&1
+        curl_exit_code=$?
+        if [ $curl_exit_code -gt 0 ]; then
+            failed=true
+        fi
     fi
     
     if [[ "$failed" = true ]]; then
+        download_error_msg="Unable to download $remote_path."
         # Check for curl timeout codes
-        if [[ $curl_output_msg == *"curl: (7)"* || $curl_output_msg == *"curl: (28)"* ]]; then
+        if [[ $curl_exit_code == 7 || $curl_exit_code == 28 ]]; then
             http_code="408"
             download_error_msg+=" Returned HTTP status code: $http_code."
         else
             local disable_feed_credential=false
             local response=$(get_http_header_curl $remote_path $disable_feed_credential)
             http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
-            download_error_msg="Unable to download $remote_path."
             if  [[ ! -z $http_code && $http_code != 2* ]]; then
                 download_error_msg+=" Returned HTTP status code: $http_code."
             fi
