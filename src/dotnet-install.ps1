@@ -171,7 +171,7 @@ function Say-Invocation($Invocation) {
 
 function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [System.Threading.CancellationToken]$cancellationToken = [System.Threading.CancellationToken]::None, [int]$MaxAttempts = 3, [int]$SecondsBetweenAttempts = 1) {
     $Attempts = 0
-    $StartTime = $(get-date)
+    $local:startTime = $(get-date)
 
     while ($true) {
         try {
