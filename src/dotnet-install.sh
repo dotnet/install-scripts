@@ -1020,8 +1020,7 @@ downloadcurl() {
         download_error_msg="Unable to download $remote_path."
         # Check for curl timeout codes
         if [[ $curl_exit_code == 7 || $curl_exit_code == 28 ]]; then
-            http_code="408"
-            download_error_msg+=" Returned HTTP status code: $http_code."
+            download_error_msg+=" Failed to reach the server: connection timeout."
         else
             local disable_feed_credential=false
             local response=$(get_http_header_curl $remote_path $disable_feed_credential)

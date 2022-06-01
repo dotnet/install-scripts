@@ -185,7 +185,7 @@ function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [System.Threading.Cancella
             else {
                 $elapsedTime = $(get-date) - $StartTime
                 if (($elapsedTime.Seconds - $DownloadTimeout) -gt 0 -and -not $cancellationToken.IsCancellationRequested) {
-                    throw New-Object System.TimeoutException("Script downloading timeout: default timeout is $DownloadTimeout second(s)");
+                    throw New-Object System.TimeoutException("Failed to reach the server: connection timeout: default timeout is $DownloadTimeout second(s)");
                 }
                 throw;
             }
