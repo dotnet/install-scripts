@@ -1000,23 +1000,23 @@ downloadcurl() {
     # Avoid passing URI with credentials to functions: note, most of them echoing parameters of invocation in verbose output.
     local remote_path_with_credential="${remote_path}${feed_credential}"
     local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
-    local failed=false
+    # local failed=false
     local curl_exit_code=0;
     if [ -z "$out_path" ]; then
         curl $curl_options "$remote_path_with_credential" 2>&1
         curl_exit_code=$?
-        if [ $curl_exit_code -gt 0 ]; then
-            failed=true
-        fi
+        # if [ $curl_exit_code -gt 0 ]; then
+        #     failed=true
+        # fi
     else
         curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>&1
         curl_exit_code=$?
-        if [ $curl_exit_code -gt 0 ]; then
-            failed=true
-        fi
+        # if [ $curl_exit_code -gt 0 ]; then
+        #     failed=true
+        # fi
     fi
     
-    if [[ "$failed" = true ]]; then
+    if [ $curl_exit_code -gt 0 ]; then
         download_error_msg="Unable to download $remote_path."
         # Check for curl timeout codes
         if [[ $curl_exit_code == 7 || $curl_exit_code == 28 ]]; then
