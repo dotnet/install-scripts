@@ -1174,10 +1174,6 @@ generate_download_links() {
     fi
 
     if [[ "${#download_links[@]}" -eq 0 ]]; then
-        if [[ "$normalized_version" != "latest" ]] && ! [ -z "$normalized_quality" ]; then
-            say_err "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options for details."
-            return 1
-        fi
         say_err "Failed to resolve the exact version number."
         return 1
     fi
@@ -1194,6 +1190,11 @@ generate_akams_links() {
     local valid_aka_ms_link=true;
 
     normalized_version="$(to_lowercase "$version")"
+    if [[ "$normalized_version" != "latest" ]] && [ -n "$normalized_quality" ]; then
+        say_err "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options for details."
+        return 1
+    fi
+
     if [[ -n "$json_file" || "$normalized_version" != "latest" ]]; then
         # aka.ms links are not needed when exact version is specified via command or json file
         return
