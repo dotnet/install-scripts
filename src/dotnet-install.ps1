@@ -805,6 +805,10 @@ function Extract-Dotnet-Package([string]$ZipPath, [string]$OutPath) {
             }
         }
     }
+    catch
+    {
+        Say-Error "Failed to extract package. Exception: $_"
+    }
     finally {
         if ($null -ne $Zip) {
             $Zip.Dispose()
