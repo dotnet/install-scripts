@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "secrets1": {
-      "type": "secrets",
-      "connectionId": "monitoring-functions-push-connection-string-linux-prod"
-    }
-  }
-}
