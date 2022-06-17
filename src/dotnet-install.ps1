@@ -204,6 +204,15 @@ function Get-Machine-Architecture() {
         return $ENV:PROCESSOR_ARCHITEW6432
     }
 
+    # covers the case when PS x64 is run on ARM machine
+    if( (wmic os get osarchitecture)[2] -like "ARM*" ) {
+        if( [Environment]::Is64BitOperatingSystem )
+        {
+            return "arm64"
+        }  
+        return "arm"
+    }
+
     return $ENV:PROCESSOR_ARCHITECTURE
 }
 
