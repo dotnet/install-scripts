@@ -615,7 +615,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [InlineData(null, Quality.Signed)]
-        [InlineData("6.0.1", null)]
+        [InlineData("7.0.1", null)]
         public void WhenEitherVersionOrQualityWasSpecified(string? version, Quality? quality)
         {
             // Run install script to download and install.
