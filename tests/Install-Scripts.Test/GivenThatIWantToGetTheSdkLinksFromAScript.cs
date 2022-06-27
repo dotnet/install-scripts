@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 
 using FluentAssertions;
-using Install_Scripts.Test.Utils;
 using Microsoft.NET.TestFramework.Assertions;
 using System;
 using System.Collections.Generic;
@@ -297,23 +296,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdOutContaining("Repeatable invocation:");
             commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
             commandResult.Should().NotHaveStdErrContainingIgnoreCase(feedCredentials);
-        }
-
-        [Theory]
-        [InlineData("7.0.1", Quality.Daily)]
-        [InlineData("6.0.1", Quality.Signed)]
-        public void WhenBothVersionAndQualityWereSpecified(string version, Quality quality)
-        {
-            string feedCredentials = Guid.NewGuid().ToString();
-            var args = new[] { "-dryrun", "-version", version, "-quality", quality.ToString(),  "-feedCredential", feedCredentials };
-
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
-
-            commandResult.Should().Fail();
-            commandResult.Should().HaveStdErrContaining("Quality and Version options are not allowed to be specified simultaneously.");
         }
 
         [Fact]

@@ -3,7 +3,7 @@
 namespace Install_Scripts.Test.Utils
 {
     [Flags]
-    public enum Quality
+    enum Quality
     {
         None = 0,
         Daily = 1,
