@@ -1109,7 +1109,7 @@ $feeds = Get-Feeds-To-Use
 $DownloadLinks = @()
 
 if ($Version.ToLowerInvariant() -ne "latest" -and -not [string]::IsNullOrEmpty($Quality)) {
-    throw "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options for details."
+    throw "Quality and Version options are not allowed to be specified simultaneously. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options for details."
 }
 
 # aka.ms links can only be used if the user did not request a specific version via the command line or a global.json file.
