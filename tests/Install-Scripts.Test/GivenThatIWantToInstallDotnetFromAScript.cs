@@ -600,8 +600,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("6.0.1", Quality.Signed)]
         public void WhenBothVersionAndQualityWereSpecified(string version, Quality quality)
         {
-            string feedCredentials = Guid.NewGuid().ToString();
-            var args = new[] { "-dryrun", "-version", version, "-quality", quality.ToString(), "-feedCredential", feedCredentials };
+            var args = GetInstallScriptArgs(null, null, quality.ToString(), _sdkInstallationDirectory, version);
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
@@ -612,6 +611,39 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().HaveStdErrContaining("Quality and Version options are not allowed to be specified simultaneously.");
             commandResult.Should().NotHaveStdOutContaining("Installation finished");
         }
+
+
+        [Theory]
+        [InlineData(null, Quality.Signed)]
+        [InlineData("6.0.1", null)]
+        public void WhenEitherVersionOrQualityWasSpecified(string? version, Quality? quality)
+        {
+            // Run install script to download and install.
+            var args = GetInstallScriptArgs(null, null, quality?.ToString(), _sdkInstallationDirectory, version);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().Pass();
+        }
+
+        [Fact]
+        public void WhenNoArgsWereSpecified()
+        {
+            var commandResult = CreateInstallCommand(Enumerable.Empty<string>())
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().Pass();
+        }
+
 
         private static IEnumerable<string> GetInstallScriptArgs(
             string? channel, 
