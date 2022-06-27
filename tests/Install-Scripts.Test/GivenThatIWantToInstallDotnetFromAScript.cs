@@ -600,7 +600,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("6.0.1", Quality.Signed)]
         public void WhenBothVersionAndQualityWereSpecified(string version, Quality quality)
         {
-            var args = GetInstallScriptArgs(null, null, quality.ToString(), _sdkInstallationDirectory, version);
+            var args = GetInstallScriptArgs(null, null, quality.ToString(), _sdkInstallationDirectory, version: version);
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
@@ -619,7 +619,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         public void WhenEitherVersionOrQualityWasSpecified(string? version, Quality? quality)
         {
             // Run install script to download and install.
-            var args = GetInstallScriptArgs(null, null, quality?.ToString(), _sdkInstallationDirectory, version);
+            var args = GetInstallScriptArgs(null, null, quality?.ToString(), _sdkInstallationDirectory, version: version);
 
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
