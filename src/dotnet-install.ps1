@@ -12,7 +12,7 @@
 .PARAMETER Channel
     Default: LTS
     Download from the Channel specified. Possible values:
-    - Current - most current release
+    - STS - short term support SDK
     - LTS - most current supported release
     - 2-part version in a format A.B - represents a specific release
           examples: 2.0, 1.0
@@ -22,7 +22,7 @@
     Note: The version parameter overrides the channel parameter when any version other than 'latest' is used.
 .PARAMETER Quality
     Download the latest build of specified quality in the channel. The possible values are: daily, signed, validated, preview, GA.
-    Works only in combination with channel. Not applicable for current and LTS channels and will be ignored if those channels are used. 
+    Works only in combination with channel. Not applicable for STS and LTS channels and will be ignored if those channels are used. 
     For SDK use channel in A.B.Cxx format: using quality together with channel in A.B format is not supported.
     Supported since 5.0 release.
     Note: The version parameter overrides the channel parameter when any version other than 'latest' is used, and therefore overrides the quality.     
