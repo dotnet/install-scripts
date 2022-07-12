@@ -205,7 +205,7 @@ function Get-Machine-Architecture() {
     }
 
     # covers the case when PS x64 is run on ARM machine
-    if( ((Get-WmiObject Win32_OperatingSystem).OSArchitecture) -like "ARM*") {
+    if( ((Get-CimInstance -ClassName CIM_OperatingSystem).OSArchitecture) -like "ARM*") {
         if( [Environment]::Is64BitOperatingSystem )
         {
             return "arm64"
