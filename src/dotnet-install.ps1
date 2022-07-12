@@ -205,7 +205,7 @@ function Get-Machine-Architecture() {
     }
 
     # covers the case when PS x64 is run on ARM machine
-    if( (wmic os get osarchitecture)[2] -like "ARM*" ) {
+    if( ((Get-WmiObject Win32_OperatingSystem).OSArchitecture) -like "ARM*") {
         if( [Environment]::Is64BitOperatingSystem )
         {
             return "arm64"
@@ -817,6 +817,7 @@ function Extract-Dotnet-Package([string]$ZipPath, [string]$OutPath) {
     catch
     {
         Say-Error "Failed to extract package. Exception: $_"
+        throw;
     }
     finally {
         if ($null -ne $Zip) {
