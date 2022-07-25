@@ -1190,8 +1190,8 @@ generate_akams_links() {
     local valid_aka_ms_link=true;
 
     normalized_version="$(to_lowercase "$version")"
-    if [[ -z "$normalized_version" && -z "$normalized_quality" ]]; then
-        say_err "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options for details."
+    if [[ "$normalized_version" != "latest" ]] && [ -n "$normalized_quality" ]; then
+        say_err "Quality and Version options are not allowed to be specified simultaneously. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options for details."
         return 1
     fi
 
