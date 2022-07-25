@@ -204,6 +204,15 @@ function Get-Machine-Architecture() {
         return $ENV:PROCESSOR_ARCHITEW6432
     }
 
+    # covers the case when PS x64 is run on ARM machine
+    if( ((Get-CimInstance -ClassName CIM_OperatingSystem).OSArchitecture) -like "ARM*") {
+        if( [Environment]::Is64BitOperatingSystem )
+        {
+            return "arm64"
+        }  
+        return "arm"
+    }
+
     return $ENV:PROCESSOR_ARCHITECTURE
 }
 
@@ -804,6 +813,11 @@ function Extract-Dotnet-Package([string]$ZipPath, [string]$OutPath) {
                 }
             }
         }
+    }
+    catch
+    {
+        Say-Error "Failed to extract package. Exception: $_"
+        throw;
     }
     finally {
         if ($null -ne $Zip) {

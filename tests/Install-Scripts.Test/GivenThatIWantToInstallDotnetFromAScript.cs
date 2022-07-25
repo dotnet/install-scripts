@@ -34,6 +34,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("6.0", "6\\.0\\..*", Quality.None),
                 ("Current", "6\\.0\\..*", Quality.None),
                 ("LTS", "6\\.0\\..*", Quality.None),
+                ("7.0", "7\\.0\\..*", Quality.None),
+                ("7.0", "7\\.0\\..*", Quality.Preview),
             };
 
         /// <summary>
@@ -62,7 +64,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("release/2.1.8xx", "2\\.1\\.8.*", Quality.None),
                 ("release/2.2.4xx", "2\\.2\\.4.*", Quality.None),
                 ("release/3.0.1xx", "3\\.0\\.1.*", Quality.None),
-                ("release/3.1.4xx", "3\\.1\\.4.*", Quality.None),
+               // ("release/3.1.4xx", "3\\.1\\.4.*", Quality.None),
                 ("release/5.0.1xx", "5\\.0\\.1.*", Quality.None),
                 ("release/5.0.2xx", "5\\.0\\.2.*", Quality.None),
                 // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
@@ -634,7 +636,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [Fact]
         public void WhenNoArgsWereSpecified()
         {
-            var commandResult = CreateInstallCommand(Enumerable.Empty<string>())
+            var args = GetInstallScriptArgs(null, null, null, installDir: _sdkInstallationDirectory);
+
+            var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
                             .CaptureStdErr()
                             .Execute();
