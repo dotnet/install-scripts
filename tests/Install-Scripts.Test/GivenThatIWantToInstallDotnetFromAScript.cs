@@ -636,7 +636,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [Fact]
         public void WhenNoArgsWereSpecified()
         {
-            var commandResult = CreateInstallCommand(Enumerable.Empty<string>())
+            var args = GetInstallScriptArgs(null, null, null, installDir: _sdkInstallationDirectory);
+
+            var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
                             .CaptureStdErr()
                             .Execute();
