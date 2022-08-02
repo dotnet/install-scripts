@@ -208,8 +208,15 @@ function Get-Machine-Architecture() {
     # It shouldn't be fatal if neither of those cmdlets exists, however
     # some NanoServer/PS images contain a non-functioning version of Get-CimInstance
     # so don't even try it if we're on one of those images.
-    $IsNanoServer = (Get-ItemPropertyValue 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Server\ServerLevels' -Name NanoServer -ErrorAction Ignore) -eq 1
 
+    $IsNanoServer = $false
+    try {
+        $IsNanoServer = (Get-ItemPropertyValue 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Server\ServerLevels' -Name NanoServer -ErrorAction Ignore) -eq 1
+    }
+    catch {
+        $IsNanoServer = $false
+    }
+   
     if (-not $IsNanoServer) {
         # covers the case when PS x64 is run on ARM machine
         if( ((Get-CimInstance -ClassName CIM_OperatingSystem).OSArchitecture) -like "ARM*") {
