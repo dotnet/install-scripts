@@ -204,13 +204,21 @@ function Get-Machine-Architecture() {
         return $ENV:PROCESSOR_ARCHITEW6432
     }
 
-    # covers the case when PS x64 is run on ARM machine
-    if( ((get-wmiobject Win32_OperatingSystem).OSArchitecture) -like "ARM*") {
-        if( [Environment]::Is64BitOperatingSystem )
-        {
-            return "arm64"
-        }  
-        return "arm"
+    # Not all platforms have Get-CimInstance (preferred) or Get-WmiObject.
+    # It shouldn't be fatal if neither of those cmdlets exists, however
+    # some NanoServer/PS images contain a non-functioning version of Get-CimInstance
+    # so don't even try it if we're on one of those images.
+    $IsNanoServer = (Get-ItemPropertyValue 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Server\ServerLevels' -Name NanoServer -ErrorAction Ignore) -eq 1
+
+    if (-not $IsNanoServer) {
+        # covers the case when PS x64 is run on ARM machine
+        if( ((Get-CimInstance -ClassName CIM_OperatingSystem).OSArchitecture) -like "ARM*") {
+            if( [Environment]::Is64BitOperatingSystem )
+            {
+                return "arm64"
+            }  
+            return "arm"
+        }
     }
 
     return $ENV:PROCESSOR_ARCHITECTURE
