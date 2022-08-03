@@ -214,7 +214,7 @@ function Get-Machine-Architecture() {
         }
     }
     catch {
-       return $ENV:PROCESSOR_ARCHITECTURE
+        # Machine doesn't support Get-CimInstance
     }
 
     return $ENV:PROCESSOR_ARCHITECTURE
