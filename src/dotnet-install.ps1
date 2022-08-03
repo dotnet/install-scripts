@@ -214,7 +214,7 @@ function Get-Machine-Architecture() {
         $IsNanoServer = (Get-ItemPropertyValue 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion\Server\ServerLevels' -Name NanoServer -ErrorAction Ignore) -eq 1
     }
     catch {
-        $IsNanoServer = $false
+        # it's ok to be here if machine is not a nano server
     }
    
     if (-not $IsNanoServer) {
