@@ -11,10 +11,14 @@
     <None Remove="Assets\InstallationScriptTests.json" />
     <None Remove="Assets\InstallationScriptTestsWithMultipleSdkFields.json" />
     <None Remove="Assets\InstallationScriptTestsWithVersionFieldInTheMiddle.json" />
+    <None Remove="Assets\InstallationScriptTestsWithWindowsLineEndings.json" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\InstallationScriptTests.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\InstallationScriptTestsWithWindowsLineEndings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\InstallationScriptTestsWithMultipleSdkFields.json">
