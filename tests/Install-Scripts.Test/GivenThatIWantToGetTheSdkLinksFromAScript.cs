@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("InstallationScriptTests.json")]
         [InlineData("InstallationScriptTestsWithMultipleSdkFields.json")]
         [InlineData("InstallationScriptTestsWithVersionFieldInTheMiddle.json")]
+        [InlineData("InstallationScriptTestsWithWindowsLineEndings.json")]
         public void WhenJsonFileIsPassedToInstallScripts(string filename)
         {
             var installationScriptTestsJsonFile = Path.Combine(Environment.CurrentDirectory,
