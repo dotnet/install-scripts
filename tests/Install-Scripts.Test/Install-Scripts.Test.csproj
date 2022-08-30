@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\.gitattributes" />
     <None Remove="Assets\InstallationScriptTests.json" />
     <None Remove="Assets\InstallationScriptTestsWithMultipleSdkFields.json" />
     <None Remove="Assets\InstallationScriptTestsWithVersionFieldInTheMiddle.json" />
