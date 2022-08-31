@@ -306,6 +306,10 @@ get_machine_architecture() {
             echo "arm64"
             return 0
             ;;
+        s390x)
+            echo "s390x"
+            return 0
+            ;;
         esac
     fi
 
@@ -337,6 +341,10 @@ get_normalized_architecture_from_architecture() {
             ;;
         arm64)
             echo "arm64"
+            return 0
+            ;;
+        s390x)
+            echo "s390x"
             return 0
             ;;
     esac
@@ -415,7 +423,7 @@ get_normalized_os() {
 # quality - $1
 get_normalized_quality() {
     eval $invocation
-    
+
     local quality="$(to_lowercase "$1")"
     if [ ! -z "$quality" ]; then
         case "$quality" in
@@ -557,7 +565,7 @@ parse_globaljson_file_for_version() {
         return 1
     fi
 
-    sdk_section=$(cat $json_file | tr -d "\r" | awk '/"sdk"/,/}/')
+    sdk_section=$(cat $json_file | awk '/"sdk"/,/}/')
     if [ -z "$sdk_section" ]; then
         say_err "Unable to parse the SDK node in \`$json_file\`"
         return 1
@@ -679,11 +687,13 @@ get_specific_product_version() {
 
         if machine_has "curl"
         then
-            specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1)
-            if [ $? = 0 ]; then
+            if ! specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1); then
+                continue
+            else
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
             fi
+
         elif machine_has "wget"
         then
             specific_product_version=$(wget -qO- "${download_link}${feed_credential}" 2>&1)
@@ -963,9 +973,15 @@ get_http_header_wget() {
     local remote_path="$1"
     local disable_feed_credential="$2"
     local wget_options="-q -S --spider --tries 5 "
-    # Store options that aren't supported on all wget implementations separately.
-    local wget_options_extra="--waitretry 2 --connect-timeout 15 "
-    local wget_result=''
+
+    local wget_options_extra=''
+
+    # Test for options that aren't supported on all wget implementations.
+    if [[ $(wget -h 2>&1 | grep -E 'waitretry|connect-timeout') ]]; then
+        wget_options_extra="--waitretry 2 --connect-timeout 15 "
+    else
+        say "wget extra options are unavailable for this environment"
+    fi
 
     remote_path_with_credential="$remote_path"
     if [ "$disable_feed_credential" = false ]; then
@@ -973,15 +989,8 @@ get_http_header_wget() {
     fi
 
     wget $wget_options $wget_options_extra "$remote_path_with_credential" 2>&1
-    wget_result=$?
 
-    if [[ $wget_result == 2 ]]; then
-        # Parsing of the command has failed. Exclude potentially unrecognized options and retry.
-        wget $wget_options "$remote_path_with_credential" 2>&1
-        return $?
-    fi
-
-    return $wget_result
+    return $?
 }
 
 # args:
@@ -1041,19 +1050,27 @@ downloadcurl() {
     # Avoid passing URI with credentials to functions: note, most of them echoing parameters of invocation in verbose output.
     local remote_path_with_credential="${remote_path}${feed_credential}"
     local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
-    local failed=false
+    local curl_exit_code=0;
     if [ -z "$out_path" ]; then
-        curl $curl_options "$remote_path_with_credential" 2>&1 || failed=true
+        curl $curl_options "$remote_path_with_credential" 2>&1
+        curl_exit_code=$?
     else
-        curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>&1 || failed=true
+        curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>&1
+        curl_exit_code=$?
     fi
-    if [ "$failed" = true ]; then
-        local disable_feed_credential=false
-        local response=$(get_http_header_curl $remote_path $disable_feed_credential)
-        http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
+    
+    if [ $curl_exit_code -gt 0 ]; then
         download_error_msg="Unable to download $remote_path."
-        if  [[ $http_code != 2* ]]; then
-            download_error_msg+=" Returned HTTP status code: $http_code."
+        # Check for curl timeout codes
+        if [[ $curl_exit_code == 7 || $curl_exit_code == 28 ]]; then
+            download_error_msg+=" Failed to reach the server: connection timeout."
+        else
+            local disable_feed_credential=false
+            local response=$(get_http_header_curl $remote_path $disable_feed_credential)
+            http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
+            if  [[ ! -z $http_code && $http_code != 2* ]]; then
+                download_error_msg+=" Returned HTTP status code: $http_code."
+            fi
         fi
         say_verbose "$download_error_msg"
         return 1
@@ -1072,9 +1089,16 @@ downloadwget() {
     # Append feed_credential as late as possible before calling wget to avoid logging feed_credential
     local remote_path_with_credential="${remote_path}${feed_credential}"
     local wget_options="--tries 20 "
-    # Store options that aren't supported on all wget implementations separately.
-    local wget_options_extra="--waitretry 2 --connect-timeout 15 "
+
+    local wget_options_extra=''
     local wget_result=''
+
+    # Test for options that aren't supported on all wget implementations.
+    if [[ $(wget -h 2>&1 | grep -E 'waitretry|connect-timeout') ]]; then
+        wget_options_extra="--waitretry 2 --connect-timeout 15 "
+    else
+        say "wget extra options are unavailable for this environment"
+    fi
 
     if [ -z "$out_path" ]; then
         wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential" 2>&1
@@ -1084,24 +1108,16 @@ downloadwget() {
         wget_result=$?
     fi
 
-    if [[ $wget_result == 2 ]]; then
-        # Parsing of the command has failed. Exclude potentially unrecognized options and retry.
-        if [ -z "$out_path" ]; then
-            wget -q $wget_options -O - "$remote_path_with_credential" 2>&1
-            wget_result=$?
-        else
-            wget $wget_options -O "$out_path" "$remote_path_with_credential" 2>&1
-            wget_result=$?
-        fi
-    fi
-
     if [[ $wget_result != 0 ]]; then
         local disable_feed_credential=false
         local response=$(get_http_header_wget $remote_path $disable_feed_credential)
         http_code=$( echo "$response" | awk '/^  HTTP/{print $2}' | tail -1 )
         download_error_msg="Unable to download $remote_path."
-        if  [[ $http_code != 2* ]]; then
+        if  [[ ! -z $http_code && $http_code != 2* ]]; then
             download_error_msg+=" Returned HTTP status code: $http_code."
+        # wget exit code 4 stands for network-issue
+        elif [[ $wget_result == 4 ]]; then
+            download_error_msg+=" Failed to reach the server: connection timeout."
         fi
         say_verbose "$download_error_msg"
         return 1
@@ -1208,10 +1224,6 @@ generate_download_links() {
     fi
 
     if [[ "${#download_links[@]}" -eq 0 ]]; then
-        if [[ "$normalized_version" != "latest" ]] && ! [ -z "$normalized_quality" ]; then
-            say_err "Either Quality or Version option has to be specified. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script for details."
-            return 1
-        fi
         say_err "Failed to resolve the exact version number."
         return 1
     fi
@@ -1228,6 +1240,11 @@ generate_akams_links() {
     local valid_aka_ms_link=true;
 
     normalized_version="$(to_lowercase "$version")"
+    if [[ "$normalized_version" != "latest" ]] && [ -n "$normalized_quality" ]; then
+        say_err "Quality and Version options are not allowed to be specified simultaneously. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options for details."
+        return 1
+    fi
+
     if [[ -n "$json_file" || "$normalized_version" != "latest" ]]; then
         # aka.ms links are not needed when exact version is specified via command or json file
         return
@@ -1622,7 +1639,7 @@ do
             echo "      -InstallDir"
             echo "  --architecture <ARCHITECTURE>      Architecture of dotnet binaries to be installed, Defaults to \`$architecture\`."
             echo "      --arch,-Architecture,-Arch"
-            echo "          Possible values: x64, arm, and arm64"
+            echo "          Possible values: x64, arm, arm64 and s390x"
             echo "  --os <system>                    Specifies operating system to be used when selecting the installer."
             echo "          Overrides the OS determination approach used by the script. Supported values: osx, linux, linux-musl, freebsd, rhel.6."
             echo "          In case any other value is provided, the platform will be determined by the script based on machine configuration."
