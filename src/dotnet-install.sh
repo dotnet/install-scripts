@@ -360,12 +360,12 @@ get_normalized_architecture_from_architecture() {
 get_normalized_architecture_for_specific_sdk_version() {
     eval $invocation
 
-    local is_version_supports_arm64="$(is_arm64_supported "$1")"
-    local is_channel_supports_arm64="$(is_arm64_supported "$2")"
+    local is_version_support_arm64="$(is_arm64_supported "$1")"
+    local is_channel_support_arm64="$(is_arm64_supported "$2")"
     local architecture="$3";
     local osname="$(get_current_os_name)"
 
-    if [ "$osname" == "osx" ] && [ "$architecture" == "arm64" ] && { [ "$is_version_supports_arm64" = false ] || [ "$is_channel_supports_arm64" = false ]; }; then
+    if [ "$osname" == "osx" ] && [ "$architecture" == "arm64" ] && { [ "$is_version_support_arm64" = false ] || [ "$is_channel_support_arm64" = false ]; }; then
         #check if rosetta is installed
         if [ "$(/usr/bin/pgrep oahd >/dev/null 2>&1;echo $?)" -eq 0 ]; then 
             say_verbose "Edit architecture for osx because SDK version is pre-6.0"
