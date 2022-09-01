@@ -204,13 +204,17 @@ function Get-Machine-Architecture() {
         return $ENV:PROCESSOR_ARCHITEW6432
     }
 
-    # covers the case when PS x64 is run on ARM machine
-    if( ((get-wmiobject Win32_OperatingSystem).OSArchitecture) -like "ARM*") {
-        if( [Environment]::Is64BitOperatingSystem )
-        {
-            return "arm64"
-        }  
-        return "arm"
+    try {        
+        if( ((Get-CimInstance -ClassName CIM_OperatingSystem).OSArchitecture) -like "ARM*") {
+            if( [Environment]::Is64BitOperatingSystem )
+            {
+                return "arm64"
+            }  
+            return "arm"
+        }
+    }
+    catch {
+        # Machine doesn't support Get-CimInstance
     }
 
     return $ENV:PROCESSOR_ARCHITECTURE
