@@ -523,7 +523,7 @@ parse_globaljson_file_for_version() {
         return 1
     fi
 
-    sdk_section=$(cat $json_file | awk '/"sdk"/,/}/')
+    sdk_section=$(cat $json_file | tr -d "\r" | awk '/"sdk"/,/}/')
     if [ -z "$sdk_section" ]; then
         say_err "Unable to parse the SDK node in \`$json_file\`"
         return 1
