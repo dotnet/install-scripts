@@ -372,7 +372,7 @@ get_normalized_architecture_for_specific_sdk_version() {
             echo "x64"
             return 0;
         else
-            say_err "Architecture \`$architecture\` is not supported for \`$version\` version. Please install Rosetta for resolving this issue."
+            say_err "Architecture \`$architecture\` is not supported for .NET SDK version \`$version\`. Please install Rosetta to allow emulation of the \`$architecture\` .NET SDK on this platform"
             return 1
         fi
     fi
