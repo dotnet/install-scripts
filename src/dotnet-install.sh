@@ -368,7 +368,7 @@ get_normalized_architecture_for_specific_sdk_version() {
     if [ "$osname" == "osx" ] && [ "$architecture" == "arm64" ] && { [ "$is_version_support_arm64" = false ] || [ "$is_channel_support_arm64" = false ]; }; then
         #check if rosetta is installed
         if [ "$(/usr/bin/pgrep oahd >/dev/null 2>&1;echo $?)" -eq 0 ]; then 
-            say_verbose "Edit architecture for osx because SDK version is pre-6.0"
+            say_verbose "Changing user architecture from '$architecture' to 'x64' because .NET SDKs prior to version 6.0 do not support arm64. 
             echo "x64"
             return 0;
         else
