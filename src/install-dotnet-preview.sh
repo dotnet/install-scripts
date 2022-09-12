@@ -2,7 +2,7 @@
 
 # System must first have curl installed.
 # The following command will download the installation script and run it.
-# curl -L https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-preview.$PREVIEW_NUMBER/install-dotnet-preview.sh -o install-dotnet-preview.sh && bash install-dotnet-preview.sh
+# curl -L https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER/install-dotnet-preview.sh -o install-dotnet-preview.sh && bash install-dotnet-preview.sh
 # The script will
 #   - install any additional dependences needed for the script to continue
 #   - download a tar.gz containing the .NET preview installer packages to the current directory
@@ -25,15 +25,28 @@ fi
 
 PACKAGE_TYPE=""
 DEPS_PACKAGE=""
+PRERELEASE_TYPE=""
 DOWNLOAD_DIR=$PWD
 DOTNET_PACKAGE_DIR="dotnet_packages"
 SUPPORTED_DISTRO=1
 
 # runtime-version
-DEPS_BUILD="22375.6"
-PREVIEW_NUMBER="7"
+DEPS_BUILD="22426.10"
+PREVIEW_NUMBER="1"
+# is the release a preview or rc?
+isRC=1
 
 declare -a ADDITIONAL_DEPS
+
+function set_prerelease_type()
+{
+    if [ ${isRC} == 1 ]
+    then
+        PRERELEASE_TYPE="rc"
+    else
+        PRERELEASE_TYPE="preview"
+    fi
+}
 
 function distro_check()
 {
@@ -64,37 +77,37 @@ function distro_check()
           ;;
         *"Fedora 32"* | *"Fedora 33"*)
           PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-preview.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-preview.$PREVIEW_NUMBER.$DEPS_BUILD-fedora.27-x64.rpm"
+          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER.$DEPS_BUILD-fedora.27-x64.rpm"
           ADDITIONAL_DEPS=("tar" "gzip" "compat-openssl10" "libicu")
           ;;
         *"Fedora 34"*)
           PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-preview.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-preview.$PREVIEW_NUMBER.$DEPS_BUILD-fedora.34-x64.rpm"
+          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER.$DEPS_BUILD-fedora.34-x64.rpm"
           ADDITIONAL_DEPS=("tar" "gzip" "libicu")
           ;;
          *"Fedora Linux 35"* | "Fedora Linux 36"*)
           PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-preview.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-preview.$PREVIEW_NUMBER.$DEPS_BUILD-fedora.34-x64.rpm"
+          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER.$DEPS_BUILD-fedora.34-x64.rpm"
           ADDITIONAL_DEPS=("tar" "gzip" "libicu")
           ;;
         *"openSUSE"*)
           PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-preview.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-preview.$PREVIEW_NUMBER.$DEPS_BUILD-opensuse.42-x64.rpm"
+          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER.$DEPS_BUILD-opensuse.42-x64.rpm"
           ADDITIONAL_DEPS=("tar" "gzip" "libopenssl1_0_0" "libicu")
           ;;
         *"sles"**)
           PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-preview.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-preview.$PREVIEW_NUMBER.$DEPS_BUILD-sles.12-x64.rpm"
+          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER.$DEPS_BUILD-sles.12-x64.rpm"
           ADDITIONAL_DEPS=("tar" "gzip" "libopenssl1_0_0" "libicu")
           ;;
         *"CentOS"*)
           PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-preview.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-preview.$PREVIEW_NUMBER.$DEPS_BUILD-centos.7-x64.rpm"
+          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER.$DEPS_BUILD-centos.7-x64.rpm"
           ADDITIONAL_DEPS=("tar" "gzip" "libicu")
           ;;
         *"CBL-Mariner"*)
           PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-preview.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-preview.$PREVIEW_NUMBER.$DEPS_BUILD-cm.1-x64.rpm"
+          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER.$DEPS_BUILD-cm.1-x64.rpm"
           ADDITIONAL_DEPS=("icu")
           ;;
         *) SUPPORTED_DISTRO=0 ;;
@@ -106,20 +119,20 @@ function download_preview()
     case $PACKAGE_TYPE in
         "rpm")
             echo "*** Setting package type to rpm."
-            DOTNET_SRC="dotnet-7.0.0-preview.$PREVIEW_NUMBER-rpm.tar.gz"
+            DOTNET_SRC="dotnet-7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER-rpm.tar.gz"
             ;;
         "deb")
             echo "*** Setting package type to deb."
-            DOTNET_SRC="dotnet-7.0.0-preview.$PREVIEW_NUMBER-deb.tar.gz"
+            DOTNET_SRC="dotnet-7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER-deb.tar.gz"
             ;;
         *)
     esac
 
     echo "*** Download source: ${DOTNET_SRC}"
     echo
-    echo "*** Downloading https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-preview.$PREVIEW_NUMBER/$DOTNET_SRC to $DOWNLOAD_DIR ..."
+    echo "*** Downloading https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER/$DOTNET_SRC to $DOWNLOAD_DIR ..."
 
-    curl "https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-preview.$PREVIEW_NUMBER/"$DOTNET_SRC -o $DOWNLOAD_DIR/$DOTNET_SRC
+    curl "https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/7.0.0-$PRERELEASE_TYPE.$PREVIEW_NUMBER/"$DOTNET_SRC -o $DOWNLOAD_DIR/$DOTNET_SRC
     
     echo
     echo "*** Unpacking ${DOTNET_SRC} ..."
@@ -205,6 +218,7 @@ distro_check
 echo ${SUPPORTED_DISTRO}
 if [ ${SUPPORTED_DISTRO} == 1 ]
 then
+    set_prerelease_type
     echo
     echo "*** Checking required system dependencies for detected OS: ${DISTRO_NAME} ..."
     check_dependencies $DISTRO_NAME
@@ -216,3 +230,4 @@ then
 else
     echo "${DISTRO_NAME} is not supported by the .NET 7 Preview installer."
 fi
+
