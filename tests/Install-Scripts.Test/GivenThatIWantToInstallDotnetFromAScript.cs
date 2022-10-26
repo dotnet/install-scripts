@@ -34,7 +34,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("6.0", "6\\.0\\..*", Quality.None),
                 ("Current", "6\\.0\\..*", Quality.None),
                 ("LTS", "6\\.0\\..*", Quality.None),
-                ("Current", "7\\.0\\..*", Quality.None),
                 ("7.0", "7\\.0\\..*", Quality.None),
                 ("7.0", "7\\.0\\..*", Quality.Preview),
             };
