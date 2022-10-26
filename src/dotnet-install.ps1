@@ -204,6 +204,19 @@ function Get-Machine-Architecture() {
         return $ENV:PROCESSOR_ARCHITEW6432
     }
 
+    try {        
+        if( ((Get-CimInstance -ClassName CIM_OperatingSystem).OSArchitecture) -like "ARM*") {
+            if( [Environment]::Is64BitOperatingSystem )
+            {
+                return "arm64"
+            }  
+            return "arm"
+        }
+    }
+    catch {
+        # Machine doesn't support Get-CimInstance
+    }
+
     return $ENV:PROCESSOR_ARCHITECTURE
 }
 
@@ -804,6 +817,11 @@ function Extract-Dotnet-Package([string]$ZipPath, [string]$OutPath) {
                 }
             }
         }
+    }
+    catch
+    {
+        Say-Error "Failed to extract package. Exception: $_"
+        throw;
     }
     finally {
         if ($null -ne $Zip) {
