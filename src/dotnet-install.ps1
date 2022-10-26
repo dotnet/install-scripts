@@ -283,7 +283,7 @@ function Get-NormalizedChannel([string]$Channel) {
 
     switch ($Channel) {
         { $_ -eq "lts" } { return "LTS" }
-        { $_ -eq "current" } { return "current" }
+        { $_ -eq "sts" } { return "STS" }
         default { return $Channel.ToLowerInvariant() }
     }
 }
@@ -925,10 +925,10 @@ function PrintDryRunOutput($Invocation, $DownloadLinks)
 function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Internal, [string]$Product, [string]$Architecture) {
     Say-Invocation $MyInvocation 
 
-    #quality is not supported for LTS or current channel
-    if (![string]::IsNullOrEmpty($Quality) -and (@("LTS", "current") -contains $Channel)) {
+    #quality is not supported for LTS or STS channel
+    if (![string]::IsNullOrEmpty($Quality) -and (@("LTS", "STS") -contains $Channel)) {
         $Quality = ""
-        Say-Warning "Specifying quality for current or LTS channel is not supported, the quality will be ignored."
+        Say-Warning "Specifying quality for STS or LTS channel is not supported, the quality will be ignored."
     }
     Say-Verbose "Retrieving primary payload URL from aka.ms link for channel: '$Channel', quality: '$Quality' product: '$Product', os: 'win', architecture: '$Architecture'." 
    

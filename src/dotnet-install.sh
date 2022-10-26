@@ -1127,10 +1127,10 @@ downloadwget() {
 get_download_link_from_aka_ms() {
     eval $invocation
 
-    #quality is not supported for LTS or current channel
-    if [[ ! -z "$normalized_quality"  && ("$normalized_channel" == "LTS" || "$normalized_channel" == "current") ]]; then
+    #quality is not supported for LTS or STS channel
+    if [[ ! -z "$normalized_quality"  && ("$normalized_channel" == "LTS" || "$normalized_channel" == "STS") ]]; then
         normalized_quality=""
-        say_warning "Specifying quality for current or LTS channel is not supported, the quality will be ignored."
+        say_warning "Specifying quality for STS or LTS channel is not supported, the quality will be ignored."
     fi
 
     say_verbose "Retrieving primary payload URL from aka.ms for channel: '$normalized_channel', quality: '$normalized_quality', product: '$normalized_product', os: '$normalized_os', architecture: '$normalized_architecture'." 
