@@ -14,3 +14,6 @@ https://github.com/dotnet/core/blob/main/release-notes/7.0/install-linux.md#inst
 
 The latest stable versions of install dotnet preview is available here:
 -  https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/install-dotnet-preview.sh
+
+
+//update
