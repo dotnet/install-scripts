@@ -32,9 +32,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("5.0", "5\\.0\\..*", Quality.None),
                 ("6.0", "6\\.0\\..*", Quality.Daily),
                 ("6.0", "6\\.0\\..*", Quality.None),
-                ("STS", "6\\.0\\..*", Quality.None),
+                ("Current", "6\\.0\\..*", Quality.None),
                 ("LTS", "6\\.0\\..*", Quality.None),
-                ("STS", "7\\.0\\..*", Quality.None),
+                ("Current", "7\\.0\\..*", Quality.None),
                 ("7.0", "7\\.0\\..*", Quality.None),
                 ("7.0", "7\\.0\\..*", Quality.Preview),
             };
@@ -648,21 +648,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().Pass();
         }
-
-        [Theory]
-        [InlineData("Current")]
-        public void WhenDeprecatedOptionValueWasSpecified(string channel)
-        {
-            var args = GetInstallScriptArgs(channel, null, null, _sdkInstallationDirectory);
-
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
-
-            commandResult.Should().HaveStdOutContaining("Value \"Current\" was deprecated for -Channel option, please use STS instead.");
-        }
-
 
         private static IEnumerable<string> GetInstallScriptArgs(
             string? channel, 
