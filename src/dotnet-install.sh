@@ -452,7 +452,7 @@ get_normalized_channel() {
     local channel="$(to_lowercase "$1")"
 
     if [[ $channel == current ]]; then
-        say_err 'Value "Current" was depricated for -Channel option. Please use "STS" instead.'
+        say_warning 'Value "Current" was deprecated for -Channel option. Please use "STS" instead.'
         return 1
     fi
 
@@ -1626,7 +1626,7 @@ do
             echo "          - 3-part version in a format A.B.Cxx - represents a specific SDK release"
             echo "              examples: 5.0.1xx, 5.0.2xx."
             echo "              Supported since 5.0 release"
-            echo "          Warning: Value \"Current\" was depricated for -Channel option, please use STS instead."
+            echo "          Warning: Value \"Current\" was deprecated for -Channel option, please use STS instead."
             echo "          Note: The version parameter overrides the channel parameter when any version other than 'latest' is used."
             echo "  -v,--version <VERSION>         Use specific VERSION, Defaults to \`$version\`."
             echo "      -Version"

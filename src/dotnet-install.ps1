@@ -19,7 +19,7 @@
     - 3-part version in a format A.B.Cxx - represents a specific SDK release
           examples: 5.0.1xx, 5.0.2xx
           Supported since 5.0 release
-    Warning: Value "Current" was depricated for Channel parameter, please use "STS" instead. 
+    Warning: Value "Current" was deprecated for Channel parameter, please use "STS" instead. 
     Note: The version parameter overrides the channel parameter when any version other than 'latest' is used.
 .PARAMETER Quality
     Download the latest build of specified quality in the channel. The possible values are: daily, signed, validated, preview, GA.
@@ -279,7 +279,7 @@ function Get-NormalizedChannel([string]$Channel) {
     }
 
     if ($Channel.Contains("Current")) {
-        Say-Error 'Value "Current" was depricated for -Channel option. Please use "STS" instead.'
+        Say-Warning 'Value "Current" was deprecated for -Channel option. Please use "STS" instead.'
     }
 
     if ($Channel.StartsWith('release/')) {

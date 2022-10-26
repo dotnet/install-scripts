@@ -651,7 +651,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [InlineData("Current")]
-        public void WhenDepricatedOptionValueWasSpecified(string channel)
+        public void WhenDeprecatedOptionValueWasSpecified(string channel)
         {
             var args = GetInstallScriptArgs(channel, null, null, _sdkInstallationDirectory);
 
@@ -660,9 +660,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
-            commandResult.Should().Fail();
-            commandResult.Should().HaveStdErrContaining("Value \"Current\" was depricated for -Channel option, please use STS instead.");
-            commandResult.Should().NotHaveStdOutContaining("Installation finished");
+            commandResult.Should().HaveStdOutContaining("Value \"Current\" was deprecated for -Channel option, please use STS instead.");
         }
 
 
