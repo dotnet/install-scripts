@@ -538,6 +538,12 @@ get_version_from_latestversion_file() {
     local normalized_architecture="$3"
 
     local version_file_url=null
+    local normalized_channel="$(to_lowercase "$channel")"
+    # for saving backward compatibility when sdk =< 3.1, after migating from current to sts channel
+    if [[ "normalized_channel" == "sts" ]]; then
+        $channel="Current"
+    fi
+
     if [[ "$runtime" == "dotnet" ]]; then
         version_file_url="$azure_feed/Runtime/$channel/latest.version"
     elif [[ "$runtime" == "aspnetcore" ]]; then
