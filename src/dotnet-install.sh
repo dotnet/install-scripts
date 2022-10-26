@@ -1609,7 +1609,7 @@ do
             echo "  -c,--channel <CHANNEL>         Download from the channel specified, Defaults to \`$channel\`."
             echo "      -Channel"
             echo "          Possible values:"
-            echo "          - STS - short term support SDK"
+            echo "          - STS - standard term support SDK"
             echo "          - LTS - most current supported release"
             echo "          - 2-part version in a format A.B - represents a specific release"
             echo "              examples: 2.0; 1.0"
