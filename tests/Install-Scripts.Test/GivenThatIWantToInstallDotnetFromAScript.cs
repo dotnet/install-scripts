@@ -616,7 +616,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdOutContaining("Installation finished");
         }
 
-
         [Theory]
         [InlineData(null, Quality.Signed)]
         [InlineData("6.0.301", null)]
@@ -648,6 +647,22 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().Pass();
+        }
+
+        [Theory]
+        [InlineData("Current")]
+        public void WhenDepricatedOptionValueWasSpecified(string channel)
+        {
+            var args = GetInstallScriptArgs(channel, null, null, _sdkInstallationDirectory);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().Fail();
+            commandResult.Should().HaveStdErrContaining("Value \"Current\" was depricated for -Channel option, please use STS instead.");
+            commandResult.Should().NotHaveStdOutContaining("Installation finished");
         }
 
 

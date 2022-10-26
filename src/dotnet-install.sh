@@ -451,6 +451,10 @@ get_normalized_channel() {
 
     local channel="$(to_lowercase "$1")"
 
+    if [[ $channel == current ]]; then
+        say_error 'Value "Current" was depricated for -Channel option. Please use "STS" instead.';
+    fi
+
     if [[ $channel == release/* ]]; then
         say_warning 'Using branch name with -Channel option is no longer supported with newer releases. Use -Quality option with a channel in X.Y format instead.';
     fi
@@ -1621,6 +1625,7 @@ do
             echo "          - 3-part version in a format A.B.Cxx - represents a specific SDK release"
             echo "              examples: 5.0.1xx, 5.0.2xx."
             echo "              Supported since 5.0 release"
+            echo "          Warning: Value \"Current\" was depricated for -Channel option, please use STS instead."
             echo "          Note: The version parameter overrides the channel parameter when any version other than 'latest' is used."
             echo "  -v,--version <VERSION>         Use specific VERSION, Defaults to \`$version\`."
             echo "      -Version"
