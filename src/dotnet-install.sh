@@ -453,7 +453,6 @@ get_normalized_channel() {
 
     if [[ $channel == current ]]; then
         say_warning 'Value "Current" was deprecated for -Channel option. Please use "STS" instead.'
-        return 1
     fi
 
     if [[ $channel == release/* ]]; then
