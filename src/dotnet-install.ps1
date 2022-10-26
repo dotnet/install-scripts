@@ -283,7 +283,7 @@ function Get-NormalizedChannel([string]$Channel) {
 
     switch ($Channel) {
         { $_ -eq "lts" } { return "LTS" }
-        { $_ -eq "sts" } { return "STS" }
+        { $_ -eq "sts" } { return "current" }
         default { return $Channel.ToLowerInvariant() }
     }
 }
@@ -455,11 +455,6 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
 
 function Get-Version-From-LatestVersion-File([string]$AzureFeed, [string]$Channel) {
     Say-Invocation $MyInvocation
-
-    # for saving backward compatibility when sdk =< 3.1, after migating from current to sts channel
-    if ($Channel.ToLowerInvariant() -eq "sts") {
-        $Channel = "Current"
-    }
 
     $VersionFileUrl = $null
     if ($Runtime -eq "dotnet") {
@@ -931,7 +926,7 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
     Say-Invocation $MyInvocation 
 
     #quality is not supported for LTS or STS channel
-    if (![string]::IsNullOrEmpty($Quality) -and (@("LTS", "STS") -contains $Channel)) {
+    if (![string]::IsNullOrEmpty($Quality) -and (@("LTS", "current") -contains $Channel)) {
         $Quality = ""
         Say-Warning "Specifying quality for STS or LTS channel is not supported, the quality will be ignored."
     }

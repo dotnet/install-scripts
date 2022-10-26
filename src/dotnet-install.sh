@@ -461,6 +461,10 @@ get_normalized_channel() {
                 echo "LTS"
                 return 0
                 ;;
+            sts)
+                echo "current"
+                return 0
+                ;;
             *)
                 echo "$channel"
                 return 0
@@ -538,12 +542,6 @@ get_version_from_latestversion_file() {
     local normalized_architecture="$3"
 
     local version_file_url=null
-    local normalized_channel="$(to_lowercase "$channel")"
-    # for saving backward compatibility when sdk =< 3.1, after migating from current to sts channel
-    if [[ "normalized_channel" == "sts" ]]; then
-        $channel="Current"
-    fi
-
     if [[ "$runtime" == "dotnet" ]]; then
         version_file_url="$azure_feed/Runtime/$channel/latest.version"
     elif [[ "$runtime" == "aspnetcore" ]]; then
@@ -1134,7 +1132,8 @@ get_download_link_from_aka_ms() {
     eval $invocation
 
     #quality is not supported for LTS or STS channel
-    if [[ ! -z "$normalized_quality"  && ("$normalized_channel" == "LTS" || "$normalized_channel" == "STS") ]]; then
+    #STS maps to current
+    if [[ ! -z "$normalized_quality"  && ("$normalized_channel" == "LTS" || "$normalized_channel" == "current") ]]; then
         normalized_quality=""
         say_warning "Specifying quality for STS or LTS channel is not supported, the quality will be ignored."
     fi
