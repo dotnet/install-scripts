@@ -452,7 +452,7 @@ get_normalized_channel() {
     local channel="$(to_lowercase "$1")"
 
     if [[ $channel == current ]]; then
-        say_error 'Value "Current" was depricated for -Channel option. Please use "STS" instead.';
+        say_err 'Value "Current" was depricated for -Channel option. Please use "STS" instead.';
     fi
 
     if [[ $channel == release/* ]]; then
