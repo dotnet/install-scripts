@@ -615,7 +615,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdOutContaining("Installation finished");
         }
 
-
         [Theory]
         [InlineData(null, Quality.Signed)]
         [InlineData("6.0.301", null)]
@@ -648,7 +647,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().Pass();
         }
-
 
         private static IEnumerable<string> GetInstallScriptArgs(
             string? channel, 

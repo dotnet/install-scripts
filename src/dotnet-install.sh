@@ -451,6 +451,10 @@ get_normalized_channel() {
 
     local channel="$(to_lowercase "$1")"
 
+    if [[ $channel == current ]]; then
+        say_warning 'Value "Current" was deprecated for -Channel option. Please use "STS" instead.'
+    fi
+
     if [[ $channel == release/* ]]; then
         say_warning 'Using branch name with -Channel option is no longer supported with newer releases. Use -Quality option with a channel in X.Y format instead.';
     fi
@@ -459,6 +463,10 @@ get_normalized_channel() {
         case "$channel" in
             lts)
                 echo "LTS"
+                return 0
+                ;;
+            sts)
+                echo "current"
                 return 0
                 ;;
             *)
@@ -1127,10 +1135,11 @@ downloadwget() {
 get_download_link_from_aka_ms() {
     eval $invocation
 
-    #quality is not supported for LTS or current channel
+    #quality is not supported for LTS or STS channel
+    #STS maps to current
     if [[ ! -z "$normalized_quality"  && ("$normalized_channel" == "LTS" || "$normalized_channel" == "current") ]]; then
         normalized_quality=""
-        say_warning "Specifying quality for current or LTS channel is not supported, the quality will be ignored."
+        say_warning "Specifying quality for STS or LTS channel is not supported, the quality will be ignored."
     fi
 
     say_verbose "Retrieving primary payload URL from aka.ms for channel: '$normalized_channel', quality: '$normalized_quality', product: '$normalized_product', os: '$normalized_os', architecture: '$normalized_architecture'." 
@@ -1609,13 +1618,14 @@ do
             echo "  -c,--channel <CHANNEL>         Download from the channel specified, Defaults to \`$channel\`."
             echo "      -Channel"
             echo "          Possible values:"
-            echo "          - Current - most current release"
+            echo "          - STS - standard term support SDK"
             echo "          - LTS - most current supported release"
             echo "          - 2-part version in a format A.B - represents a specific release"
             echo "              examples: 2.0; 1.0"
             echo "          - 3-part version in a format A.B.Cxx - represents a specific SDK release"
             echo "              examples: 5.0.1xx, 5.0.2xx."
             echo "              Supported since 5.0 release"
+            echo "          Warning: Value \"Current\" was deprecated for -Channel option, please use STS instead."
             echo "          Note: The version parameter overrides the channel parameter when any version other than 'latest' is used."
             echo "  -v,--version <VERSION>         Use specific VERSION, Defaults to \`$version\`."
             echo "      -Version"
@@ -1626,7 +1636,7 @@ do
             echo "  -q,--quality <quality>         Download the latest build of specified quality in the channel."
             echo "      -Quality"
             echo "          The possible values are: daily, signed, validated, preview, GA."
-            echo "          Works only in combination with channel. Not applicable for current and LTS channels and will be ignored if those channels are used." 
+            echo "          Works only in combination with channel. Not applicable for STS and LTS channels and will be ignored if those channels are used." 
             echo "          For SDK use channel in A.B.Cxx format. Using quality for SDK together with channel in A.B format is not supported." 
             echo "          Supported since 5.0 release." 
             echo "          Note: The version parameter overrides the channel parameter when any version other than 'latest' is used, and therefore overrides the quality."
