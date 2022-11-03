@@ -3,11 +3,17 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.DotNet.Cli.Utils;
 using System.Collections.Generic;
+using VerifyXunit;
+using VerifyTests;
+using System.Runtime.CompilerServices;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
-    public abstract class TestBase
+    public abstract class TestBase : VerifyBase
     {
+        protected TestBase(VerifySettings settings = null, [CallerFilePath] string sourceFile = "")
+            : base(settings, Path.Combine(Path.GetDirectoryName(sourceFile) ?? "", "Assets", "foo.cs")) { }
+
         protected static Command CreateInstallCommand(IEnumerable<string> args)
         {
             string path;

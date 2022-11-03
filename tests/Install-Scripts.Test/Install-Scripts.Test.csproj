@@ -8,13 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Assets\.gitattributes" />
     <None Remove="Assets\InstallationScriptTests.json" />
     <None Remove="Assets\InstallationScriptTestsWithMultipleSdkFields.json" />
     <None Remove="Assets\InstallationScriptTestsWithVersionFieldInTheMiddle.json" />
+    <None Remove="Assets\InstallationScriptTestsWithWindowsLineEndings.json" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\InstallationScriptTests.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\InstallationScriptTestsWithWindowsLineEndings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Assets\InstallationScriptTestsWithMultipleSdkFields.json">
@@ -30,6 +35,7 @@
     <PackageReference Include="Microsoft.DotNet.Cli.Utils" Version="2.2.402" />
     <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.1.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.6.1" />
+    <PackageReference Include="Verify.Xunit" Version="14.2.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.2">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

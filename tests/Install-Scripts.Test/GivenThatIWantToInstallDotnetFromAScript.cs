@@ -12,11 +12,13 @@ using FluentAssertions;
 using System.Text.RegularExpressions;
 using System.Linq;
 using Install_Scripts.Test.Utils;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
     public class GivenThatIWantToInstallDotnetFromAScript : IDisposable
     {
+
         /// <summary>
         /// All the channels that will be tested.
         /// </summary>
@@ -30,8 +32,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("5.0", "5\\.0\\..*", Quality.None),
                 ("6.0", "6\\.0\\..*", Quality.Daily),
                 ("6.0", "6\\.0\\..*", Quality.None),
-                ("Current", "5\\.0\\..*", Quality.None),
-                ("LTS", "3\\.1\\..*", Quality.None),
+                ("Current", "6\\.0\\..*", Quality.None),
+                ("LTS", "6\\.0\\..*", Quality.None),
+                ("7.0", "7\\.0\\..*", Quality.None),
+                ("7.0", "7\\.0\\..*", Quality.Preview),
             };
 
         /// <summary>
@@ -60,13 +64,15 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("release/2.1.8xx", "2\\.1\\.8.*", Quality.None),
                 ("release/2.2.4xx", "2\\.2\\.4.*", Quality.None),
                 ("release/3.0.1xx", "3\\.0\\.1.*", Quality.None),
-                ("release/3.1.4xx", "3\\.1\\.4.*", Quality.None),
+                // version is outdated. For more details check the link: https://github.com/dotnet/arcade/issues/10026
+                // ("release/3.1.4xx", "3\\.1\\.4.*", Quality.None),
                 ("release/5.0.1xx", "5\\.0\\.1.*", Quality.None),
                 ("release/5.0.2xx", "5\\.0\\.2.*", Quality.None),
                 // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
                 ("6.0.1xx-preview2", "6\\.0\\.1.*", Quality.Daily | Quality.Signed),
                 ("6.0.1xx-preview3", "6\\.0\\.1.*", Quality.Daily),
                 ("6.0.1xx-preview4", "6\\.0\\.1.*", Quality.Daily),
+                ("7.0.1xx", "7\\.0\\..*", Quality.Daily),
             };
 
         public static IEnumerable<object?[]> InstallSdkFromChannelTestCases
@@ -142,12 +148,16 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         /// </summary>
         private readonly string _sdkInstallationDirectory;
 
+        private readonly ITestOutputHelper outputHelper;
+
         /// <summary>
         /// Instantiates a GivenThatIWantToInstallTheSdkFromAScript instance.
         /// </summary>
         /// <remarks>This constructor is called once for each of the tests to run.</remarks>
-        public GivenThatIWantToInstallDotnetFromAScript()
+        public GivenThatIWantToInstallDotnetFromAScript(ITestOutputHelper testOutputHelper)
         {
+            outputHelper = testOutputHelper;
+
             _sdkInstallationDirectory = Path.Combine(
                 Path.GetTempPath(),
                 "InstallScript-Tests",
@@ -184,6 +194,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
+        [Trait("MonitoringTest", "true")]
         [MemberData(nameof(InstallSdkFromChannelTestCases))]
         public void WhenInstallingTheSdk(string channel, string? quality, string versionRegex)
         {
@@ -196,6 +207,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().Pass();
 
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
@@ -205,13 +218,17 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 .CaptureStdErr()
                 .Execute();
 
-            string installPath = " [" + Path.Combine(_sdkInstallationDirectory, "sdk") + "]";
-            string regex = Regex.Escape("  ") + versionRegex + Regex.Escape(installPath);
+            // On MacOS, installation directory has an extra /private at the beginning.
+            string installPathRegex = "\\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "sdk")) + "\\]";
+            string regex = Regex.Escape("  ") + versionRegex + Regex.Escape(" ") + installPathRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
-            commandResult.Should().NotHaveStdErr();
+            dotnetCommandResult.Should().Pass();
+
+            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
         }
 
         [Theory]
+        [Trait("MonitoringTest", "true")]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingDotnetRuntime(string channel, string? quality, string versionRegex)
         {
@@ -224,6 +241,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().Pass();
 
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
@@ -233,14 +252,17 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 .CaptureStdErr()
                 .Execute();
 
-            string lineStart = " Microsoft.NETCore.App ";
-            string lineEnd = " [" + Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.NETCore.App") + "]";
-            string regex = Regex.Escape(lineStart) + versionRegex + Regex.Escape(lineEnd);
+            string lineStartRegex = Regex.Escape(" Microsoft.NETCore.App ");
+            string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.NETCore.App")) + "\\]";
+            string regex = lineStartRegex + versionRegex + lineEndRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
-            commandResult.Should().NotHaveStdErr();
+            dotnetCommandResult.Should().Pass();
+
+            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
         }
 
         [Theory]
+        [Trait("MonitoringTest", "true")]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingAspNetCoreRuntime(string channel, string? quality, string versionRegex)
         {
@@ -260,6 +282,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .Execute();
 
             commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().Pass();
 
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
@@ -269,14 +293,17 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 .CaptureStdErr()
                 .Execute();
 
-            string lineStart = " Microsoft.AspNetCore.App ";
-            string lineEnd = " [" + Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.AspNetCore.App") + "]";
-            string regex = Regex.Escape(lineStart) + versionRegex + Regex.Escape(lineEnd);
+            string lineStartRegex = Regex.Escape(" Microsoft.AspNetCore.App ");
+            string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.AspNetCore.App")) + "\\]";
+            string regex = lineStartRegex + versionRegex + lineEndRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
-            commandResult.Should().NotHaveStdErr();
+            dotnetCommandResult.Should().Pass();
+
+            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
         }
 
         [Theory]
+        [Trait("MonitoringTest", "true")]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingWindowsdesktopRuntime(string channel, string? quality, string versionRegex)
         {
@@ -311,6 +338,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().Pass();
+
+            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
 
             // Dotnet CLI is not included in the windowsdesktop runtime. Therefore, version validation cannot be tested.
             // Add the validation once the becomes available in the artifacts.
@@ -333,6 +363,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredential);
+            commandResult.Should().Pass();
         }
 
         [Theory]
@@ -352,6 +383,191 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredential);
+            commandResult.Should().Pass();
+        }
+
+        [Theory]
+        [Trait("MonitoringTest", "true")]
+        [InlineData("5.0.404-servicing.21560.14", "5.0.404")]
+        [InlineData("6.0.100-preview.6.21364.34")]
+        [InlineData("7.0.100-alpha.1.22054.9")]
+        public void WhenInstallingASpecificVersionOfTheSdk(string version, string? effectiveVersion = null)
+        {
+            // Run install script to download and install.
+            var args = GetInstallScriptArgs(channel:null, runtime: null, quality:null, _sdkInstallationDirectory, version: version);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().Pass();
+
+            // Run dotnet to verify that the version is installed into correct folder.
+            var dotnetArgs = new List<string> { "--info" };
+
+            var dotnetCommandResult = CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs)
+                .CaptureStdOut()
+                .CaptureStdErr()
+                .Execute();
+
+            // On MacOS, installation directory has an extra /private at the beginning.
+            string installPathRegex = "\\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "sdk")) + "\\]";
+            string regex = Regex.Escape("  " + (effectiveVersion ?? version) + " ") + installPathRegex;
+            dotnetCommandResult.Should().HaveStdOutMatching(regex);
+            dotnetCommandResult.Should().Pass();
+
+            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
+        }
+
+        [Theory]
+        [Trait("MonitoringTest", "true")]
+        [InlineData("5.0.13-servicing.21560.6", "5.0.13")]
+        [InlineData("6.0.0-preview.4.21176.7")]
+        [InlineData("7.0.0-alpha.1.21528.8")]
+        public void WhenInstallingASpecificVersionOfDotnetRuntime(string version, string? effectiveVersion = null)
+        {
+            // Run install script to download and install.
+            var args = GetInstallScriptArgs(channel: null, "dotnet", quality: null, _sdkInstallationDirectory, version: version);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().Pass();
+
+            // Run dotnet to verify that the version is installed into correct folder.
+            var dotnetArgs = new List<string> { "--info" };
+
+            var dotnetCommandResult = CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs)
+                .CaptureStdOut()
+                .CaptureStdErr()
+                .Execute();
+
+            string lineStartRegex = Regex.Escape(" Microsoft.NETCore.App ");
+            string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.NETCore.App")) + "\\]";
+            string regex = lineStartRegex + Regex.Escape(effectiveVersion ?? version) + lineEndRegex;
+            dotnetCommandResult.Should().HaveStdOutMatching(regex);
+            dotnetCommandResult.Should().Pass();
+
+            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
+        }
+
+        [Theory]
+        [Trait("MonitoringTest", "true")]
+        [InlineData("5.0.13-servicing.21552.32", "5.0.13")]
+        [InlineData("6.0.0-preview.4.21176.7")]
+        [InlineData("7.0.0-alpha.1.21567.15")]
+        public void WhenInstallingASpecificVersionOfAspNetCoreRuntime(string version, string? effectiveVersion = null)
+        {
+            // Run install script to download and install.
+            var args = GetInstallScriptArgs(channel: null, "aspnetcore", quality: null, _sdkInstallationDirectory, version: version);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().Pass();
+
+            // Run dotnet to verify that the version is installed into correct folder.
+            var dotnetArgs = new List<string> { "--info" };
+
+            var dotnetCommandResult = CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs)
+                .CaptureStdOut()
+                .CaptureStdErr()
+                .Execute();
+
+            string lineStartRegex = Regex.Escape(" Microsoft.AspNetCore.App ");
+            string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.AspNetCore.App")) + "\\]";
+            string regex = lineStartRegex + Regex.Escape(effectiveVersion ?? version) + lineEndRegex;
+            dotnetCommandResult.Should().HaveStdOutMatching(regex);
+            dotnetCommandResult.Should().Pass();
+
+            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
+        }
+
+        [Theory]
+        [Trait("MonitoringTest", "true")]
+        // productVersion files are broken prior to 6.0 release.
+        // [InlineData("5.0.14-servicing.21614.9")]
+        [InlineData("6.0.1-servicing.21568.2")]
+        [InlineData("7.0.0-alpha.1.21472.1")]
+        public void WhenInstallingASpecificVersionOfWindowsdesktopRuntime(string version)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Don't install windowsdesktop if not on Windows.
+                return;
+            }
+
+            // Run install script to download and install.
+            var args = GetInstallScriptArgs(channel: null, "windowsdesktop", quality: null, _sdkInstallationDirectory, version: version);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().Pass();
+
+            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
+
+            // Dotnet CLI is not included in the windowsdesktop runtime. Therefore, version validation cannot be tested.
+            // Add the validation once the becomes available in the artifacts.
+        }
+
+        [Theory]
+        [InlineData("5.0.404-servicing.21560.14", "5.0.404")]
+        [InlineData("6.0.100-preview.6.21364.34")]
+        [InlineData("7.0.100-alpha.1.22054.9")]
+        [InlineData("5.0.13-servicing.21552.32", "5.0.13", "aspnetcore")]
+        [InlineData("6.0.0-preview.4.21176.7", null, "aspnetcore")]
+        [InlineData("7.0.0-alpha.1.21567.15", null, "aspnetcore")]
+        [InlineData("5.0.13-servicing.21560.6", "5.0.13", "dotnet")]
+        [InlineData("6.0.0-preview.4.21176.7", null, "dotnet")]
+        [InlineData("7.0.0-alpha.1.21528.8", null, "dotnet")]
+        [InlineData("6.0.1-servicing.21568.2", "6.0.1", "windowsdesktop")]
+        [InlineData("7.0.0-alpha.1.21472.1", null, "windowsdesktop")]
+        public void WhenInstallingAnAlreadyInstalledVersion(string version, string? effectiveVersion = null, string? runtime = null)
+        {
+            if (runtime == "windowsdesktop" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // Don't install windowsdesktop if not on Windows.
+                return;
+            }
+
+            // Run install script to download and install.
+            var args = GetInstallScriptArgs(channel: null, runtime, quality: null, _sdkInstallationDirectory, version: version);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().Pass();
+
+            // Run the same command. This time, it should say "already installed".
+            commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().NotHaveStdOutContaining("Installation finished");
+            commandResult.Should().HaveStdOutContaining($"with version '{effectiveVersion ?? version}' is already installed.");
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().Pass();
         }
 
         [Theory]
@@ -382,13 +598,64 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredential);
         }
 
+        [Theory]
+        [InlineData("7.0.1", Quality.Daily)]
+        [InlineData("6.0.1", Quality.Signed)]
+        public void WhenBothVersionAndQualityWereSpecified(string version, Quality quality)
+        {
+            var args = GetInstallScriptArgs(null, null, quality.ToString(), _sdkInstallationDirectory, version: version);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().Fail();
+            commandResult.Should().HaveStdErrContaining("Quality and Version options are not allowed to be specified simultaneously.");
+            commandResult.Should().NotHaveStdOutContaining("Installation finished");
+        }
+
+        [Theory]
+        [InlineData(null, Quality.Signed)]
+        [InlineData("6.0.301", null)]
+        public void WhenEitherVersionOrQualityWasSpecified(string? version, Quality? quality)
+        {
+            // Run install script to download and install.
+            var args = GetInstallScriptArgs(null, null, quality?.ToString(), _sdkInstallationDirectory, version: version);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().Pass();
+        }
+
+        [Fact]
+        public void WhenNoArgsWereSpecified()
+        {
+            var args = GetInstallScriptArgs(null, null, null, installDir: _sdkInstallationDirectory);
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().HaveStdOutContaining("Installation finished");
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().Pass();
+        }
+
         private static IEnumerable<string> GetInstallScriptArgs(
             string? channel, 
             string? runtime,
             string? quality, 
             string? installDir, 
             string? feedCredentials = null,
-            bool verboseLogging = false)
+            bool verboseLogging = false,
+            string? version = null)
         {
             if (!string.IsNullOrWhiteSpace(channel))
             {
@@ -418,6 +685,12 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             {
                 yield return "-FeedCredential";
                 yield return feedCredentials;
+            }
+
+            if (!string.IsNullOrWhiteSpace(version))
+            {
+                yield return "-Version";
+                yield return version;
             }
 
             if (verboseLogging)

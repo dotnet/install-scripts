@@ -359,7 +359,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                             .CaptureStdErr()
                             .Execute();
 
-            commandResult.Should().HaveStdOutContaining("Specifying quality for current or LTS channel is not supported, the quality will be ignored.");
+            commandResult.Should().HaveStdOutContaining("Specifying quality for STS or LTS channel is not supported, the quality will be ignored.");
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
         }
 
@@ -391,7 +391,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             commandResult.Should().Fail();
             commandResult.Should().HaveStdErrContaining("Failed to locate the latest version in the channel");
-
         }
 
         [Fact]

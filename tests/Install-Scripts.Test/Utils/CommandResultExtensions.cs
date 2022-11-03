@@ -2,7 +2,6 @@
 // Taken from https://github.com/dotnet/sdk/
 
 using Microsoft.DotNet.Cli.Utils;
-using Xunit.Abstractions;
 
 namespace Microsoft.NET.TestFramework.Assertions
 {
