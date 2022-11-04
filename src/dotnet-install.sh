@@ -452,7 +452,7 @@ get_normalized_channel() {
     local channel="$(to_lowercase "$1")"
 
     if [[ $channel == current ]]; then
-        say_warning 'Value "Current" was deprecated for -Channel option. Please use "STS" instead.'
+        say_warning 'Value "Current" is deprecated for -Channel option. Use "STS" instead.'
     fi
 
     if [[ $channel == release/* ]]; then
@@ -1248,7 +1248,7 @@ generate_akams_links() {
 
     normalized_version="$(to_lowercase "$version")"
     if [[ "$normalized_version" != "latest" ]] && [ -n "$normalized_quality" ]; then
-        say_err "Quality and Version options are not allowed to be specified simultaneously. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options for details."
+        say_err "Quality and Version options are not allowed to be specified simultaneously. See https://learn.microsoft.com/dotnet/core/tools/dotnet-install-script#options for details."
         return 1
     fi
 
@@ -1625,7 +1625,7 @@ do
             echo "          - 3-part version in a format A.B.Cxx - represents a specific SDK release"
             echo "              examples: 5.0.1xx, 5.0.2xx."
             echo "              Supported since 5.0 release"
-            echo "          Warning: Value \"Current\" was deprecated for -Channel option, please use STS instead."
+            echo "          Warning: Value 'Current' is deprecated for the Channel parameter. Use 'STS' instead."
             echo "          Note: The version parameter overrides the channel parameter when any version other than 'latest' is used."
             echo "  -v,--version <VERSION>         Use specific VERSION, Defaults to \`$version\`."
             echo "      -Version"
@@ -1726,5 +1726,5 @@ else
 fi
 
 say "Note that the script does not resolve dependencies during installation."
-say "To check the list of dependencies, go to https://docs.microsoft.com/dotnet/core/install, select your operating system and check the \"Dependencies\" section."
+say "To check the list of dependencies, go to https://learn.microsoft.com/dotnet/core/install, select your operating system and check the \"Dependencies\" section."
 say "Installation finished successfully."

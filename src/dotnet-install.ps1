@@ -19,7 +19,7 @@
     - 3-part version in a format A.B.Cxx - represents a specific SDK release
           examples: 5.0.1xx, 5.0.2xx
           Supported since 5.0 release
-    Warning: Value "Current" was deprecated for Channel parameter, please use "STS" instead. 
+    Warning: Value "Current" is deprecated for the Channel parameter. Use "STS" instead.
     Note: The version parameter overrides the channel parameter when any version other than 'latest' is used.
 .PARAMETER Quality
     Download the latest build of specified quality in the channel. The possible values are: daily, signed, validated, preview, GA.
@@ -279,7 +279,7 @@ function Get-NormalizedChannel([string]$Channel) {
     }
 
     if ($Channel.Contains("Current")) {
-        Say-Warning 'Value "Current" was deprecated for -Channel option. Please use "STS" instead.'
+        Say-Warning 'Value "Current" is deprecated for -Channel option. Use "STS" instead.'
     }
 
     if ($Channel.StartsWith('release/')) {
@@ -1132,7 +1132,7 @@ $feeds = Get-Feeds-To-Use
 $DownloadLinks = @()
 
 if ($Version.ToLowerInvariant() -ne "latest" -and -not [string]::IsNullOrEmpty($Quality)) {
-    throw "Quality and Version options are not allowed to be specified simultaneously. See https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script#options for details."
+    throw "Quality and Version options are not allowed to be specified simultaneously. See https:// learn.microsoft.com/dotnet/core/tools/dotnet-install-script#options for details."
 }
 
 # aka.ms links can only be used if the user did not request a specific version via the command line or a global.json file.
@@ -1279,6 +1279,6 @@ SafeRemoveFile -Path $ZipPath
 Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
 
 Say "Note that the script does not resolve dependencies during installation."
-Say "To check the list of dependencies, go to https://docs.microsoft.com/dotnet/core/install/windows#dependencies"
+Say "To check the list of dependencies, go to https://learn.microsoft.com/dotnet/core/install/windows#dependencies"
 Say "Installed version is $($DownloadedLink.effectiveVersion)"
 Say "Installation finished"

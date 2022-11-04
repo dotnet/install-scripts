@@ -3,7 +3,7 @@
 This repo is the central place for dotnet install and install dotnet preview scripts.
 
 For more information about the usage of dotnet install, see:
-https://docs.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script
+https://learn.microsoft.com/dotnet/core/tools/dotnet-install-script
 
 To download the latest stable versions of dotnet install, go to:
 - Bash (Linux/macOS): https://dot.net/v1/dotnet-install.sh 
