@@ -12,8 +12,8 @@
 .PARAMETER Channel
     Default: LTS
     Download from the Channel specified. Possible values:
-    - STS - standard term support SDK
-    - LTS - most current supported release
+    - STS - Standard Term Support SDK
+    - LTS - the most current Long Term Support release
     - 2-part version in a format A.B - represents a specific release
           examples: 2.0, 1.0
     - 3-part version in a format A.B.Cxx - represents a specific SDK release
