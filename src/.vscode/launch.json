@@ -10,7 +10,8 @@
             "request": "launch",
             "name": "Bash-Debug (hardcoded script name)",
             "cwd": "${workspaceFolder}",
-            "program": "C:/install-scripts/dotnet-install.sh",
+            // specify path to script file 
+            "program": {workspaceRoot}/dotnet-install.sh",
             "args": ["-Channel", "current", "-Verbose"]
         },
         {
