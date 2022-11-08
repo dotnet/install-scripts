@@ -466,7 +466,11 @@ get_normalized_channel() {
                 return 0
                 ;;
             sts)
-                echo "current"
+                echo "STS"
+                return 0
+                ;;
+            current)
+                echo "STS"
                 return 0
                 ;;
             *)
@@ -1137,7 +1141,7 @@ get_download_link_from_aka_ms() {
 
     #quality is not supported for LTS or STS channel
     #STS maps to current
-    if [[ ! -z "$normalized_quality"  && ("$normalized_channel" == "LTS" || "$normalized_channel" == "current") ]]; then
+    if [[ ! -z "$normalized_quality"  && ("$normalized_channel" == "LTS" || "$normalized_channel" == "STS") ]]; then
         normalized_quality=""
         say_warning "Specifying quality for STS or LTS channel is not supported, the quality will be ignored."
     fi
