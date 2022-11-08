@@ -288,7 +288,8 @@ function Get-NormalizedChannel([string]$Channel) {
 
     switch ($Channel) {
         { $_ -eq "lts" } { return "LTS" }
-        { $_ -eq "sts" } { return "current" }
+        { $_ -eq "sts" } { return "STS" }
+        { $_ -eq "current" } { return "STS" }
         default { return $Channel.ToLowerInvariant() }
     }
 }
@@ -931,7 +932,7 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
     Say-Invocation $MyInvocation 
 
     #quality is not supported for LTS or STS channel
-    if (![string]::IsNullOrEmpty($Quality) -and (@("LTS", "current") -contains $Channel)) {
+    if (![string]::IsNullOrEmpty($Quality) -and (@("LTS", "STS") -contains $Channel)) {
         $Quality = ""
         Say-Warning "Specifying quality for STS or LTS channel is not supported, the quality will be ignored."
     }

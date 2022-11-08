@@ -9,7 +9,9 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
-    public class AkaMsLinksTests : TestBase
+#pragma warning disable xUnit1000 // Test classes must be public
+    internal class AkaMsLinksTests : TestBase
+#pragma warning restore xUnit1000 // Test classes must be public
     {
         /// <summary>
         /// Test verifies E2E the aka.ms resolution for SDK

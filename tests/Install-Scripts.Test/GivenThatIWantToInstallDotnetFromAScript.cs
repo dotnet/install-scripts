@@ -16,7 +16,9 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
-    public class GivenThatIWantToInstallDotnetFromAScript : IDisposable
+#pragma warning disable xUnit1000 // Test classes must be public
+    internal class GivenThatIWantToInstallDotnetFromAScript : IDisposable
+#pragma warning restore xUnit1000 // Test classes must be public
     {
 
         /// <summary>

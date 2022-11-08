@@ -12,7 +12,9 @@ using Xunit;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
-    public class GivenThatIWantToGetTheSdkLinksFromAScript : TestBase
+#pragma warning disable xUnit1000 // Test classes must be public
+    internal class GivenThatIWantToGetTheSdkLinksFromAScript : TestBase
+#pragma warning restore xUnit1000 // Test classes must be public
     {
         public GivenThatIWantToGetTheSdkLinksFromAScript(VerifySettings settings = null) 
             : base(settings) { }
