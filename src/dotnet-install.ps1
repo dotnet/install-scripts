@@ -12,8 +12,8 @@
 .PARAMETER Channel
     Default: LTS
     Download from the Channel specified. Possible values:
-    - STS - standard term support SDK
-    - LTS - most current supported release
+    - STS - Standard Term Support
+    - LTS - the most recent Long Term Support release
     - 2-part version in a format A.B - represents a specific release
           examples: 2.0, 1.0
     - 3-part version in a format A.B.Cxx - represents a specific SDK release
@@ -288,7 +288,8 @@ function Get-NormalizedChannel([string]$Channel) {
 
     switch ($Channel) {
         { $_ -eq "lts" } { return "LTS" }
-        { $_ -eq "sts" } { return "current" }
+        { $_ -eq "sts" } { return "STS" }
+        { $_ -eq "current" } { return "STS" }
         default { return $Channel.ToLowerInvariant() }
     }
 }
@@ -931,7 +932,7 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
     Say-Invocation $MyInvocation 
 
     #quality is not supported for LTS or STS channel
-    if (![string]::IsNullOrEmpty($Quality) -and (@("LTS", "current") -contains $Channel)) {
+    if (![string]::IsNullOrEmpty($Quality) -and (@("LTS", "STS") -contains $Channel)) {
         $Quality = ""
         Say-Warning "Specifying quality for STS or LTS channel is not supported, the quality will be ignored."
     }
