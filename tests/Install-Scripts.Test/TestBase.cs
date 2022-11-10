@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
-    internal abstract class TestBase : VerifyBase
+    public abstract class TestBase : VerifyBase
     {
         protected TestBase(VerifySettings settings = null, [CallerFilePath] string sourceFile = "")
             : base(settings, Path.Combine(Path.GetDirectoryName(sourceFile) ?? "", "Assets", "foo.cs")) { }

@@ -12,9 +12,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
-#pragma warning disable xUnit1000 // Test classes must be public
-    internal class GivenThatIWantToGetTheSdkLinksFromAScript : TestBase
-#pragma warning restore xUnit1000 // Test classes must be public
+    public class GivenThatIWantToGetTheSdkLinksFromAScript : TestBase
     {
         public GivenThatIWantToGetTheSdkLinksFromAScript(VerifySettings settings = null) 
             : base(settings) { }
@@ -111,7 +109,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("3.1", "dotnet", true)]
         [InlineData("5.0", "dotnet")]
         [InlineData("5.0", "dotnet", true)]
-        [InlineData("Current", "dotnet")]
+        [InlineData("STS", "dotnet")]
         [InlineData("LTS", "dotnet")]
         [InlineData("master", "dotnet")]
         [InlineData("release/2.1", "dotnet")]
@@ -120,7 +118,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("release/3.1", "dotnet")]
         [InlineData("release/3.1", "dotnet", true)]
         // [InlineData("release/5.0", "dotnet")] - Broken
-        [InlineData("Current", "aspnetcore")]
+        [InlineData("STS", "aspnetcore")]
         [InlineData("LTS", "aspnetcore")]
         //[InlineData("1.0", "aspnetcore")] - Broken
         //[InlineData("1.1", "aspnetcore")] - Broken
@@ -136,8 +134,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         //[InlineData("release/3.0", "aspnetcore")] - Broken
         //[InlineData("release/3.1", "aspnetcore")] - Broken
         //[InlineData("release/5.0", "aspnetcore")] - Broken 
-        [InlineData("Current", "windowsdesktop")]
-        [InlineData("Current", "windowsdesktop", true)]
+        [InlineData("STS", "windowsdesktop")]
+        [InlineData("STS", "windowsdesktop", true)]
         [InlineData("LTS", "windowsdesktop")]
         [InlineData("3.0", "windowsdesktop")]
         [InlineData("3.1", "windowsdesktop")]
@@ -191,7 +189,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("3.0")]
         [InlineData("3.1")]
         [InlineData("5.0")]
-        [InlineData("Current")]
+        [InlineData("STS")]
         [InlineData("LTS")]
         [InlineData("master")]
         [InlineData("release/1.0.0")]

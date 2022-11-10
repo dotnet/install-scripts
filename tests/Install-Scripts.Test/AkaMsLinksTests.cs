@@ -9,9 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
-#pragma warning disable xUnit1000 // Test classes must be public
-    internal class AkaMsLinksTests : TestBase
-#pragma warning restore xUnit1000 // Test classes must be public
+    public class AkaMsLinksTests : TestBase
     {
         /// <summary>
         /// Test verifies E2E the aka.ms resolution for SDK
@@ -27,7 +25,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         //[InlineData("5.0", null, @"https://aka.ms/dotnet/5.0/dotnet-sdk-")]
         //[InlineData("5.0.1xx", null, @"https://aka.ms/dotnet/5.0.1xx/dotnet-sdk-")]
         //[InlineData("5.0.2xx", null, @"https://aka.ms/dotnet/5.0.2xx/dotnet-sdk-")]
-        //[InlineData("Current", null, @"https://aka.ms/dotnet/current/dotnet-sdk-")]
+        //[InlineData("STS", null, @"https://aka.ms/dotnet/STS/dotnet-sdk-")]
         //[InlineData("LTS", null, @"https://aka.ms/dotnet/LTS/dotnet-sdk-")]
         //[InlineData("5.0.2xx", "signed", @"https://aka.ms/dotnet/5.0.2xx/signed/dotnet-sdk-")]
         //[InlineData("5.0.2xx", "daily", @"https://aka.ms/dotnet/5.0.2xx/daily/dotnet-sdk-")]
@@ -42,6 +40,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         //[InlineData("6.0", "ga", @"https://aka.ms/dotnet/6.0/dotnet-sdk-")]
 
         [InlineData("6.0", "daily", @"https://aka.ms/dotnet/6.0/daily/dotnet-sdk-")]
+        [InlineData("7.0", "daily", @"https://aka.ms/dotnet/7.0/daily/dotnet-sdk-")]
         public void SDK_IntegrationTest(string channel, string quality, string expectedLink)
         {
             string expectedLinkPattern = Regex.Escape(expectedLink);
@@ -91,7 +90,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         //[InlineData("3.0", "dotnet", null, @"https://aka.ms/dotnet/3.0/dotnet-runtime-")]
         //[InlineData("3.1", "dotnet", null, @"https://aka.ms/dotnet/3.1/dotnet-runtime-")]
         //[InlineData("5.0", "dotnet", null, @"https://aka.ms/dotnet/5.0/dotnet-runtime-")]
-        //[InlineData("Current", "dotnet", null, @"https://aka.ms/dotnet/current/dotnet-runtime-")]
+        //[InlineData("STS", "dotnet", null, @"https://aka.ms/dotnet/STS/dotnet-runtime-")]
         //[InlineData("LTS", "dotnet", null, @"https://aka.ms/dotnet/LTS/dotnet-runtime-")]
         //[InlineData("5.0", "dotnet", "signed", @"https://aka.ms/dotnet/5.0/signed/dotnet-runtime-")]
         //[InlineData("5.0", "dotnet", "daily", @"https://aka.ms/dotnet/5.0/daily/dotnet-runtime-")]
@@ -103,7 +102,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         //[InlineData("3.0", "aspnetcore", null, @"https://aka.ms/dotnet/3.0/aspnetcore-runtime-")]
         //[InlineData("3.1", "aspnetcore", null, @"https://aka.ms/dotnet/3.1/aspnetcore-runtime-")]
         //[InlineData("5.0", "aspnetcore", null, @"https://aka.ms/dotnet/5.0/aspnetcore-runtime-")]
-        //[InlineData("Current", "aspnetcore", null, @"https://aka.ms/dotnet/current/aspnetcore-runtime-")]
+        //[InlineData("STS", "aspnetcore", null, @"https://aka.ms/dotnet/STS/aspnetcore-runtime-")]
         //[InlineData("LTS", "aspnetcore", null, @"https://aka.ms/dotnet/LTS/aspnetcore-runtime-")]
         //[InlineData("5.0", "aspnetcore", "signed", @"https://aka.ms/dotnet/5.0/signed/aspnetcore-runtime-")]
         //[InlineData("5.0", "aspnetcore", "daily", @"https://aka.ms/dotnet/5.0/daily/aspnetcore-runtime-")]
@@ -113,7 +112,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         //[InlineData("3.0", "windowsdesktop", null, @"https://aka.ms/dotnet/3.0/windowsdesktop-runtime-")]
         //[InlineData("3.1", "windowsdesktop", null, @"https://aka.ms/dotnet/3.1/windowsdesktop-runtime-")]
         //[InlineData("5.0", "windowsdesktop", null, @"https://aka.ms/dotnet/5.0/windowsdesktop-runtime-")]
-        //[InlineData("Current", "windowsdesktop", null, @"https://aka.ms/dotnet/current/windowsdesktop-runtime-")]
+        //[InlineData("STS", "windowsdesktop", null, @"https://aka.ms/dotnet/STS/windowsdesktop-runtime-")]
         //[InlineData("LTS", "windowsdesktop", null, @"https://aka.ms/dotnet/LTS/windowsdesktop-runtime-")]
         //[InlineData("5.0", "windowsdesktop", "signed", @"https://aka.ms/dotnet/5.0/signed/windowsdesktop-runtime-")]
         //[InlineData("5.0", "windowsdesktop", "daily", @"https://aka.ms/dotnet/5.0/daily/windowsdesktop-runtime-")]
@@ -128,6 +127,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         // [InlineData("6.0", "windowsdesktop", "ga", @"https://aka.ms/dotnet/6.0/windowsdesktop-runtime-")]
         
         [InlineData("6.0", "windowsdesktop", "daily", @"https://aka.ms/dotnet/6.0/daily/windowsdesktop-runtime-")]
+        [InlineData("7.0", "windowsdesktop", "daily", @"https://aka.ms/dotnet/7.0/daily/windowsdesktop-runtime-")]
         public void Runtime_IntegrationTest(string channel, string runtime, string quality, string expectedLink)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop")
@@ -177,7 +177,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("5.0", null, false, @"https://aka.ms/dotnet/5.0/dotnet-sdk-")]
         [InlineData("5.0.1xx", null, false, @"https://aka.ms/dotnet/5.0.1xx/dotnet-sdk-")]
         [InlineData("5.0.2xx", null, false, @"https://aka.ms/dotnet/5.0.2xx/dotnet-sdk-")]
-        [InlineData("Current", null, false, @"https://aka.ms/dotnet/current/dotnet-sdk-")]
+        [InlineData("STS", null, false, @"https://aka.ms/dotnet/STS/dotnet-sdk-")]
         [InlineData("LTS", null, false, @"https://aka.ms/dotnet/LTS/dotnet-sdk-")]
         [InlineData("5.0.2xx", "signed", false, @"https://aka.ms/dotnet/5.0.2xx/signed/dotnet-sdk-")]
         [InlineData("5.0.2xx", "daily", false, @"https://aka.ms/dotnet/5.0.2xx/daily/dotnet-sdk-")]
@@ -186,9 +186,11 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("5.0.2xx", "ga", false, @"https://aka.ms/dotnet/5.0.2xx/dotnet-sdk-")]
         [InlineData("3.1", null, true, @"https://aka.ms/dotnet/internal/3.1/dotnet-sdk-")]
         [InlineData("5.0.2xx", null, true, @"https://aka.ms/dotnet/internal/5.0.2xx/dotnet-sdk-")]
-        [InlineData("Current", null, true, @"https://aka.ms/dotnet/internal/current/dotnet-sdk-")]
+        [InlineData("STS", null, true, @"https://aka.ms/dotnet/internal/STS/dotnet-sdk-")]
         [InlineData("LTS", null, true, @"https://aka.ms/dotnet/internal/LTS/dotnet-sdk-")]
         [InlineData("5.0.2xx", "validated", true, @"https://aka.ms/dotnet/internal/5.0.2xx/validated/dotnet-sdk-")]
+        [InlineData("6.0.2xx", "validated", true, @"https://aka.ms/dotnet/internal/6.0.2xx/validated/dotnet-sdk-")]
+        [InlineData("7.0.1xx", "validated", true, @"https://aka.ms/dotnet/internal/7.0.1xx/validated/dotnet-sdk-")]
         public void LinkCanBeCreatedForSdk(string channel, string quality, bool isInternal, string expectedLink)
         {
             string expectedLinkPattern = Regex.Escape(expectedLink);
@@ -237,7 +239,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("2.1", "dotnet", null, false, @"https://aka.ms/dotnet/2.1/dotnet-runtime-")]
         [InlineData("3.1", "dotnet", null, false, @"https://aka.ms/dotnet/3.1/dotnet-runtime-")]
         [InlineData("5.0", "dotnet", null, false, @"https://aka.ms/dotnet/5.0/dotnet-runtime-")]
-        [InlineData("Current", "dotnet", null, false, @"https://aka.ms/dotnet/current/dotnet-runtime-")]
+        [InlineData("STS", "dotnet", null, false, @"https://aka.ms/dotnet/STS/dotnet-runtime-")]
         [InlineData("LTS", "dotnet", null, false, @"https://aka.ms/dotnet/LTS/dotnet-runtime-")]
         [InlineData("5.0", "dotnet", "signed", false, @"https://aka.ms/dotnet/5.0/signed/dotnet-runtime-")]
         [InlineData("5.0", "dotnet", "daily", false, @"https://aka.ms/dotnet/5.0/daily/dotnet-runtime-")]
@@ -247,7 +249,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("2.1", "aspnetcore", null, false, @"https://aka.ms/dotnet/2.1/aspnetcore-runtime-")]
         [InlineData("3.1", "aspnetcore", null, false, @"https://aka.ms/dotnet/3.1/aspnetcore-runtime-")]
         [InlineData("5.0", "aspnetcore", null, false, @"https://aka.ms/dotnet/5.0/aspnetcore-runtime-")]
-        [InlineData("Current", "aspnetcore", null, false, @"https://aka.ms/dotnet/current/aspnetcore-runtime-")]
+        [InlineData("STS", "aspnetcore", null, false, @"https://aka.ms/dotnet/STS/aspnetcore-runtime-")]
         [InlineData("LTS", "aspnetcore", null, false, @"https://aka.ms/dotnet/LTS/aspnetcore-runtime-")]
         [InlineData("5.0", "aspnetcore", "signed", false, @"https://aka.ms/dotnet/5.0/signed/aspnetcore-runtime-")]
         [InlineData("5.0", "aspnetcore", "daily", false, @"https://aka.ms/dotnet/5.0/daily/aspnetcore-runtime-")]
@@ -256,7 +258,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("5.0", "aspnetcore", "ga", false, @"https://aka.ms/dotnet/5.0/aspnetcore-runtime-")]
         [InlineData("3.1", "windowsdesktop", null, false, @"https://aka.ms/dotnet/3.1/windowsdesktop-runtime-")]
         [InlineData("5.0", "windowsdesktop", null, false, @"https://aka.ms/dotnet/5.0/windowsdesktop-runtime-")]
-        [InlineData("Current", "windowsdesktop", null, false, @"https://aka.ms/dotnet/current/windowsdesktop-runtime-")]
+        [InlineData("STS", "windowsdesktop", null, false, @"https://aka.ms/dotnet/STS/windowsdesktop-runtime-")]
         [InlineData("LTS", "windowsdesktop", null, false, @"https://aka.ms/dotnet/LTS/windowsdesktop-runtime-")]
         [InlineData("5.0", "windowsdesktop", "signed", false, @"https://aka.ms/dotnet/5.0/signed/windowsdesktop-runtime-")]
         [InlineData("5.0", "windowsdesktop", "daily", false, @"https://aka.ms/dotnet/5.0/daily/windowsdesktop-runtime-")]
@@ -265,10 +267,12 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("5.0", "windowsdesktop", "ga", false, @"https://aka.ms/dotnet/5.0/windowsdesktop-runtime-")]
         [InlineData("LTS", "dotnet", null, true, @"https://aka.ms/dotnet/internal/LTS/dotnet-runtime-")]
         [InlineData("5.0", "dotnet", "daily", true, @"https://aka.ms/dotnet/internal/5.0/daily/dotnet-runtime-")]
-        [InlineData("Current", "aspnetcore", null, true, @"https://aka.ms/dotnet/internal/current/aspnetcore-runtime-")]
+        [InlineData("STS", "aspnetcore", null, true, @"https://aka.ms/dotnet/internal/STS/aspnetcore-runtime-")]
         [InlineData("5.0", "aspnetcore", "ga", true, @"https://aka.ms/dotnet/internal/5.0/aspnetcore-runtime-")]
         [InlineData("LTS", "windowsdesktop", null, true, @"https://aka.ms/dotnet/internal/LTS/windowsdesktop-runtime-")]
         [InlineData("5.0", "windowsdesktop", "ga", true, @"https://aka.ms/dotnet/internal/5.0/windowsdesktop-runtime-")]
+        [InlineData("6.0", "windowsdesktop", "ga", true, @"https://aka.ms/dotnet/internal/6.0/windowsdesktop-runtime-")]
+        [InlineData("7.0", "windowsdesktop", "ga", true, @"https://aka.ms/dotnet/internal/7.0/windowsdesktop-runtime-")]
         public void LinkCanBeCreatedForGivenRuntime(string channel, string runtime, string quality, bool isInternal, string expectedLink)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop")
@@ -320,13 +324,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
-        [InlineData("Current", null, "daily", @"https://aka.ms/dotnet/current/dotnet-sdk-")]
+        [InlineData("STS", null, "daily", @"https://aka.ms/dotnet/STS/dotnet-sdk-")]
         [InlineData("LTS", null, "signed", @"https://aka.ms/dotnet/LTS/dotnet-sdk-")]
-        [InlineData("Current", "dotnet", "validated", @"https://aka.ms/dotnet/current/dotnet-runtime-")]
+        [InlineData("STS", "dotnet", "validated", @"https://aka.ms/dotnet/STS/dotnet-runtime-")]
         [InlineData("LTS", "dotnet", "preview", @"https://aka.ms/dotnet/LTS/dotnet-runtime-")]
-        [InlineData("Current", "aspnetcore", "daily", @"https://aka.ms/dotnet/current/aspnetcore-runtime-")]
+        [InlineData("STS", "aspnetcore", "daily", @"https://aka.ms/dotnet/STS/aspnetcore-runtime-")]
         [InlineData("LTS", "aspnetcore", "signed", @"https://aka.ms/dotnet/LTS/aspnetcore-runtime-")]
-        [InlineData("Current", "windowsdesktop", "validated", @"https://aka.ms/dotnet/current/windowsdesktop-runtime-")]
+        [InlineData("STS", "windowsdesktop", "validated", @"https://aka.ms/dotnet/STS/windowsdesktop-runtime-")]
         [InlineData("LTS", "windowsdesktop", "preview", @"https://aka.ms/dotnet/LTS/windowsdesktop-runtime-")]
         public void QualityIsSkippedForLTSAndCurrentChannel(string channel, string runtime, string quality, string expectedLink)
         {
