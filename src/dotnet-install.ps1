@@ -1223,7 +1223,7 @@ foreach ($link in $DownloadLinks)
 
     try {
         Measure-Action "Package download" { DownloadFile -Source $link.downloadLink -OutPath $ZipPath }
-        Say "Download succeeded."
+        Say-Verbose "Download succeeded."
         $DownloadSucceeded = $true
         $DownloadedLink = $link
         break
