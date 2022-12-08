@@ -1219,7 +1219,7 @@ $ErrorMessages = @()
 
 foreach ($link in $DownloadLinks)
 {
-    Say "Downloading `"$($link.type)`" link $($link.downloadLink)"
+    Say-Verbose "Downloading `"$($link.type)`" link $($link.downloadLink)"
 
     try {
         Measure-Action "Package download" { DownloadFile -Source $link.downloadLink -OutPath $ZipPath }
