@@ -164,6 +164,12 @@ function Say-Verbose($str) {
     }
 }
 
+function Measure-Action($name, $block) {
+    $time = Measure-Command $block
+    $totalSeconds = $time.TotalSeconds
+    Say-Verbose "⏱ Action '$name' took $totalSeconds seconds"
+}
+
 function Say-Invocation($Invocation) {
     $command = $Invocation.MyCommand;
     $args = (($Invocation.BoundParameters.Keys | foreach { "-$_ `"$($Invocation.BoundParameters[$_])`"" }) -join " ")
@@ -1115,14 +1121,16 @@ if ($SharedRuntime -and (-not $Runtime)) {
 
 $OverrideNonVersionedFiles = !$SkipNonVersionedFiles
 
-$CLIArchitecture = Get-CLIArchitecture-From-Architecture $Architecture
-$NormalizedQuality = Get-NormalizedQuality $Quality
-Say-Verbose "Normalized quality: '$NormalizedQuality'"
-$NormalizedChannel = Get-NormalizedChannel $Channel
-Say-Verbose "Normalized channel: '$NormalizedChannel'"
-$NormalizedProduct = Get-NormalizedProduct $Runtime
-Say-Verbose "Normalized product: '$NormalizedProduct'"
-$FeedCredential = ValidateFeedCredential $FeedCredential
+Measure-Action "Product discovery" {
+    $script:CLIArchitecture = Get-CLIArchitecture-From-Architecture $Architecture
+    $script:NormalizedQuality = Get-NormalizedQuality $Quality
+    Say-Verbose "Normalized quality: '$NormalizedQuality'"
+    $script:NormalizedChannel = Get-NormalizedChannel $Channel
+    Say-Verbose "Normalized channel: '$NormalizedChannel'"
+    $script:NormalizedProduct = Get-NormalizedProduct $Runtime
+    Say-Verbose "Normalized product: '$NormalizedProduct'"
+    $script:FeedCredential = ValidateFeedCredential $FeedCredential
+}
 
 $InstallRoot = Resolve-Installation-Path $InstallDir
 Say-Verbose "InstallRoot: $InstallRoot"
@@ -1200,7 +1208,7 @@ if ($DryRun) {
     return
 }
 
-Prepare-Install-Directory
+Measure-Action "Installation directory preparation" { Prepare-Install-Directory }
 
 $ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName())
 Say-Verbose "Zip path: $ZipPath"
@@ -1214,7 +1222,7 @@ foreach ($link in $DownloadLinks)
     Say-Verbose "Downloading `"$($link.type)`" link $($link.downloadLink)"
 
     try {
-        DownloadFile -Source $link.downloadLink -OutPath $ZipPath
+        Measure-Action "Package download" { DownloadFile -Source $link.downloadLink -OutPath $ZipPath }
         Say-Verbose "Download succeeded."
         $DownloadSucceeded = $true
         $DownloadedLink = $link
@@ -1251,7 +1259,7 @@ if (-not $DownloadSucceeded) {
 }
 
 Say "Extracting the archive."
-Extract-Dotnet-Package -ZipPath $ZipPath -OutPath $InstallRoot
+Measure-Action "Package extraction" { Extract-Dotnet-Package -ZipPath $ZipPath -OutPath $InstallRoot }
 
 #  Check if the SDK version is installed; if not, fail the installation.
 $isAssetInstalled = $false
@@ -1277,7 +1285,7 @@ if (!$isAssetInstalled) {
 
 SafeRemoveFile -Path $ZipPath
 
-Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
+Measure-Action "Setting up shell environment" { Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot }
 
 Say "Note that the script does not resolve dependencies during installation."
 Say "To check the list of dependencies, go to https://learn.microsoft.com/dotnet/core/install/windows#dependencies"
