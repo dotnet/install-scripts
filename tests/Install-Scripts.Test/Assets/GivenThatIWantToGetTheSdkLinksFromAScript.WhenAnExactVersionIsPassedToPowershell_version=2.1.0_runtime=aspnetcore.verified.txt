@@ -1,8 +1,4 @@
-﻿dotnet-install: Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:
-dotnet-install: - The SDK needs to be installed without user interaction and without admin rights.
-dotnet-install: - The SDK installation doesn't need to persist across multiple CI runs.
-dotnet-install: To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.
-dotnet-install: Payload URLs:
+﻿dotnet-install: Payload URLs:
 dotnet-install: URL #0 - primary: https://dotnetcli.azureedge.net/dotnet/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-win-x64.zip
 dotnet-install: URL #1 - primary: https://dotnetbuilds.azureedge.net/public/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-win-x64.zip
 dotnet-install: Repeatable invocation: .\dotnet-install.ps1 -Version "2.1.0" -InstallDir "dotnet-sdk" -Architecture "x64" -Runtime "aspnetcore"
