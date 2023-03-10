@@ -9,6 +9,12 @@
 .DESCRIPTION
     Installs dotnet cli. If dotnet installation already exists in the given directory
     it will update it only if the requested version differs from the one already installed.
+
+    Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:
+    - The SDK needs to be installed without user interaction and without admin rights.
+    - The SDK installation doesn't need to persist across multiple CI runs.
+    To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.
+
 .PARAMETER Channel
     Default: LTS
     Download from the Channel specified. Possible values:
@@ -1110,10 +1116,10 @@ function Prepare-Install-Directory {
     }
 }
 
-Say "Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:"
-Say "- The SDK needs to be installed without user interaction and without admin rights."
-Say "- The SDK installation doesn't need to persist across multiple CI runs."
-Say "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.`r`n"
+Say-Verbose "Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:"
+Say-Verbose "- The SDK needs to be installed without user interaction and without admin rights."
+Say-Verbose "- The SDK installation doesn't need to persist across multiple CI runs."
+Say-Verbose "To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.`r`n"
 
 if ($SharedRuntime -and (-not $Runtime)) {
     $Runtime = "dotnet"

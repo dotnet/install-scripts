@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 {
     public class GivenThatIWantToGetTheSdkLinksFromAScript : TestBase
     {
-        public GivenThatIWantToGetTheSdkLinksFromAScript(VerifySettings settings = null) 
+        public GivenThatIWantToGetTheSdkLinksFromAScript(VerifySettings settings = null)
             : base(settings) { }
 
         [Theory]
@@ -284,8 +284,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         public void WhenInvalidChannelWasUsed(string channel)
         {
             string feedCredentials = Guid.NewGuid().ToString();
-            var args = new [] { "-dryrun", "-channel", channel, "-internal", "-feedCredential", feedCredentials };
-            
+            var args = new[] { "-dryrun", "-channel", channel, "-internal", "-feedCredential", feedCredentials };
+
             var commandResult = CreateInstallCommand(args)
                             .CaptureStdOut()
                             .CaptureStdErr()
@@ -302,7 +302,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [Fact]
         public void WhenInstallDirAliasIsUsed()
         {
-            var commandResult = CreateInstallCommand(new []{"-DryRun", "-i", "installation_path" })
+            var commandResult = CreateInstallCommand(new[] { "-DryRun", "-i", "installation_path" })
                             .CaptureStdOut()
                             .CaptureStdErr()
                             .Execute();
@@ -340,19 +340,19 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 return;
             }
             string[] args;
-            
-            if( string.IsNullOrWhiteSpace(runtime))
+
+            if (string.IsNullOrWhiteSpace(runtime))
             {
                 args = new string[] {
                     "-version", version,
-                    "-runtimeid", "osx", 
+                    "-runtimeid", "osx",
                     "--os", "osx",
                     "-installdir", "dotnet-sdk",
                     "-dryrun" };
             }
             else
             {
-                args = new string[] { 
+                args = new string[] {
                     "-version", version,
                     "-runtimeid", "osx",
                     "-runtime", runtime,
@@ -368,7 +368,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
-            await Verify(commandResult.StdOut).UseParameters(version,runtime);
+            await Verify(commandResult.StdOut).UseParameters(version, runtime);
         }
 
         [Theory]
@@ -383,19 +383,19 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 return;
             }
             string[] args;
-            
-            if( string.IsNullOrWhiteSpace(runtime))
+
+            if (string.IsNullOrWhiteSpace(runtime))
             {
-                args = new string[] { 
+                args = new string[] {
                     "-version", version,
                     "-installdir", "dotnet-sdk",
                     "-dryrun" };
             }
             else
             {
-                args = new string[] { 
-                    "-version", version, 
-                    "-runtime", runtime, 
+                args = new string[] {
+                    "-version", version,
+                    "-runtime", runtime,
                     "-installdir", "dotnet-sdk",
                     "-dryrun" };
             }
@@ -408,6 +408,71 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
             await Verify(commandResult.StdOut).UseParameters(version, runtime);
+        }
+
+        [Fact]
+        public void ShowScriptPurposeBlurbBash()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                //do not run bash test on Windows environment
+                return;
+            }
+
+            const string IntroBlurb = @"
+    .NET Tools Installer
+Usage: dotnet-install.sh [-c|--channel <CHANNEL>] [-v|--version <VERSION>] [-p|--prefix <DESTINATION>]
+       dotnet-install.sh -h|-?|--help
+dotnet-install.sh is a simple command line interface for obtaining dotnet cli.
+    Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:
+    - The SDK needs to be installed without user interaction and without admin rights.
+    - The SDK installation doesn't need to persist across multiple CI runs.
+    To set up a development environment or to run apps, use installers rather than this script. Visit https://dotnet.microsoft.com/download to get the installer.
+";
+
+            string[] args = new string[] {
+                "-help" };
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
+            commandResult.StdOut.StartsWith(IntroBlurb);
+        }
+
+        [Fact]
+        public void ShowScriptPurposeBlurbBashPowershellVerbose()
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                //do not run powershell test on Linux environment
+                return;
+            }
+
+
+            const string IntroBlurb = @"
+VERBOSE: dotnet-install: Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:
+VERBOSE: dotnet-install: - The SDK needs to be installed without user interaction and without admin rights.
+VERBOSE: dotnet-install: - The SDK installation doesn't need to persist across multiple CI runs.
+VERBOSE: dotnet-install: To set up a development environment or to run apps, use installers rather than this script. 
+";
+
+            string[] args = new string[] {
+                "-version", "6.0.100",
+                "-installdir", "dotnet-sdk",
+                "-dryrun",
+                "-verbose" };
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
+            commandResult.StdOut.StartsWith(IntroBlurb);
         }
     }
 }
