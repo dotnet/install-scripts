@@ -1124,7 +1124,7 @@ function Set-Informational-Env-Variable([string]$assetName, [string]$version ) {
     else {
         $envVariablePostfix = "SDK"
     }
-    $envVariableName = "INSTALLED_DOTNET_$($envVariablePostfix)"
+    $envVariableName = "DOTNET_INSTALL_SCRIPTS_$($envVariablePostfix)_LAST_INSTALLED_VERSION"
     [Environment]::SetEnvironmentVariable($envVariableName, $version)
     Say-Verbose "Informational environment variable $envVariableName is set to $version"
 }

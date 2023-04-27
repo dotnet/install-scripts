@@ -1429,7 +1429,7 @@ set_informational_env_variable() {
     else
         env_variable_postfix="SDK"
     fi
-    local env_variable_name="INSTALLED_DOTNET_${env_variable_postfix}"
+    local env_variable_name="DOTNET_INSTALL_SCRIPTS_${env_variable_postfix}_LAST_INSTALLED_VERSION"
     export "$env_variable_name=$version"
     say_verbose "Informational environment variable ${env_variable_name} is set to $version"
     return 0
