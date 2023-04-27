@@ -1289,6 +1289,7 @@ generate_akams_links() {
         #  Check if the SDK version is already installed.
         if [[ "$dry_run" != true ]] && is_dotnet_package_installed "$install_root" "$asset_relative_path" "$effective_version"; then
             say "$asset_name with version '$effective_version' is already installed."
+            set_informational_env_variable "$asset_name" "$effective_version"
             exit 0
         fi
 
@@ -1347,6 +1348,7 @@ generate_regular_links() {
     #  Check if the SDK version is already installed.
     if [[ "$dry_run" != true ]] && is_dotnet_package_installed "$install_root" "$asset_relative_path" "$effective_version"; then
         say "$asset_name with version '$effective_version' is already installed."
+        set_informational_env_variable "$asset_name" "$effective_version"
         exit 0
     fi
 }
@@ -1415,6 +1417,24 @@ calculate_vars() {
     get_feeds_to_use
 }
 
+# args:
+# asset_name - $1
+# version - $2
+set_informational_env_variable() {
+    local asset_name="$1"
+    local version="$2"
+    local env_variable_postfix=""
+    if [[ $(to_lowercase "$asset_name") == *"runtime"* ]]; then
+        env_variable_postfix="RUNTIME"
+    else
+        env_variable_postfix="SDK"
+    fi
+    local env_variable_name="INSTALLED_DOTNET_${env_variable_postfix}"
+    export "$env_variable_name=$version"
+    say_verbose "Informational environment variable ${env_variable_name} is set to $version"
+    return 0
+}
+
 install_dotnet() {
     eval $invocation
     local download_failed=false
@@ -1472,6 +1492,7 @@ install_dotnet() {
         say_verbose "Checking installation: version = $release_version"
         if is_dotnet_package_installed "$install_root" "$asset_relative_path" "$release_version"; then
             say "Installed version is $effective_version"
+            set_informational_env_variable "$asset_name" "$effective_version"
             return 0
         fi
     fi
@@ -1480,6 +1501,7 @@ install_dotnet() {
     say_verbose "Checking installation: version = $effective_version"
     if is_dotnet_package_installed "$install_root" "$asset_relative_path" "$effective_version"; then
         say "Installed version is $effective_version"
+        set_informational_env_variable "$asset_name" "$effective_version"
         return 0
     fi
 

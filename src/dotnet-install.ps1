@@ -1116,6 +1116,19 @@ function Prepare-Install-Directory {
     }
 }
 
+function Set-Informational-Env-Variable([string]$assetName, [string]$version ) {
+    $envVariablePostfix = $null
+    if ($assetName.ToLower().Contains("runtime")) {
+        $envVariablePostfix = "RUNTIME"
+    }
+    else {
+        $envVariablePostfix = "SDK"
+    }
+    $envVariableName = "INSTALLED_DOTNET_$($envVariablePostfix)"
+    [Environment]::SetEnvironmentVariable($envVariableName, $version)
+    Say-Verbose "Informational environment variable $envVariableName is set to $version"
+}
+
 Say-Verbose "Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:"
 Say-Verbose "- The SDK needs to be installed without user interaction and without admin rights."
 Say-Verbose "- The SDK installation doesn't need to persist across multiple CI runs."
@@ -1164,6 +1177,7 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
             {
                 Say "$assetName with version '$EffectiveVersion' is already installed."
                 Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
+                Set-Informational-Env-Variable $assetName $EffectiveVersion
                 return
             }
         }
@@ -1194,6 +1208,7 @@ if ([string]::IsNullOrEmpty($NormalizedQuality) -and 0 -eq $DownloadLinks.count)
                 {
                     Say "$assetName with version '$EffectiveVersion' is already installed."
                     Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
+                    Set-Informational-Env-Variable $assetName $EffectiveVersion
                     return
                 }
             }
@@ -1297,3 +1312,4 @@ Say "Note that the script does not resolve dependencies during installation."
 Say "To check the list of dependencies, go to https://learn.microsoft.com/dotnet/core/install/windows#dependencies"
 Say "Installed version is $($DownloadedLink.effectiveVersion)"
 Say "Installation finished"
+Set-Informational-Env-Variable $assetName $DownloadedLink.effectiveVersion
