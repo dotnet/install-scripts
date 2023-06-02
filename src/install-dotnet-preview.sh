@@ -4,7 +4,7 @@
 # The following command will download the installation script and run it.
 # curl -L https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/8.0.0-preview.$PREVIEW_NUMBER/install-dotnet-preview.sh -o install-dotnet-preview.sh && bash install-dotnet-preview.sh
 # The script will
-#   - install any additional dependences needed for the script to continue
+#   - install any additional dependencies needed for the script to continue
 #   - download a tar.gz containing the .NET preview installer packages to the current directory
 #   - expand the tar.gz into ./dotnet_packages
 #   - download the appropriate runtime dependency installer package into ./dotnet_packages
@@ -124,13 +124,13 @@ function download_preview()
     echo "*** Downloading https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/8.0.0-preview.$PREVIEW_NUMBER/$DOTNET_Spreview to $DOWNLOAD_DIR ..."
 
     curl "https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/8.0.0-preview.$PREVIEW_NUMBER/"$DOTNET_Spreview -o $DOWNLOAD_DIR/$DOTNET_Spreview
-    
+
     echo
     echo "*** Unpacking ${DOTNET_Spreview} ..."
     echo
     tar xvf $DOTNET_Spreview -C $DOWNLOAD_DIR
     echo
-    
+
     if [ $PACKAGE_TYPE == "rpm" ]
     then
         echo "*** Downloading $DEPS_PACKAGE"
@@ -151,7 +151,7 @@ function check_dependencies()
             then
             dep_found=$(dpkg --get-selections | grep -E '\b${dependency}' | wc -c )
         fi
-        
+
         if [ $dep_found == 0 ]
         then
             echo
