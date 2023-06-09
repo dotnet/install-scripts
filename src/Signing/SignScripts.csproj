@@ -13,12 +13,14 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+  </ItemGroup>
   <Target Name="Delete Unused" AfterTargets="Build">
-    <Delete Files="$(OutputPath)UNUSED.dll"/>
-    <Delete Files="$(OutputPath)UNUSED.pdb"/>
+    <Delete Files="$(OutputPath)UNUSED.dll" />
+    <Delete Files="$(OutputPath)UNUSED.pdb" />
   </Target>
   <Target Name="ArtifactsDir Setup" AfterTargets="Build">
     <!-- To prevent "directory not found" errors, create empty directory -->
-    <MakeDir Directories="$(ArtifactsPackagesDir)"/>
+    <MakeDir Directories="$(ArtifactsPackagesDir)" />
   </Target>
 </Project>
