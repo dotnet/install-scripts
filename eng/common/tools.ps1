@@ -323,18 +323,18 @@ function InstallDotNet([string] $dotnetRoot,
     } else {
       $location = "public location";
     }
-    Write-Host "  Attempting to install $dotnetVersionLabel from $location."
+    Write-Host "  Attempting to install dotnet from $location."
     try {
       & $installScript @variation
       $installSuccess = $true
       break
     }
     catch {
-      Write-Host "  Failed to install $dotnetVersionLabel from $location."
+      Write-Host "  Failed to install dotnet from $location."
     }
   }
   if (-not $installSuccess) {
-    Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Failed to install $dotnetVersionLabel from any of the specified locations."
+    Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Failed to install dotnet from any of the specified locations."
     ExitWithExitCode 1
   }
 }

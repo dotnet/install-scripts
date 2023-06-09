@@ -228,17 +228,17 @@ function InstallDotNet {
   for variationName in "${variations[@]}"; do
     local name="$variationName[@]"
     local variation=("${!name}")
-    echo "  Attempting to install $dotnetVersionLabel from $variationName."
+    echo "  Attempting to install dotnet from $variationName."
     bash "$install_script" "${variation[@]}" && installSuccess=1
     if [[ "$installSuccess" -eq 1 ]]; then
       break
     fi
 
-    echo "  Failed to install $dotnetVersionLabel from $variationName."
+    echo "  Failed to install dotnet from $variationName."
   done
 
   if [[ "$installSuccess" -eq 0 ]]; then
-    Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to install $dotnetVersionLabel from any of the specified locations."
+    Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to install dotnet from any of the specified locations."
     ExitWithExitCode 1
   fi
 }
