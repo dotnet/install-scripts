@@ -8,17 +8,34 @@
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <AssemblyName>UNUSED</AssemblyName>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="1.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  
   <ItemGroup>
     <None Include="..\dotnet-install.ps1" Link="dotnet-install.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="..\dotnet-install.sh" Link="dotnet-install.sh">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <FilesToSign Include="$(OutDir)\dotnet-install.ps1">
+      <Authenticode>Microsoft400</Authenticode>
+    </FilesToSign>
+    <FilesToSign Include="$(OutDir)\dotnet-install.sh">
+      <Authenticode>Linux500046PGPDetached</Authenticode>
+    </FilesToSign>
   </ItemGroup>
-  <ItemGroup>
-  </ItemGroup>
+  
   <Target Name="Delete Unused" AfterTargets="Build">
     <Delete Files="$(OutputPath)UNUSED.dll" />
     <Delete Files="$(OutputPath)UNUSED.pdb" />
   </Target>
+  
   <Target Name="ArtifactsDir Setup" AfterTargets="Build">
     <!-- To prevent "directory not found" errors, create empty directory -->
     <MakeDir Directories="$(ArtifactsPackagesDir)" />
