@@ -32,8 +32,8 @@
   </ItemGroup>
   
   <Target Name="Delete Unused" AfterTargets="Build">
-    <Delete Files="$(OutputPath)UNUSED.dll" />
-    <Delete Files="$(OutputPath)UNUSED.pdb" />
+    <Delete Files="$(OutputPath)\**\UNUSED.dll" />
+    <Delete Files="$(OutputPath)\**\UNUSED.pdb" />
   </Target>
   
   <Target Name="ArtifactsDir Setup" AfterTargets="Build">
