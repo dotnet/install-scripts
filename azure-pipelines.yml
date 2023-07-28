@@ -70,7 +70,6 @@ stages:
           displayName: Sign scripts
           env:
             SIGNTOOL_DISABLE_TELEMETRY: 'true'
-         :: Signing is disabled for now. This will be enabled back once we resolve the issue with validation task
         - ${{ if eq(variables._RunAsInternal, True) }}:
           - task: PowerShell@2
             displayName: Validate Signature
