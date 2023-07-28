@@ -26,14 +26,23 @@
     <FilesToSign Include="$(OutDir)\dotnet-install.ps1">
       <Authenticode>Microsoft400</Authenticode>
     </FilesToSign>
-    <FilesToSign Include="$(OutDir)\dotnet-install.sh">
+    <FilesToSign Include="$(OutDir)\dotnet-install.sig">
       <Authenticode>Linux500046PGPDetached</Authenticode>
     </FilesToSign>
   </ItemGroup>
-  
+
+  <Target Name="CopyBeforeSign" BeforeTargets="SignFiles">
+    <!-- MicroBuild signing overwrites original file. As we have detached signature for Bash script, we will create a copy that will be rewriten. -->
+    <Copy SourceFiels="$(OutDir)\dotnet-install.sh" DestinationFiles="$(OutDir)\dotnet-install.sig"/>
+  </Target>
+
+  <Target Name="DeleteRefAfterSign" AfterTargets="SignFiles">
+    <Delete Files="$(OutDir)\ref\UNUSED.dll" />
+  </Target>
+
   <Target Name="Delete Unused" AfterTargets="Build">
-    <Delete Files="$(OutputPath)\**\UNUSED.dll" />
-    <Delete Files="$(OutputPath)\**\UNUSED.pdb" />
+    <Delete Files="$(OutDir)\UNUSED.dll" />
+    <Delete Files="$(OutDir)\UNUSED.pdb" />
   </Target>
   
   <Target Name="ArtifactsDir Setup" AfterTargets="Build">
