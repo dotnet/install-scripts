@@ -33,7 +33,7 @@
 
   <Target Name="CopyBeforeSign" BeforeTargets="SignFiles">
     <!-- MicroBuild signing overwrites original file. As we have detached signature for Bash script, we will create a copy that will be rewriten. -->
-    <Copy SourceFiels="$(OutDir)\dotnet-install.sh" DestinationFiles="$(OutDir)\dotnet-install.sig"/>
+    <Copy SourceFiles="$(OutDir)\dotnet-install.sh" DestinationFiles="$(OutDir)\dotnet-install.sig"/>
   </Target>
 
   <Target Name="DeleteRefAfterSign" AfterTargets="SignFiles">
