@@ -70,15 +70,15 @@ stages:
           displayName: Sign scripts
           env:
             SIGNTOOL_DISABLE_TELEMETRY: 'true'
-        # :: Signing is disabled for now. This will be enabled back once we resolve the issue with validation task
-        #- ${{ if eq(variables._RunAsInternal, True) }}:
-        #  - task: PowerShell@2
-        #    displayName: Validate Signature
-        #    inputs:
-        #      filePath: eng/common/sdk-task.ps1
-        #      arguments: -task SigningValidation -restore -msbuildEngine vs 
-        #        /p:InputFiles='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/**/*.ps1'
-        #        /p:PackageBasePath='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/'
+         :: Signing is disabled for now. This will be enabled back once we resolve the issue with validation task
+        - ${{ if eq(variables._RunAsInternal, True) }}:
+          - task: PowerShell@2
+            displayName: Validate Signature
+            inputs:
+              filePath: eng/common/sdk-task.ps1
+              arguments: -task SigningValidation -restore -msbuildEngine vs 
+                /p:InputFiles='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/**/*.ps1'
+                /p:PackageBasePath='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/'
   - job: LinuxTests
     timeoutInMinutes: 30
     container: LinuxContainer
