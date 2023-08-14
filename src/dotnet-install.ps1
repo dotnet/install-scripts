@@ -1101,7 +1101,7 @@ function Resolve-AssetName-And-RelativePath([string] $Runtime) {
 
 function Prepare-Install-Directory {
     $diskSpaceWarning = "Failed to check the disk space. Installation will continue, but it may fail if you do not have enough disk space.";
-    # this check is relevant for PS version >= 7, the result can be irrelevant for older versions. See https://github.com/PowerShell/PowerShell/issues/12442.
+
     if ($PSVersionTable.PSVersion.Major -lt 7) {
         Say-Warning $diskSpaceWarning
         return $null
@@ -1118,6 +1118,7 @@ function Prepare-Install-Directory {
         Say-Warning $diskSpaceWarning
     }
 
+    # The check is relevant for PS version >= 7, the result can be irrelevant for older versions. See https://github.com/PowerShell/PowerShell/issues/12442.
     if ( ($null -ne $diskInfo) -and ($diskInfo.Free / 1MB -le 100)) {
         throw "There is not enough disk space on drive ${installDrive}:"
     }
