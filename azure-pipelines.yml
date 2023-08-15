@@ -67,7 +67,9 @@ stages:
             /p:Test=false
             /p:DotNetSignType=$(_SignType)
             /p:TeamName=$(_TeamName)
-          displayName: Sign dotnet-install.ps1
+          displayName: Sign scripts
+          env:
+            SIGNTOOL_DISABLE_TELEMETRY: 'true'
         - ${{ if eq(variables._RunAsInternal, True) }}:
           - task: PowerShell@2
             displayName: Validate Signature
