@@ -1103,8 +1103,8 @@ function Prepare-Install-Directory {
     $diskSpaceWarning = "Failed to check the disk space. Installation will continue, but it may fail if you do not have enough disk space.";
 
     if ($PSVersionTable.PSVersion.Major -lt 7) {
-        Say-Warning $diskSpaceWarning
-        return $null
+        Say-Verbose $diskSpaceWarning
+        return
     }
 
     New-Item -ItemType Directory -Force -Path $InstallRoot | Out-Null
