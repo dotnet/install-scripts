@@ -123,6 +123,13 @@ stages:
       displayName: Run Tests
       inputs: 
         command: test
+    - task: PublishBuildArtifacts@1 
+      displayName: Publish Test output 
+      inputs: 
+        pathToPublish: '$(Build.SourcesDirectory)' 
+        artifactName: drop 
+        continueOnError: true
+        condition: always()
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml
