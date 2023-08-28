@@ -547,6 +547,32 @@ is_dotnet_package_installed() {
 }
 
 # args:
+# install_root - $1
+# relative_path_to_package - $2
+# specific_version - $3
+# remote file size - $4
+validate_remote_local_file_sizes() 
+{
+    eval $invocation
+
+    local install_root="$1"
+    local relative_path_to_package="$2"
+    local specific_version="${3//[$'\t\r\n']}"
+    local remote_file_size="$4"
+
+    local dotnet_package_path="$(combine_paths "$(combine_paths "$install_root" "$relative_path_to_package")" "$specific_version")"
+
+    local file_size="$(stat -c %s "$dotnet_package_path")"
+    local file_size_bits="$(awk "BEGIN { print $file_size * 8 }")"
+
+    say "Downloaded file size: $file_size_bits bits."
+
+    if [ "$remote_file_size" -ne "$file_size_bits" ]; then
+        say "The remote and local file sizes are not equal for $dotnet_package_path. The downloaded package may be corrupted."
+    fi    
+}
+
+# args:
 # azure_feed - $1
 # channel - $2
 # normalized_architecture - $3
@@ -912,6 +938,27 @@ copy_files_or_dirs_from_list() {
             cp -R $override_switch "$root_path/$path" "$target"
         fi
     done
+}
+
+# args:
+# zip_uri - $1
+get_file_size() {
+    local zip_uri="$1"
+
+    if machine_has "curl"; then
+        file_size=$(curl -sI  "$zip_uri" | grep -i content-length | awk '{print $2}')
+    elif machine_has "wget"; then
+        file_size=$(wget --server-response -O /dev/null "$zip_uri" 2>&1 | grep -i '^Content-Length:' | awk '{print $2}')
+    else
+        say "Neither curl nor wget is available on this system."
+        return
+    fi
+
+    remote_file_size_bits=$(awk "BEGIN { print $file_size * 8 }")
+
+    say "Initial file $zip_uri size is $remote_file_size_bits bits."
+
+    echo "$remote_file_size_bits"
 }
 
 # args:
@@ -1427,6 +1474,7 @@ install_dotnet() {
     eval $invocation
     local download_failed=false
     local download_completed=false
+    local remote_file_size=''
 
     mkdir -p "$install_root"
     zip_path="$(mktemp "$temporary_file_template")"
@@ -1440,6 +1488,8 @@ install_dotnet() {
         link_type="${link_types[$link_index]}"
 
         say "Attempting to download using $link_type link $download_link"
+
+        remote_file_size="$(get_file_size "$download_link")"
 
         # The download function will set variables $http_code and $download_error_msg in case of failure.
         download_failed=false
@@ -1486,6 +1536,7 @@ install_dotnet() {
 
     #  Check if the standard SDK version is installed.
     say_verbose "Checking installation: version = $effective_version"
+    validate_remote_local_file_sizes "$install_root" "$asset_relative_path" "$effective_version" "$remote_file_size"
     if is_dotnet_package_installed "$install_root" "$asset_relative_path" "$effective_version"; then
         say "Installed version is $effective_version"
         return 0
