@@ -562,7 +562,7 @@ validate_remote_local_file_sizes()
 
     local dotnet_package_path="$(combine_paths "$(combine_paths "$install_root" "$relative_path_to_package")" "$specific_version")"
 
-    local file_size="$(stat -c %s "$dotnet_package_path")"
+    local file_size="$(stat -c '%s' "$dotnet_package_path")"
     if [ -n "$file_size" ]; then
         local file_size_bits="$(awk "BEGIN { print $file_size * 8 }")"
 
@@ -958,11 +958,14 @@ get_file_size() {
         return
     fi
 
-    remote_file_size_bits=$(awk "BEGIN { print $file_size * 8 }")
-
-    say "Initial file $zip_uri size is $remote_file_size_bits bits."
-
-    echo "$remote_file_size_bits"
+    if [ -n "$file_size" ]; then
+        remote_file_size_bits=$(awk "BEGIN { print $file_size * 8 }")
+        say "Initial file $zip_uri size is $remote_file_size_bits bits."
+        echo "$remote_file_size_bits"
+    else
+        say "Initial file size was not received from request."
+        echo 0
+    fi
 }
 
 # args:
