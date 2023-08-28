@@ -563,13 +563,17 @@ validate_remote_local_file_sizes()
     local dotnet_package_path="$(combine_paths "$(combine_paths "$install_root" "$relative_path_to_package")" "$specific_version")"
 
     local file_size="$(stat -c %s "$dotnet_package_path")"
-    local file_size_bits="$(awk "BEGIN { print $file_size * 8 }")"
+    if [ -n "$file_size" ]; then
+        local file_size_bits="$(awk "BEGIN { print $file_size * 8 }")"
 
-    say "Downloaded file size: $file_size_bits bits."
+        say "Downloaded file size: $file_size_bits bits."
 
-    if [ "$remote_file_size" -ne "$file_size_bits" ]; then
-        say "The remote and local file sizes are not equal for $dotnet_package_path. The downloaded package may be corrupted."
-    fi    
+        if [ "$remote_file_size" -ne "$file_size_bits" ]; then
+            say "The remote and local file sizes are not equal for $dotnet_package_path. The downloaded package may be corrupted."
+        fi
+    else
+        say "The downloaded package size can not be measured. The downloaded package may be corrupted."      
+    fi 
 }
 
 # args:
