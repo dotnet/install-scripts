@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using VerifyXunit;
 using VerifyTests;
 using System.Runtime.CompilerServices;
+using System.Linq;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
@@ -28,7 +29,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             else
             {
                 path = Path.Combine(GetRepoRoot(), "src", "dotnet-install.sh");
-                finalArgs = ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(args);
+                finalArgs = ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(args.Append("--verbose"));
             }
 
             return Command.Create(new CommandSpec(path, finalArgs, CommandResolutionStrategy.None));

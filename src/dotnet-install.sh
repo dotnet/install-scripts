@@ -562,7 +562,13 @@ validate_remote_local_file_sizes()
 
     local dotnet_package_path="$(combine_paths "$(combine_paths "$install_root" "$relative_path_to_package")" "$specific_version")"
 
-    local file_size="$(stat -c '%s' "$dotnet_package_path")"
+    local file_size=''
+    if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        file_size="$(stat -c '%s' "$dotnet_package_path")"
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        file_size="$(stat -f '%z' "$dotnet_package_path")"
+    fi  
+    
     if [ -n "$file_size" ]; then
         local file_size_bits="$(awk "BEGIN { print $file_size * 8 }")"
 

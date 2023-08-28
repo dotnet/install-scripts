@@ -223,8 +223,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string regex = Regex.Escape("  ") + versionRegex + Regex.Escape(" ") + installPathRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
             dotnetCommandResult.Should().Pass();
-
-            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
         }
 
         [Theory]
@@ -257,8 +255,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string regex = lineStartRegex + versionRegex + lineEndRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
             dotnetCommandResult.Should().Pass();
-
-            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
         }
 
         [Theory]
@@ -298,52 +294,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string regex = lineStartRegex + versionRegex + lineEndRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
             dotnetCommandResult.Should().Pass();
-
-            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
-        }
-
-        [Theory]
-        [Trait("MonitoringTest", "true")]
-        [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
-        public void WhenInstallingWindowsdesktopRuntime(string channel, string? quality, string versionRegex)
-        {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Don't install windowsdesktop if not on Windows.
-                return;
-            }
-
-            List<Regex> exclusions = new List<Regex>()
-            {
-                new Regex(".*2\\..*"),     // Runtime is not supported in this version.
-                new Regex(".*3\\.0.*"),    // Runtime is not supported in this version.
-                new Regex("release/3.1"),  // Broken scenario.
-                new Regex("6.0"),          // Broken scenario.
-                new Regex("6.0-preview2"), // Broken scenario.
-            };
-
-            if (exclusions.Any(e => e.IsMatch(channel)))
-            {
-                // Test is excluded.
-                return;
-            }
-
-            // Run install script to download and install.
-            var args = GetInstallScriptArgs(channel, "windowsdesktop", quality, _sdkInstallationDirectory);
-
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
-
-            commandResult.Should().NotHaveStdErr();
-            commandResult.Should().HaveStdOutContaining("Installation finished");
-            commandResult.Should().Pass();
-
-            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
-
-            // Dotnet CLI is not included in the windowsdesktop runtime. Therefore, version validation cannot be tested.
-            // Add the validation once the becomes available in the artifacts.
         }
 
         [Theory]
@@ -364,6 +314,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredential);
             commandResult.Should().Pass();
+
+            new CommandResultAssertions(commandResult).AppendDiagnosticsTo(string.Empty);
         }
 
         [Theory]
@@ -418,8 +370,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string regex = Regex.Escape("  " + (effectiveVersion ?? version) + " ") + installPathRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
             dotnetCommandResult.Should().Pass();
-
-            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
         }
 
         [Theory]
@@ -454,8 +404,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string regex = lineStartRegex + Regex.Escape(effectiveVersion ?? version) + lineEndRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
             dotnetCommandResult.Should().Pass();
-
-            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
         }
 
         [Theory]
@@ -490,8 +438,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string regex = lineStartRegex + Regex.Escape(effectiveVersion ?? version) + lineEndRegex;
             dotnetCommandResult.Should().HaveStdOutMatching(regex);
             dotnetCommandResult.Should().Pass();
-
-            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
         }
 
         [Theory]
@@ -519,8 +465,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().Pass();
-
-            TestOutputHelper.PopulateTestLoggerOutput(outputHelper, commandResult);
 
             // Dotnet CLI is not included in the windowsdesktop runtime. Therefore, version validation cannot be tested.
             // Add the validation once the becomes available in the artifacts.
@@ -732,7 +676,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         private static string GetRepoRoot()
         {
-            string directory = AppContext.BaseDirectory;
+            string? directory = AppContext.BaseDirectory;
 
             while (!Directory.Exists(Path.Combine(directory, ".git")) && directory != null)
             {

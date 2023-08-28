@@ -1,19 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>Install_Scripts.Test</RootNamespace>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="Assets\.gitattributes" />
-    <None Remove="Assets\InstallationScriptTests.json" />
-    <None Remove="Assets\InstallationScriptTestsWithMultipleSdkFields.json" />
-    <None Remove="Assets\InstallationScriptTestsWithVersionFieldInTheMiddle.json" />
-    <None Remove="Assets\InstallationScriptTestsWithWindowsLineEndings.json" />
-  </ItemGroup>
 
   <ItemGroup>
     <Content Include="Assets\InstallationScriptTests.json">
