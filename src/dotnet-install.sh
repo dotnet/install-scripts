@@ -547,35 +547,29 @@ is_dotnet_package_installed() {
 }
 
 # args:
-# install_root - $1
-# relative_path_to_package - $2
-# specific_version - $3
-# remote file size - $4
+# downloaded file - $1
+# remote_file_size - $2
 validate_remote_local_file_sizes() 
 {
     eval $invocation
 
-    local install_root="$1"
-    local relative_path_to_package="$2"
-    local specific_version="${3//[$'\t\r\n']}"
-    local remote_file_size="$4"
-
-    local dotnet_package_path="$(combine_paths "$(combine_paths "$install_root" "$relative_path_to_package")" "$specific_version")"
+    local downloaded_file="$1"
+    local remote_file_size="$2"
 
     local file_size=''
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-        file_size="$(stat -c '%s' "$dotnet_package_path")"
+        file_size="$(stat -c '%s' "$downloaded_file")"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
-        file_size="$(stat -f '%z' "$dotnet_package_path")"
+        file_size="$(stat -f '%z' "$downloaded_file")"
     fi  
     
     if [ -n "$file_size" ]; then
         local file_size_bits="$(awk "BEGIN { print $file_size * 8 }")"
 
-        say "Downloaded file size: $file_size_bits bits."
+        say "Downloaded file size is $file_size_bits bits."
 
         if [ "$remote_file_size" -ne "$file_size_bits" ]; then
-            say "The remote and local file sizes are not equal for $dotnet_package_path. The downloaded package may be corrupted."
+            say "The remote and local file sizes are not equal. The downloaded package may be corrupted."
         fi
     else
         say "The downloaded package size can not be measured. The downloaded package may be corrupted."      
@@ -977,11 +971,13 @@ get_file_size() {
 # args:
 # zip_path - $1
 # out_path - $2
+# remote_file_size - $3
 extract_dotnet_package() {
     eval $invocation
 
     local zip_path="$1"
     local out_path="$2"
+    local remote_file_size="$3"
 
     local temp_out_path="$(mktemp -d "$temporary_file_template")"
 
@@ -991,7 +987,9 @@ extract_dotnet_package() {
     local folders_with_version_regex='^.*/[0-9]+\.[0-9]+[^/]+/'
     find "$temp_out_path" -type f | grep -Eo "$folders_with_version_regex" | sort | copy_files_or_dirs_from_list "$temp_out_path" "$out_path" false
     find "$temp_out_path" -type f | grep -Ev "$folders_with_version_regex" | copy_files_or_dirs_from_list "$temp_out_path" "$out_path" "$override_non_versioned_files"
-
+    
+    validate_remote_local_file_sizes "$zip_path" "$remote_file_size"
+    
     rm -rf "$temp_out_path"
     rm -f "$zip_path" && say_verbose "Temporary zip file $zip_path was removed"
 
@@ -1487,7 +1485,6 @@ install_dotnet() {
     eval $invocation
     local download_failed=false
     local download_completed=false
-    local remote_file_size=''
 
     mkdir -p "$install_root"
     zip_path="$(mktemp "$temporary_file_template")"
@@ -1501,8 +1498,6 @@ install_dotnet() {
         link_type="${link_types[$link_index]}"
 
         say "Attempting to download using $link_type link $download_link"
-
-        remote_file_size="$(get_file_size "$download_link")"
 
         # The download function will set variables $http_code and $download_error_msg in case of failure.
         download_failed=false
@@ -1530,8 +1525,10 @@ install_dotnet() {
         return 1
     fi
 
+    local remote_file_size="$(get_file_size "$download_link")"
+
     say "Extracting zip from $download_link"
-    extract_dotnet_package "$zip_path" "$install_root" || return 1
+    extract_dotnet_package "$zip_path" "$install_root" "$remote_file_size" || return 1
 
     #  Check if the SDK version is installed; if not, fail the installation.
     # if the version contains "RTM" or "servicing"; check if a 'release-type' SDK version is installed.
@@ -1549,7 +1546,6 @@ install_dotnet() {
 
     #  Check if the standard SDK version is installed.
     say_verbose "Checking installation: version = $effective_version"
-    validate_remote_local_file_sizes "$install_root" "$asset_relative_path" "$effective_version" "$remote_file_size"
     if is_dotnet_package_installed "$install_root" "$asset_relative_path" "$effective_version"; then
         say "Installed version is $effective_version"
         return 0

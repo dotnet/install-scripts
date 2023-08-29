@@ -103,8 +103,6 @@ stages:
       displayName: Run Tests
       inputs: 
         command: test
-        continueOnError: true
-        condition: always()
 
   - job: MacOSTests
     timeoutInMinutes: 30
@@ -125,15 +123,6 @@ stages:
       displayName: Run Tests
       inputs: 
         command: test
-        continueOnError: true
-        condition: always()
-    - task: PublishBuildArtifacts@1 
-      displayName: Publish Test output 
-      inputs: 
-        pathToPublish: '$(Build.SourcesDirectory)' 
-        artifactName: drop 
-        continueOnError: true
-        condition: always()
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - template: eng\common\templates\post-build\post-build.yml

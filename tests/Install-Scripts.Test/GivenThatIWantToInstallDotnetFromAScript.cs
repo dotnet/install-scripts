@@ -314,8 +314,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredential);
             commandResult.Should().Pass();
-
-            new CommandResultAssertions(commandResult).AppendDiagnosticsTo(string.Empty);
         }
 
         [Theory]
