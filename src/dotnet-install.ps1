@@ -176,14 +176,23 @@ function Measure-Action($name, $block) {
     Say-Verbose "⏱ Action '$name' took $totalSeconds seconds"
 }
 
-function Get-File-Size($zipUri) {
-    $response = Invoke-WebRequest -Uri $zipUri -Method Head
-    $fileSize = [long]$response.Headers["Content-Length"]
-    $fileSizeBits = $fileSize * 8
+function Get-Remote-File-Size($zipUri) {
+    try {
+        $response = Invoke-WebRequest -Uri $zipUri -Method Head
+        $fileSize = $response.Headers["Content-Length"]
+        if ((![string]::IsNullOrEmpty($fileSize))) {
+            $fileSizeBits = [long]$fileSize * 8
+            Say "Initial file $zipUri size is $fileSizeBits bits."
+        
+            return $fileSizeBits
+        }
+     
+    }
+    catch {
+        Say-Verbose "Content-Length header was not extacted for $zipUri."
+    }
 
-    Say "Initial file $zipUri size is $fileSizeBits bits."
-
-    return $fileSizeBits
+    return $null
 }
 
 function Say-Invocation($Invocation) {
@@ -873,7 +882,7 @@ function DownloadFile($Source, [string]$OutPath) {
 
     $Stream = $null
 
-    $remoteFileSize = Get-File-Size -zipUri $Source
+    $remoteFileSize = Get-Remote-File-Size -zipUri $Source
     
     try {
         $Response = GetHTTPResponse -Uri $Source
@@ -894,9 +903,8 @@ function DownloadFile($Source, [string]$OutPath) {
             $Stream.Dispose()
         }
 
-        if ($remoteFileSize -ne $fileSizeBits)
-        {
-            Say "The remote and local file sizes are not equal for $Source. The downloaded package may be corrupted."
+        if ((![string]::IsNullOrEmpty($remoteFileSize)) -and $remoteFileSize -ne $fileSizeBits) {
+            Say "The remote and local file sizes are not equal."
         }
     }
 }

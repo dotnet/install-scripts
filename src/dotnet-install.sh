@@ -555,6 +555,7 @@ validate_remote_local_file_sizes()
 
     local downloaded_file="$1"
     local remote_file_size="$2"
+    local file_size_bits=''
 
     local file_size=''
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -564,12 +565,12 @@ validate_remote_local_file_sizes()
     fi  
     
     if [ -n "$file_size" ]; then
-        local file_size_bits="$(awk "BEGIN { print $file_size * 8 }")"
+        file_size_bits="$(awk "BEGIN { print $file_size * 8 }")"
 
         say "Downloaded file size is $file_size_bits bits."
 
-        if [ "$remote_file_size" -ne "$file_size_bits" ]; then
-            say "The remote and local file sizes are not equal. The downloaded package may be corrupted."
+        if [ -n "$remote_file_size" ] && [ "$remote_file_size" -ne "$file_size_bits" ]; then
+            say "The remote and local file sizes are not equal."
         fi
     else
         say "The downloaded package size can not be measured. The downloaded package may be corrupted."      
@@ -946,7 +947,7 @@ copy_files_or_dirs_from_list() {
 
 # args:
 # zip_uri - $1
-get_file_size() {
+get_remote_file_size() {
     local zip_uri="$1"
 
     if machine_has "curl"; then
@@ -963,8 +964,8 @@ get_file_size() {
         say "Initial file $zip_uri size is $remote_file_size_bits bits."
         echo "$remote_file_size_bits"
     else
-        say "Initial file size was not received from request."
-        echo 0
+        say_verbose "Initial file size was not received from request."
+        echo ""
     fi
 }
 
@@ -1485,6 +1486,7 @@ install_dotnet() {
     eval $invocation
     local download_failed=false
     local download_completed=false
+    local remote_file_size=''
 
     mkdir -p "$install_root"
     zip_path="$(mktemp "$temporary_file_template")"
@@ -1525,7 +1527,7 @@ install_dotnet() {
         return 1
     fi
 
-    local remote_file_size="$(get_file_size "$download_link")"
+    remote_file_size="$(get_remote_file_size "$download_link")"
 
     say "Extracting zip from $download_link"
     extract_dotnet_package "$zip_path" "$install_root" "$remote_file_size" || return 1
