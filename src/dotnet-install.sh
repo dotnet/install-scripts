@@ -555,7 +555,6 @@ validate_remote_local_file_sizes()
 
     local downloaded_file="$1"
     local remote_file_size="$2"
-    local file_size_bits=''
 
     local file_size=''
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
@@ -565,12 +564,12 @@ validate_remote_local_file_sizes()
     fi  
     
     if [ -n "$file_size" ]; then
-        file_size_bits="$(awk "BEGIN { print $file_size * 8 }")"
+        say "Downloaded file size is $file_size bytes."
 
-        say "Downloaded file size is $file_size_bits bits."
-
-        if [ -n "$remote_file_size" ] && [ "$remote_file_size" -ne "$file_size_bits" ]; then
-            say "The remote and local file sizes are not equal."
+        if [ -n "$remote_file_size" ] && [ "$file_size" != "$remote_file_size" ]; then
+            say "The remote and local file sizes are not equal. Remote file size is $remote_file_size bytes and local size is $file_size bytes. The local package may be corrupted."
+        else
+            say "The remote and local file sizes are equal."
         fi
     else
         say "The downloaded package size can not be measured. The downloaded package may be corrupted."      
@@ -960,11 +959,10 @@ get_remote_file_size() {
     fi
 
     if [ -n "$file_size" ]; then
-        remote_file_size_bits=$(awk "BEGIN { print $file_size * 8 }")
-        say "Initial file $zip_uri size is $remote_file_size_bits bits."
-        echo "$remote_file_size_bits"
+        say "Remote file $zip_uri size is $file_size bytes."
+        echo "$file_size"
     else
-        say_verbose "Initial file size was not received from request."
+        say_verbose "Content-Length header was not extacted for $zip_uri."
         echo ""
     fi
 }

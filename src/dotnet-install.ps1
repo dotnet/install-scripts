@@ -181,10 +181,9 @@ function Get-Remote-File-Size($zipUri) {
         $response = Invoke-WebRequest -Uri $zipUri -Method Head
         $fileSize = $response.Headers["Content-Length"]
         if ((![string]::IsNullOrEmpty($fileSize))) {
-            $fileSizeBits = [long]$fileSize * 8
-            Say "Initial file $zipUri size is $fileSizeBits bits."
+            Say "Remote file $zipUri size is $fileSize bytes."
         
-            return $fileSizeBits
+            return $fileSize
         }
      
     }
@@ -891,20 +890,19 @@ function DownloadFile($Source, [string]$OutPath) {
         $Stream.CopyTo($File)
         $File.Close()
 
-        # Calculate the downloaded file size in bits
-        $fileSizeBytes = [long](Get-Item $OutPath).Length
-        $fileSizeBits = $fileSizeBytes * 8
-
-        # Log the downloaded file size in bits
-        Say "Downloaded file $Source size is $fileSizeBits bits."
+        $fileSize = [long](Get-Item $OutPath).Length
+        Say "Downloaded file $Source size is $fileSize bytes."
     }
     finally {
         if ($null -ne $Stream) {
             $Stream.Dispose()
         }
 
-        if ((![string]::IsNullOrEmpty($remoteFileSize)) -and $remoteFileSize -ne $fileSizeBits) {
-            Say "The remote and local file sizes are not equal."
+        if ((![string]::IsNullOrEmpty($remoteFileSize)) -and $remoteFileSize -ne $fileSize) {
+            Say "The remote and local file sizes are not equal. Remote file size is $remoteFileSize bytes and local size is $fileSize bytes. The local package may be corrupted."
+        }
+        else {
+            Say "The remote and local file sizes are equal."
         }
     }
 }
