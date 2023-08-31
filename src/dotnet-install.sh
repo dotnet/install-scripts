@@ -566,13 +566,16 @@ validate_remote_local_file_sizes()
     if [ -n "$file_size" ]; then
         say "Downloaded file size is $file_size bytes."
 
-        if [ -n "$remote_file_size" ] && [ "$file_size" != "$remote_file_size" ]; then
-            say "The remote and local file sizes are not equal. Remote file size is $remote_file_size bytes and local size is $file_size bytes. The local package may be corrupted."
-        else
-            say "The remote and local file sizes are equal."
+        if [ -n "$remote_file_size" ] && [ -n "$file_size" ]; then
+            if [ "$file_size" != "$remote_file_size" ]; then
+                say "The remote and local file sizes are not equal. Remote file size is $remote_file_size bytes and local size is $file_size bytes. The local package may be corrupted."
+            else
+                say "The remote and local file sizes are equal."
+            fi
         fi
+        
     else
-        say "The downloaded package size can not be measured. The downloaded package may be corrupted."      
+        say "Either downloaded or local package size can not be measured. One of them may be corrupted."      
     fi 
 }
 
@@ -962,7 +965,7 @@ get_remote_file_size() {
         say "Remote file $zip_uri size is $file_size bytes."
         echo "$file_size"
     else
-        say_verbose "Content-Length header was not extacted for $zip_uri."
+        say_verbose "Content-Length header was not extracted for $zip_uri."
         echo ""
     fi
 }
