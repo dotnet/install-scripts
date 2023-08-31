@@ -176,6 +176,23 @@ function Measure-Action($name, $block) {
     Say-Verbose "⏱ Action '$name' took $totalSeconds seconds"
 }
 
+function Get-Remote-File-Size($zipUri) {
+    try {
+        $response = Invoke-WebRequest -Uri $zipUri -Method Head
+        $fileSize = $response.Headers["Content-Length"]
+        if ((![string]::IsNullOrEmpty($fileSize))) {
+            Say "Remote file $zipUri size is $fileSize bytes."
+        
+            return $fileSize
+        }
+    }
+    catch {
+        Say-Verbose "Content-Length header was not extracted for $zipUri."
+    }
+
+    return $null
+}
+
 function Say-Invocation($Invocation) {
     $command = $Invocation.MyCommand;
     $args = (($Invocation.BoundParameters.Keys | foreach { "-$_ `"$($Invocation.BoundParameters[$_])`"" }) -join " ")
@@ -862,18 +879,43 @@ function DownloadFile($Source, [string]$OutPath) {
     }
 
     $Stream = $null
-
+    
     try {
         $Response = GetHTTPResponse -Uri $Source
         $Stream = $Response.Content.ReadAsStreamAsync().Result
         $File = [System.IO.File]::Create($OutPath)
         $Stream.CopyTo($File)
         $File.Close()
+
+        ValidateRemoteLocalFileSizes -LocalFileOutPath $OutPath -SourceUri $Source
     }
     finally {
         if ($null -ne $Stream) {
             $Stream.Dispose()
         }
+    }
+}
+
+function ValidateRemoteLocalFileSizes([string]$LocalFileOutPath, $SourceUri) {
+    try {
+        $remoteFileSize = Get-Remote-File-Size -zipUri $SourceUri
+        $fileSize = [long](Get-Item $LocalFileOutPath).Length
+        Say "Downloaded file $SourceUri size is $fileSize bytes."
+    
+        if ((![string]::IsNullOrEmpty($remoteFileSize)) -and !([string]::IsNullOrEmpty($fileSize)) ) {
+            if ($remoteFileSize -ne $fileSize) {
+                Say "The remote and local file sizes are not equal. Remote file size is $remoteFileSize bytes and local size is $fileSize bytes. The local package may be corrupted."
+            }
+            else {
+                Say "The remote and local file sizes are equal."
+            }   
+        }
+        else {
+            Say "Either downloaded or local package size can not be measured. One of them may be corrupted."
+        }
+    }
+    catch {
+        Say "Either downloaded or local package size can not be measured. One of them may be corrupted."
     }
 }
 
@@ -883,13 +925,11 @@ function SafeRemoveFile($Path) {
             Remove-Item $Path
             Say-Verbose "The temporary file `"$Path`" was removed."
         }
-        else
-        {
+        else {
             Say-Verbose "The temporary file `"$Path`" does not exist, therefore is not removed."
         }
     }
-    catch
-    {
+    catch {
         Say-Warning "Failed to remove the temporary file: `"$Path`", remove it manually."
     }
 }
