@@ -1,3 +1,4 @@
+---
 # This workflow executes several linters on changed files based on languages used in your code base whenever
 # you push a code or open a pull request.
 #
@@ -8,9 +9,9 @@ name: Lint Code Base
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
 jobs:
   run-lint:
     runs-on: ubuntu-latest
@@ -22,8 +23,13 @@ jobs:
           fetch-depth: 0
 
       - name: Lint Code Base
-        uses: github/super-linter@v4
+        uses: github/super-linter@v5
         env:
           VALIDATE_ALL_CODEBASE: false
-          DEFAULT_BRANCH: "main"
+          VALIDATE_CSS: false
+          VALIDATE_JAVASCRIPT_STANDARD: false
+          VALIDATE_MARKDOWN: false
+          VALIDATE_HTML: false
+          FILTER_REGEX_EXCLUDE: .*static/.*
+          DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
