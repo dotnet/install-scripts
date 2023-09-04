@@ -29,10 +29,10 @@
     Note: The version parameter overrides the channel parameter when any version other than 'latest' is used.
 .PARAMETER Quality
     Download the latest build of specified quality in the channel. The possible values are: daily, signed, validated, preview, GA.
-    Works only in combination with channel. Not applicable for STS and LTS channels and will be ignored if those channels are used. 
+    Works only in combination with channel. Not applicable for STS and LTS channels and will be ignored if those channels are used.
     For SDK use channel in A.B.Cxx format: using quality together with channel in A.B format is not supported.
     Supported since 5.0 release.
-    Note: The version parameter overrides the channel parameter when any version other than 'latest' is used, and therefore overrides the quality.     
+    Note: The version parameter overrides the channel parameter when any version other than 'latest' is used, and therefore overrides the quality.
 .PARAMETER Version
     Default: latest
     Represents a build version on specific channel. Possible values:
@@ -115,7 +115,7 @@ param(
    [switch]$NoPath,
    [string]$AzureFeed,
    [string]$UncachedFeed,
-   [string]$FeedCredential,
+   [SecureString]$FeedCredential,
    [string]$ProxyAddress,
    [switch]$ProxyUseDefaultCredentials,
    [string[]]$ProxyBypassList=@(),
@@ -182,7 +182,7 @@ function Get-Remote-File-Size($zipUri) {
         $fileSize = $response.Headers["Content-Length"]
         if ((![string]::IsNullOrEmpty($fileSize))) {
             Say "Remote file $zipUri size is $fileSize bytes."
-        
+
             return $fileSize
         }
     }
@@ -194,9 +194,13 @@ function Get-Remote-File-Size($zipUri) {
 }
 
 function Say-Invocation($Invocation) {
-    $command = $Invocation.MyCommand;
-    $args = (($Invocation.BoundParameters.Keys | foreach { "-$_ `"$($Invocation.BoundParameters[$_])`"" }) -join " ")
-    Say-Verbose "$command $args"
+    $command = $Invocation.MyCommand
+    $boundParameters = $Invocation.BoundParameters.GetEnumerator() | ForEach-Object {
+        "-$($_.Key) $($_.Value)"
+    }
+
+    $argsString = $boundParameters -join ' '
+    Say-Verbose "$command $argsString"
 }
 
 function Invoke-With-Retry([ScriptBlock]$ScriptBlock, [System.Threading.CancellationToken]$cancellationToken = [System.Threading.CancellationToken]::None, [int]$MaxAttempts = 3, [int]$SecondsBetweenAttempts = 1) {
@@ -230,21 +234,19 @@ function Get-Machine-Architecture() {
     # To get the correct architecture, we need to use PROCESSOR_ARCHITEW6432.
     # PS x64 doesn't define this, so we fall back to PROCESSOR_ARCHITECTURE.
     # Possible values: amd64, x64, x86, arm64, arm
-    if( $ENV:PROCESSOR_ARCHITEW6432 -ne $null ) {
+    if( $null -ne $ENV:PROCESSOR_ARCHITEW6432 ) {
         return $ENV:PROCESSOR_ARCHITEW6432
     }
 
     try {        
         if( ((Get-CimInstance -ClassName CIM_OperatingSystem).OSArchitecture) -like "ARM*") {
-            if( [Environment]::Is64BitOperatingSystem )
-            {
+            if ( [Environment]::Is64BitOperatingSystem ) {
                 return "arm64"
             }  
             return "arm"
         }
-    }
-    catch {
-        # Machine doesn't support Get-CimInstance
+    } catch {
+        Say-Verbose "Machine doesn't support Get-CimInstance"
     }
 
     return $ENV:PROCESSOR_ARCHITECTURE
@@ -266,7 +268,7 @@ function Get-CLIArchitecture-From-Architecture([string]$Architecture) {
     }
 }
 
-function ValidateFeedCredential([string] $FeedCredential)
+function ValidateFeedCredential([SecureString] $FeedCredential)
 {
     if ($Internal -and [string]::IsNullOrWhitespace($FeedCredential)) {
         $message = "Provide credentials via -FeedCredential parameter."
@@ -276,7 +278,7 @@ function ValidateFeedCredential([string] $FeedCredential)
             throw "$message"
         }
     }
-    
+
     #FeedCredential should start with "?", for it to be added to the end of the link.
     #adding "?" at the beginning of the FeedCredential if needed.
     if ((![string]::IsNullOrWhitespace($FeedCredential)) -and ($FeedCredential[0] -ne '?')) {
@@ -285,6 +287,7 @@ function ValidateFeedCredential([string] $FeedCredential)
 
     return $FeedCredential
 }
+
 function Get-NormalizedQuality([string]$Quality) {
     Say-Invocation $MyInvocation
 
@@ -357,10 +360,9 @@ function Get-Version-From-LatestVersion-File-Content([string]$VersionText) {
 function Load-Assembly([string] $Assembly) {
     try {
         Add-Type -Assembly $Assembly | Out-Null
-    }
-    catch {
-        # On Nano Server, Powershell Core Edition is used.  Add-Type is unable to resolve base class assemblies because they are not GAC'd.
-        # Loading the base class assemblies is not unnecessary as the types will automatically get resolved.
+    } catch {
+        Say-Verbose "On Nano Server, Powershell Core Edition is used.  Add-Type is unable to resolve base class assemblies because they are not GAC'd. "
+         "Loading the base class assemblies is not unnecessary as the types will automatically get resolved."
     }
 }
 
@@ -423,8 +425,7 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
 
             if ($DisableFeedCredential) {
                 $UriWithCredential = $Uri
-            }
-            else {
+            }  else {
                 $UriWithCredential = "${Uri}${FeedCredential}"
             }
 
@@ -539,11 +540,11 @@ function Parse-Jsonfile-For-Version([string]$JSonFile) {
     }
     try {
         $JSonContent = Get-Content($JSonFile) -Raw | ConvertFrom-Json | Select-Object -expand "sdk" -ErrorAction SilentlyContinue
-    }
-    catch {
+    } catch {
         Say-Error "Json file unreadable: '$JSonFile'"
         throw
     }
+
     if ($JSonContent) {
         try {
             $JSonContent.PSObject.Properties | ForEach-Object {
@@ -553,16 +554,15 @@ function Parse-Jsonfile-For-Version([string]$JSonFile) {
                     Say-Verbose "Version = $Version"
                 }
             }
-        }
-        catch {
+        } catch {
             Say-Error "Unable to parse the SDK node in '$JSonFile'"
             throw
         }
-    }
-    else {
+    } else {
         throw "Unable to find the SDK node in '$JSonFile'"
     }
-    If ($Version -eq $null) {
+
+    If ($null -eq $Version) {
         throw "Unable to find the SDK:version node in '$JSonFile'"
     }
     return $Version
@@ -643,9 +643,9 @@ function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion, [stri
     Say-Invocation $MyInvocation
 
     # Try to get the version number, using the productVersion.txt file located next to the installer file.
-    $ProductVersionTxtURLs = (Get-Product-Version-Url $AzureFeed $SpecificVersion $PackageDownloadLink -Flattened $true),
-                             (Get-Product-Version-Url $AzureFeed $SpecificVersion $PackageDownloadLink -Flattened $false)
-    
+    $ProductVersionTxtURLs = (Get-Product-Version-Url -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -PackageDownloadLink $PackageDownloadLink -Flattened $true),
+                             (Get-Product-Version-Url -AzureFeed $AzureFeed -SpecificVersion $SpecificVersion -PackageDownloadLink $PackageDownloadLink -Flattened $false)
+
     Foreach ($ProductVersionTxtURL in $ProductVersionTxtURLs) {
         Say-Verbose "Checking for the existence of $ProductVersionTxtURL"
 
@@ -711,7 +711,7 @@ function Get-Product-Version-Url([string]$AzureFeed, [string]$SpecificVersion, [
         elseif ($Runtime -eq "windowsdesktop") {
             # The windows desktop runtime is part of the core runtime layout prior to 5.0
             $ProductVersionTxtURL = "$AzureFeed/Runtime/$SpecificVersion/$pvFileName"
-            if ($majorVersion -ne $null -and $majorVersion -ge 5) {
+            if ($null -ne $majorVersion -and $majorVersion -ge 5) {
                 $ProductVersionTxtURL = "$AzureFeed/WindowsDesktop/$SpecificVersion/$pvFileName"
             }
         }
@@ -811,7 +811,7 @@ function Get-List-Of-Directories-And-Versions-To-Unpack-From-Dotnet-Package([Sys
 
     $ret = $ret | Sort-Object | Get-Unique
 
-    $values = ($ret | foreach { "$_" }) -join ";"
+    $values = ($ret | ForEach-Object { "$_" }) -join ";"
     Say-Verbose "Directories to unpack: $values"
 
     return $ret
@@ -1200,7 +1200,7 @@ if ($Version.ToLowerInvariant() -ne "latest" -and -not [string]::IsNullOrEmpty($
 
 # aka.ms links can only be used if the user did not request a specific version via the command line or a global.json file.
 if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
-    ($DownloadLink, $SpecificVersion, $EffectiveVersion) = Get-AkaMsLink-And-Version $NormalizedChannel $NormalizedQuality $Internal $NormalizedProduct $CLIArchitecture
+    ($DownloadLink, $SpecificVersion, $EffectiveVersion) = Get-AkaMsLink-And-Version -NormalizedChannel $NormalizedChannel -NormalizedQuality $NormalizedQuality -Internal $Internal -ProductName $NormalizedProduct -Architecture $CLIArchitecture
     
     if ($null -ne $DownloadLink) {
         $DownloadLinks += New-Object PSObject -Property @{downloadLink="$DownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='aka.ms'}
