@@ -993,7 +993,7 @@ extract_dotnet_package() {
     validate_remote_local_file_sizes "$zip_path" "$remote_file_size"
     
     rm -rf "$temp_out_path"
-    if [[ "$keep_zip" != "true" ]]; then
+    if [ -z ${keep_zip+x} ]; then
         rm -f "$zip_path" && say_verbose "Temporary zip file $zip_path was removed"
     fi
 
