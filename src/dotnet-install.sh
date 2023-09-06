@@ -993,7 +993,9 @@ extract_dotnet_package() {
     validate_remote_local_file_sizes "$zip_path" "$remote_file_size"
     
     rm -rf "$temp_out_path"
-    rm -f "$zip_path" && say_verbose "Temporary zip file $zip_path was removed"
+    if [[ "$keep_zip" != "true" ]]; then
+        rm -f "$zip_path" && say_verbose "Temporary zip file $zip_path was removed"
+    fi
 
     if [ "$failed" = true ]; then
         say_err "Extraction failed"
@@ -1490,7 +1492,7 @@ install_dotnet() {
     local remote_file_size=''
 
     mkdir -p "$install_root"
-    zip_path="$(mktemp "$temporary_file_template")"
+    zip_path="${zip_path:-$(mktemp "$temporary_file_template")}"
     say_verbose "Zip path: $zip_path"
 
     for link_index in "${!download_links[@]}"
@@ -1681,6 +1683,15 @@ do
             override_non_versioned_files=false
             non_dynamic_parameters+=" $name"
             ;;
+
+        --keep-zip|-[Kk]eep[Zz]ip)
+            keep_zip=true
+            non_dynamic_parameters+=" $name"
+            ;;
+        --zip-path|-[Zz]ip[Pp]ath)
+            shift
+            zip_path="$1"
+            ;;
         -?|--?|-h|--help|-[Hh]elp)
             script_name="$(basename "$0")"
             echo ".NET Tools Installer"
@@ -1751,6 +1762,8 @@ do
             echo "  --no-cdn,-NoCdn                    Disable downloading from the Azure CDN, and use the uncached feed directly."
             echo "  --jsonfile <JSONFILE>              Determines the SDK version from a user specified global.json file."
             echo "                                     Note: global.json must have a value for 'SDK:Version'"
+            echo "  --keep-zip,-KeepZip                If set, downloaded file is kept."
+            echo "  --zip-path, -ZipPath               If set, downloaded file is stored at the specified path."
             echo "  -?,--?,-h,--help,-Help             Shows this help message"
             echo ""
             echo "Install Location:"
