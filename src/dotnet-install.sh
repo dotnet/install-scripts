@@ -1683,7 +1683,6 @@ do
             override_non_versioned_files=false
             non_dynamic_parameters+=" $name"
             ;;
-
         --keep-zip|-[Kk]eep[Zz]ip)
             keep_zip=true
             non_dynamic_parameters+=" $name"
