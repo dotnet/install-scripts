@@ -575,8 +575,8 @@ validate_remote_local_file_sizes()
         say "Downloaded file size is $file_size bytes."
 
         if [ -n "$remote_file_size" ] && [ -n "$file_size" ]; then
-            if [ "$file_size" != "$remote_file_size" ]; then
-                say "The remote and local file sizes are not equal. Remote file size is $remote_file_size bytes and local size is $file_size bytes. The local package may be corrupted."
+            if [ "$file_size" -ne "$(echo "$remote_file_size" | bc)" ]; then
+                say "The remote and local file sizes are not equal. The remote file size is $remote_file_size bytes and the local size is $file_size bytes. The local package may be corrupted."
             else
                 say "The remote and local file sizes are equal."
             fi
