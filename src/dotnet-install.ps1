@@ -1224,7 +1224,7 @@ if ($Version.ToLowerInvariant() -ne "latest" -and -not [string]::IsNullOrEmpty($
 
 # aka.ms links can only be used if the user did not request a specific version via the command line or a global.json file.
 if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
-    ($DownloadLink, $SpecificVersion, $EffectiveVersion) = Get-AkaMsLink-And-Version -NormalizedChannel $NormalizedChannel -NormalizedQuality $NormalizedQuality -Internal $Internal -ProductName $NormalizedProduct -Architecture $CLIArchitecture -FeedQuery $NormalizedFeedQuery
+    ($DownloadLink, $SpecificVersion, $EffectiveVersion) = Get-AkaMsLink-And-Version -NormalizedChannel $NormalizedChannel -NormalizedQuality $NormalizedQuality -Internal $Internal -ProductName $NormalizedProduct -Architecture $CLIArchitecture
 
     if ($null -ne $DownloadLink) {
         $DownloadLinks += New-Object PSObject -Property @{downloadLink="$DownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='aka.ms'}
