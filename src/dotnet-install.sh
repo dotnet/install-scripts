@@ -562,8 +562,8 @@ validate_remote_local_file_sizes()
     eval $invocation
 
     local downloaded_file="$1"
-    local remote_file_size="$2"
-
+    local remote_file_size=$(echo "$2" | awk '{ num = $1 + 0; print num }')
+    
     local file_size=''
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         file_size="$(stat -c '%s' "$downloaded_file")"
@@ -575,7 +575,7 @@ validate_remote_local_file_sizes()
         say "Downloaded file size is $file_size bytes."
 
         if [ -n "$remote_file_size" ] && [ -n "$file_size" ]; then
-            if [ "$file_size" -ne "$(string_to_int "$remote_file_size")" ]; then
+            if [ "$file_size" -ne "$remote_file_size" ]; then
                 say "The remote and local file sizes are not equal. The remote file size is $remote_file_size bytes and the local size is $file_size bytes. The local package may be corrupted."
             else
                 say "The remote and local file sizes are equal."
@@ -585,11 +585,6 @@ validate_remote_local_file_sizes()
     else
         say "Either downloaded or local package size can not be measured. One of them may be corrupted."      
     fi 
-}
-
-# Function to convert a string to an integer
-function string_to_int {
-    echo "$1" | tr -d '\n' | sed 's/[^0-9]*//g'
 }
 
 # args:
