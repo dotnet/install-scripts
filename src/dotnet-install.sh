@@ -963,7 +963,7 @@ get_remote_file_size() {
     if machine_has "curl"; then
         file_size=$(curl -sI  "$zip_uri" | grep -i content-length | awk '{ num = $2 + 0; print num }')
     elif machine_has "wget"; then
-        file_size=$(wget --server-response -O /dev/null "$zip_uri" 2>&1 | grep -i '^Content-Length:' | awk '{ num = $2 + 0; print num }')
+        file_size=$(wget --spider --server-response -O /dev/null "$zip_uri" 2>&1 | grep -i 'Content-Length:' | awk '{ num = $2 + 0; print num }')
     else
         say "Neither curl nor wget is available on this system."
         return
