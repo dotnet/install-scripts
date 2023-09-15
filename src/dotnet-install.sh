@@ -562,9 +562,8 @@ validate_remote_local_file_sizes()
     eval $invocation
 
     local downloaded_file="$1"
-    local remote_file_size=$(echo "$2" | awk '{ num = $1 + 0; print num }')
-
-    local file_size=''
+    local remote_file_size="$2"
+    local file_size=0
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         file_size="$(stat -c '%s' "$downloaded_file")"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
@@ -575,7 +574,7 @@ validate_remote_local_file_sizes()
         say "Downloaded file size is $file_size bytes."
 
         if [ -n "$remote_file_size" ] && [ -n "$file_size" ]; then
-            if [ "$file_size" -ne "$remote_file_size" ]; then
+            if [ "$remote_file_size" -ne "$file_size" ]; then
                 say "The remote and local file sizes are not equal. The remote file size is $remote_file_size bytes and the local size is $file_size bytes. The local package may be corrupted."
             else
                 say "The remote and local file sizes are equal."
@@ -961,9 +960,9 @@ get_remote_file_size() {
     local zip_uri="$1"
 
     if machine_has "curl"; then
-        file_size=$(curl -sI  "$zip_uri" | grep -i content-length | awk '{print $2}')
+        file_size=$(curl -sI  "$zip_uri" | grep -i content-length | awk '{ num = $2 + 0; print num }')
     elif machine_has "wget"; then
-        file_size=$(wget --server-response -O /dev/null "$zip_uri" 2>&1 | grep -i '^Content-Length:' | awk '{print $2}')
+        file_size=$(wget --server-response -O /dev/null "$zip_uri" 2>&1 | grep -i '^Content-Length:' | awk '{ num = $2 + 0; print num }')
     else
         say "Neither curl nor wget is available on this system."
         return
@@ -1497,7 +1496,7 @@ install_dotnet() {
     eval $invocation
     local download_failed=false
     local download_completed=false
-    local remote_file_size=''
+    local remote_file_size=0
 
     mkdir -p "$install_root"
     zip_path="${zip_path:-$(mktemp "$temporary_file_template")}"
