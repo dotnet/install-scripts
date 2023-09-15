@@ -724,7 +724,7 @@ construct_download_link() {
     local osname="$5"
     local download_link=null
 
-    specific_product_version="$(get_specific_product_version "$1" "$4")"    local specific_product_version=""
+    specific_product_version="$(get_specific_product_version "$1" "$4")"
     local osname="$5"
     local download_link=null
 
