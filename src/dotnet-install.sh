@@ -563,7 +563,7 @@ validate_remote_local_file_sizes()
 
     local downloaded_file="$1"
     local remote_file_size=$(echo "$2" | awk '{ num = $1 + 0; print num }')
-    
+
     local file_size=''
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         file_size="$(stat -c '%s' "$downloaded_file")"
