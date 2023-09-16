@@ -649,7 +649,7 @@ parse_globaljson_file_for_version() {
         return 1
     fi
 
-    sdk_list=$(echo "$sdk_section" | awk -F"[{}]" '{print $2}')
+    sdk_list=$(echo $sdk_section | awk -F"[{}]" '{print $2}')
     sdk_list=${sdk_list//[\" ]/}
     sdk_list=${sdk_list//,/$'\n'}
 
