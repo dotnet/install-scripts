@@ -1472,19 +1472,21 @@ print_dry_run() {
     done
 
     resolved_version=${specific_versions[0]}
-    repeatable_command="./$script_name --version "\""$resolved_version"\"" --install-dir "\""$install_root"\"" --architecture "\""$normalized_architecture"\"" --os "\""$normalized_os"\"""
-    
-    if [ ! -z "$normalized_quality" ]; then
-        repeatable_command+=" --quality "\""$normalized_quality"\"""
+    repeatable_command="./$script_name --version \"\\\"$resolved_version\\\"\" --install-dir \"\\\"$install_root\\\"\" --architecture \"\\\"$normalized_architecture\\\"\" --os \"\\\"$normalized_os\\\"\""
+
+    if [ -n "$normalized_quality" ]; then
+        repeatable_command+=" --quality \"\\\"$normalized_quality\\\"\""
     fi
+
     if [[ "$runtime" == "dotnet" ]]; then
-        repeatable_command+=" --runtime "\""dotnet"\"""
+        repeatable_command+=" --runtime \"\\\"dotnet\\\"\""
     elif [[ "$runtime" == "aspnetcore" ]]; then
-        repeatable_command+=" --runtime "\""aspnetcore"\"""
+        repeatable_command+=" --runtime \"\\\"aspnetcore\\\"\""
     fi
+
     repeatable_command+="$non_dynamic_parameters"
     if [ -n "$feed_credential" ]; then
-        repeatable_command+=" --feed-credential "\""<feed_credential>"\"""
+        repeatable_command+=" --feed-credential \"\\\"<feed_credential>\\\"\""
     fi
 
     say "Repeatable invocation: $repeatable_command"
@@ -1691,12 +1693,12 @@ do
         --azure-feed|-[Aa]zure[Ff]eed)
             shift
             azure_feed="$1"
-            non_dynamic_parameters+=" $name "\""$1"\"""
+            non_dynamic_parameters+=" $name \"\\\"$1\\\"\""
             ;;
         --uncached-feed|-[Uu]ncached[Ff]eed)
             shift
             uncached_feed="$1"
-            non_dynamic_parameters+=" $name "\""$1"\"""
+            non_dynamic_parameters+=" $name \"\\\"$1\\\"\""
             ;;
         --feed-credential|-[Ff]eed[Cc]redential)
             shift
@@ -1708,7 +1710,7 @@ do
         --runtime-id|-[Rr]untime[Ii]d)
             shift
             runtime_id="$1"
-            non_dynamic_parameters+=" $name "\""$1"\"""
+            non_dynamic_parameters+=" \"$name\" \"\\\"$1\\\"\""
             say_warning "Use of --runtime-id is obsolete and should be limited to the versions below 2.1. To override architecture, use --architecture option instead. To override OS, use --os option instead."
             ;;
         --jsonfile|-[Jj][Ss]on[Ff]ile)
