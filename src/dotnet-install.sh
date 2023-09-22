@@ -567,9 +567,9 @@ validate_remote_local_file_sizes()
 
     if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         # hardcode in order to avoid conflicts with GNU stat
-        file_size="$(/usr/bin/stat -c '%s' "$downloaded_file")"
+        file_size="$(stat -c '%s' "$downloaded_file")"
     elif [[ "$OSTYPE" == "darwin"* ]]; then
-        file_size="$(stat -f '%z' "$downloaded_file")"
+        file_size="$(/usr/bin/stat -f '%z' "$downloaded_file")"
     fi  
     
     if [ -n "$file_size" ]; then
