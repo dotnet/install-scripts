@@ -747,8 +747,14 @@ get_specific_product_version() {
     do
         say_verbose "Checking for the existence of $download_link"
 
+        # we don't have a data model for the response here, so curl and wget validate the productversion in two steps:
+        # 1. HEAD request to a) verify the endpoint exists and b) validate the content type of the endpoint
+        # 2. GET request to actually retrieve the validated content
         if machine_has "curl"
         then
+            # curl allows us to extract specific named aspects of the response to a stream, so we don't need to parse the whole thing
+            # we do however have to potentially handle content types with charsets (text/html; charset=utf8), so we split on ';' and
+            # take the first segment, which is the content type, to compare against
             local productVersionContentType=""
             productVersionContentType=$(curl -sL --fail -X HEAD -w '%{content_type}' "${download_link}${feed_credential}" 2>&1 | tr ';' '\n' | head -n 1 )
             if [ $? != 0 ] || [ $productVersionContentType != "application/octet-stream" ];  then
@@ -762,6 +768,11 @@ get_specific_product_version() {
 
         elif machine_has "wget"
         then
+            # wget is less friendly than curl to inspecting the response. We have to do a HEAD request, save the headers, and then search for the content-type header using grep.
+            # This gets us a value like ' Content-Type: text/html; charset=utf-8', so we have to
+            # 1. remove all leading whitespace
+            # 2. split on : and ; to create a space-delimited set of tokens
+            # 3. take the second token, which is the content type we want to compare against
             local productVersionContentType=""
             productVersionContentType=$(wget -qO- --method HEAD --save-headers --server-response --output-document - "${download_link}${feed_credential}" 2>&1 | grep 'Content-Type' | tr -d '[:space:]' | tr ':' ' ' | tr ';' ' ' | cut -d' ' -f 2)
             if [ $? != 0 ] || [ $productVersionContentType != "application/octet-stream" ];  then
