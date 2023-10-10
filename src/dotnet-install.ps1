@@ -658,17 +658,19 @@ function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion, [stri
         try {
             $productVersionResponse = GetHTTPResponse($productVersionTxtUrl)
 
-            if ($productVersionResponse.StatusCode -eq 200) {
-                $productVersion = $productVersionResponse.Content.ReadAsStringAsync().Result.Trim()
-                if ($productVersion -ne $SpecificVersion)
-                {
-                    Say "Using alternate version $productVersion found in $ProductVersionTxtURL"
-                }
-                return $productVersion
+            if ($productVersionResponse.StatusCode -ne 200) {
+                Say-Verbose "Got unsuccessful StatusCode '$($productVersionResponse.StatusCode)' when trying to get productVersion.txt at $productVersionTxtUrl."
+                continue;
             }
-            else {
-                Say-Verbose "Got StatusCode $($productVersionResponse.StatusCode) when trying to get productVersion.txt at $productVersionTxtUrl."
+            if ($productVersionResponse.Content.Headers.ContentType.MediaType -ne "application/octet-stream") {
+                Say-Verbose "Got unknown Content-Type '$($productVersionResponse.Content.Headers.ContentType)' when trying to get productVersion.txt at $productVersionTxtUrl."
+                continue;
             }
+            $productVersion = $productVersionResponse.Content.ReadAsStringAsync().Result.Trim()
+            if ($productVersion -ne $SpecificVersion) {
+                Say "Using alternate version $productVersion found in $ProductVersionTxtURL"
+            }
+            return $productVersion
         } 
         catch {
             Say-Verbose "Could not read productVersion.txt at $productVersionTxtUrl (Exception: '$($_.Exception.Message)'. )"

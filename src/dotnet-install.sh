@@ -749,17 +749,26 @@ get_specific_product_version() {
 
         if machine_has "curl"
         then
-            if ! specific_product_version=$(curl -s --fail "${download_link}${feed_credential}" 2>&1); then
+            local productVersionContentType=""
+            productVersionContentType=$(curl -sL --fail -X HEAD -w '%{content_type}' "${download_link}${feed_credential}" 2>&1 | tr ';' '\n' | head -n 1 )
+            if [ $? != 0 ] || [ $productVersionContentType != "application/octet-stream" ];  then
+                say_verbose "Product version was not found or content type '$productVersionContentType' did not match the expected content type 'application/octet-stream'"
                 continue
             else
+                specific_product_version=$(curl -sL --fail "${download_link}${feed_credential}" 2>&1)
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
             fi
 
         elif machine_has "wget"
         then
-            specific_product_version=$(wget -qO- "${download_link}${feed_credential}" 2>&1)
-            if [ $? = 0 ]; then
+            local productVersionContentType=""
+            productVersionContentType=$(wget -qO- --method HEAD --save-headers --server-response --output-document - "${download_link}${feed_credential}" 2>&1 | grep 'Content-Type' | tr -d '[:space:]' | tr ':' ' ' | tr ';' ' ' | cut -d' ' -f 2)
+            if [ $? != 0 ] || [ $productVersionContentType != "application/octet-stream" ];  then
+                say_verbose "Product version was not found or content type '$productVersionContentType' did not match the expected content type 'application/octet-stream'"
+                continue
+            else
+                specific_product_version=$(wget -qO- "${download_link}${feed_credential}" 2>&1)
                 echo "${specific_product_version//[$'\t\r\n']}"
                 return 0
             fi
