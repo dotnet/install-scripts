@@ -371,6 +371,29 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             await Verify(commandResult.StdOut).UseParameters(version, runtime);
         }
 
+        [Fact]
+        public async Task WhenMacosIsPassedToBash()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                //do not run bash test on Windows environment
+                return;
+            }
+            string[] args = new string[] {
+                    "-version", version,
+                    "--os", "macos",
+                    "-dryrun" };
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
+            await Verify(commandResult.StdOut).UseParameters(version, runtime);
+        }
+
         [Theory]
         [InlineData("1.0.5", "dotnet")]
         [InlineData("2.1.0", "aspnetcore")]
