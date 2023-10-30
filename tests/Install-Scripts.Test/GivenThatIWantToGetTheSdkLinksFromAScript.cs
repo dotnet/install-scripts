@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VerifyTests;
 using Xunit;
@@ -380,7 +381,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 return;
             }
             string[] args = new string[] {
-                    "-version", version,
                     "--os", "macos",
                     "-dryrun" };
 
@@ -391,7 +391,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
-            await Verify(commandResult.StdOut).UseParameters(version, runtime);
+            commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, "osx-(x86|x64|arm|arm64)\\.(zip|tar\\.gz)"));
+            await Verify(commandResult.StdOut);
         }
 
         [Theory]
