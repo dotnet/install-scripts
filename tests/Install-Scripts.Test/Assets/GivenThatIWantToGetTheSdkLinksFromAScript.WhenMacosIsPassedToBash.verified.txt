@@ -1,3 +1,3 @@
 ﻿dotnet-install: Payload URLs:
 dotnet-install: URL #0 - aka.ms: https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.416/dotnet-sdk-6.0.416-osx-x64.tar.gz
-dotnet-install: Repeatable invocation: ./dotnet-install.sh --version "6.0.416" --install-dir "/home/cloudtest_azpcontainer/.dotnet" --architecture "x64" --os "osx"
+dotnet-install: Repeatable invocation: ./dotnet-install.sh --version "6.0.416" --install-dir "dotnet-sdk" --architecture "x64" --os "osx"

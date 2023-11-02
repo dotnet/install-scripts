@@ -382,6 +382,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             }
             string[] args = new string[] {
                     "--os", "macos",
+                    "-installdir", "dotnet-sdk",
                     "-dryrun" };
 
             var commandResult = CreateInstallCommand(args)
