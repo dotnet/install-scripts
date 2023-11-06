@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VerifyTests;
 using Xunit;
@@ -369,6 +370,30 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
             await Verify(commandResult.StdOut).UseParameters(version, runtime);
+        }
+
+        [Fact]
+        public async Task WhenMacosIsPassedToBash()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                //do not run bash test on Windows environment
+                return;
+            }
+            string[] args = new string[] {
+                    "--os", "macos",
+                    "-installdir", "dotnet-sdk",
+                    "-dryrun" };
+
+            var commandResult = CreateInstallCommand(args)
+                            .CaptureStdOut()
+                            .CaptureStdErr()
+                            .Execute();
+
+            commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdErr();
+            commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, "osx-(x86|x64|arm|arm64)\\.(zip|tar\\.gz)"));
+            await Verify(commandResult.StdOut);
         }
 
         [Theory]
