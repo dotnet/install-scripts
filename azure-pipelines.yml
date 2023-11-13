@@ -55,6 +55,7 @@ stages:
           displayName: Get .NET Core SDK
           inputs:
             version: 8.x
+            includePreviewVersions: true
         - task: DotNetCoreCLI@2
           displayName: Run Tests
           inputs: 
@@ -96,6 +97,7 @@ stages:
       displayName: Get .NET Core SDK
       inputs:
         version: 8.x
+        includePreviewVersions: true
     - script: |
         chmod u+x src/dotnet-install.sh
       displayName: 'Add permission to execute'
@@ -116,6 +118,7 @@ stages:
       displayName: Get .NET Core SDK
       inputs:
         version: 8.x
+        includePreviewVersions: true
     - script: |
         chmod u+x src/dotnet-install.sh
       displayName: 'Add permission to execute'
