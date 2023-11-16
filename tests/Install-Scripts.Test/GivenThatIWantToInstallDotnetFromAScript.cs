@@ -36,6 +36,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("LTS", "6\\.0\\..*", Quality.None),
                 ("7.0", "7\\.0\\..*", Quality.None),
                 ("7.0", "7\\.0\\..*", Quality.Ga),
+                ("8.0", "8\\.0\\..*", Quality.None),
+                ("8.0", "8\\.0\\..*", Quality.Ga),
             };
 
         /// <summary>
