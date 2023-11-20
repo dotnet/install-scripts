@@ -151,4 +151,6 @@ stages:
         -TsaIterationPath $(_TsaIterationPath)
         -TsaRepositoryName "Install-Scripts"
         -TsaCodebaseName "Install-Scripts"
-        -TsaPublish $True'
+        -TsaPublish $True
+        -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)\eng\policheck_exclusions.xml")'
+        
