@@ -54,7 +54,7 @@ stages:
         - task: UseDotNet@2
           displayName: Get .NET Core SDK
           inputs:
-            version: 7.x
+            version: 8.x
         - task: DotNetCoreCLI@2
           displayName: Run Tests
           inputs: 
@@ -95,7 +95,7 @@ stages:
     - task: UseDotNet@2
       displayName: Get .NET Core SDK
       inputs:
-        version: 7.x
+        version: 8.x
     - script: |
         chmod u+x src/dotnet-install.sh
       displayName: 'Add permission to execute'
@@ -115,7 +115,7 @@ stages:
     - task: UseDotNet@2
       displayName: Get .NET Core SDK
       inputs:
-        version: 7.x
+        version: 8.x
     - script: |
         chmod u+x src/dotnet-install.sh
       displayName: 'Add permission to execute'
@@ -151,4 +151,6 @@ stages:
         -TsaIterationPath $(_TsaIterationPath)
         -TsaRepositoryName "Install-Scripts"
         -TsaCodebaseName "Install-Scripts"
-        -TsaPublish $True'
+        -TsaPublish $True
+        -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)\eng\policheck_exclusions.xml")'
+        
