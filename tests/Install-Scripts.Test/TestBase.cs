@@ -33,7 +33,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             return Command.Create(new CommandSpec(path, finalArgs, CommandResolutionStrategy.None));
         }
-        protected static Command CreateInstallCommand(params string[] args) => CreateInstallCommand(args);
 
         protected static string GetRepoRoot()
         {
