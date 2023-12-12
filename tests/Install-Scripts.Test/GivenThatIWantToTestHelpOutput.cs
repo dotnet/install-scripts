@@ -38,7 +38,7 @@ public class GivenThatIWantToTestHelpOutput : TestBase
     }
 
     [Fact]
-    public async void InvokingHelpTriggersHelpForBash()
+    public void InvokingHelpTriggersHelpForBash()
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -52,6 +52,11 @@ public class GivenThatIWantToTestHelpOutput : TestBase
                         .Execute();
         
         commandResult.Should().Pass();
-        await Verify(commandResult.StdOut);
+        // Verify is not used since the location could differ from machine to machine, hence using explicit verification of the help output
+        commandResult.Should().HaveStdOutContaining("Install a .NET SDK of a given Quality from a given Channel");
+        commandResult.Should().HaveStdOutContaining("dotnet-install.sh [-c|--channel <CHANNEL>] [-q|--quality <QUALITY>]");
+        commandResult.Should().HaveStdOutContaining("# Install a .NET SDK of a specific public version");
+        commandResult.Should().HaveStdOutContaining("dotnet-install.sh [-v|--version <VERSION>]");
+        commandResult.Should().HaveStdOutContaining("dotnet-install.sh -h|-?|--help");
     }
 }
