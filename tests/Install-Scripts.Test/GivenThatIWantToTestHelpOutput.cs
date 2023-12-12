@@ -1,16 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 
-using FluentAssertions;
-using Microsoft.NET.TestFramework.Assertions;
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using VerifyTests;
 using Xunit;
-using Xunit.Sdk;
 
 namespace Microsoft.DotNet.InstallationScript.Tests;
 
@@ -24,7 +16,8 @@ public class GivenThatIWantToTestHelpOutput : TestBase
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            throw SkipException.ForSkip("Testing powershell output is intended for Windows");
+            // Testing powershell output is intended for Windows
+            return;
         }
 
         var commandResult = CreateInstallCommand("--help")
@@ -39,7 +32,8 @@ public class GivenThatIWantToTestHelpOutput : TestBase
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            throw SkipException.ForSkip("Testing bash output is intended for non-Windows");
+            // Testing bash output is intended for non-Windows
+            return;
         }
 
         var commandResult = CreateInstallCommand("--help")
