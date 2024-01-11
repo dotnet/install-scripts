@@ -1,3 +1,3 @@
 ﻿dotnet-install: Payload URLs:
-dotnet-install: URL #0 - aka.ms: https://dotnetcli.azureedge.net/dotnet/Sdk/8.0.100/dotnet-sdk-8.0.100-osx-x64.tar.gz
-dotnet-install: Repeatable invocation: ./dotnet-install.sh --version "8.0.100" --install-dir "dotnet-sdk" --architecture "x64" --os "osx"
+dotnet-install: URL #0 - aka.ms: https://dotnetcli.azureedge.net/dotnet/Sdk/8.0.101/dotnet-sdk-8.0.101-osx-x64.tar.gz
+dotnet-install: Repeatable invocation: ./dotnet-install.sh --version "8.0.101" --install-dir "dotnet-sdk" --architecture "x64" --os "osx"
