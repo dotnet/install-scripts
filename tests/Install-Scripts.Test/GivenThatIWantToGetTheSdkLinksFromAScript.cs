@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VerifyTests;
@@ -393,7 +394,16 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, "osx-(x86|x64|arm|arm64)\\.(zip|tar\\.gz)"));
-            await Verify(commandResult.StdOut);
+
+            string output = commandResult.StdOut;
+
+            var match = Regex.Match(output, "--version \\\"(.*?)\\\"", RegexOptions.Multiline);
+            match.Success.Should().BeTrue();
+            match.Groups.Count.Should().Be(2);
+            string version = match.Groups[1].Value;
+
+            await Verify(commandResult.StdOut)
+                .AddScrubber(text => text.Replace(version, "%VERSION%"));
         }
 
         [Theory]
