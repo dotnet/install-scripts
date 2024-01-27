@@ -1143,7 +1143,7 @@ downloadcurl() {
     # Append feed_credential as late as possible before calling curl to avoid logging feed_credential
     # Avoid passing URI with credentials to functions: note, most of them echoing parameters of invocation in verbose output.
     local remote_path_with_credential="${remote_path}${feed_credential}"
-    local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
+    local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -SL -f --create-dirs -#"
     local curl_exit_code=0;
     if [ -z "$out_path" ]; then
         curl $curl_options "$remote_path_with_credential" 2>&1
@@ -1182,7 +1182,7 @@ downloadwget() {
     local out_path="${2:-}"
     # Append feed_credential as late as possible before calling wget to avoid logging feed_credential
     local remote_path_with_credential="${remote_path}${feed_credential}"
-    local wget_options="--tries 20 "
+    local wget_options="--tries 20 --show-progress"
 
     local wget_options_extra=''
     local wget_result=''
@@ -1195,7 +1195,7 @@ downloadwget() {
     fi
 
     if [ -z "$out_path" ]; then
-        wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential" 2>&1
+        wget $wget_options $wget_options_extra -O - "$remote_path_with_credential" 2>&1
         wget_result=$?
     else
         wget $wget_options $wget_options_extra -O "$out_path" "$remote_path_with_credential" 2>&1
