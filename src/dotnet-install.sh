@@ -1551,7 +1551,7 @@ install_dotnet() {
 
     remote_file_size="$(get_remote_file_size "$download_link")"
 
-    say "Extracting zip from $download_link"
+    say "Extracting archive from $download_link"
     extract_dotnet_package "$zip_path" "$install_root" "$remote_file_size" || return 1
 
     #  Check if the SDK version is installed; if not, fail the installation.
