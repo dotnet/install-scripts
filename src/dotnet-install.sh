@@ -1013,7 +1013,7 @@ extract_dotnet_package() {
     
     rm -rf "$temp_out_path"
     if [ -z ${keep_zip+x} ]; then
-        rm -f "$zip_path" && say_verbose "Temporary zip file $zip_path was removed"
+        rm -f "$zip_path" && say_verbose "Temporary archive file $zip_path was removed"
     fi
 
     if [ "$failed" = true ]; then
@@ -1512,7 +1512,7 @@ install_dotnet() {
 
     mkdir -p "$install_root"
     zip_path="${zip_path:-$(mktemp "$temporary_file_template")}"
-    say_verbose "Zip path: $zip_path"
+    say_verbose "Archive path: $zip_path"
 
     for link_index in "${!download_links[@]}"
     do
@@ -1536,7 +1536,7 @@ install_dotnet() {
                 say "Failed to download $link_type link '$download_link': $download_error_msg"
                 ;;
             esac
-            rm -f "$zip_path" 2>&1 && say_verbose "Temporary zip file $zip_path was removed"
+            rm -f "$zip_path" 2>&1 && say_verbose "Temporary archive file $zip_path was removed"
         else
             download_completed=true
             break
@@ -1551,7 +1551,7 @@ install_dotnet() {
 
     remote_file_size="$(get_remote_file_size "$download_link")"
 
-    say "Extracting zip from $download_link"
+    say "Extracting archive from $download_link"
     extract_dotnet_package "$zip_path" "$install_root" "$remote_file_size" || return 1
 
     #  Check if the SDK version is installed; if not, fail the installation.
