@@ -7,11 +7,6 @@ pr:
 variables:
 - template: eng/common-variables.yml
 
-resources:
-  containers:
-  - container: UbuntuContainer
-    image: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-18.04-cross
-
 stages:
 - stage: build
   displayName: Build
@@ -46,10 +41,9 @@ stages:
 
   - job: LinuxTests
     timeoutInMinutes: 30
-    container: UbuntuContainer
     pool:
       name: NetCore-Public
-      demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
+      demands: ImageOverride -equals build.ubuntu.2204.amd64.open
     steps:
     - checkout: self
       displayName: Checkout Self
