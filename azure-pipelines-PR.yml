@@ -10,7 +10,7 @@ variables:
 resources:
   containers:
   - container: UbuntuContainer
-    image: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-20.04-cross
+    image: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-18.04-cross
 
 stages:
 - stage: build
@@ -56,7 +56,7 @@ stages:
     container: UbuntuContainer
     pool:
       name: NetCore-Public
-      demands: ImageOverride -equals Build.Ubuntu.2004.Amd64.Open
+      demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
     steps:
     - checkout: self
       displayName: Checkout Self
