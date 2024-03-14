@@ -1,0 +1,94 @@
+trigger:
+  - main
+
+pr:
+  - main
+
+variables:
+- template: eng/common-variables.yml
+
+resources:
+  containers:
+  - container: UbuntuContainer
+    image: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-20.04-cross
+
+stages:
+- stage: build
+  displayName: Build
+  jobs:
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      artifacts:
+        publish:
+          artifacts: true
+          logs: true
+          manifests: true
+      enableMicrobuild: true
+      enablePublishUsingPipelines: true
+      workspace:
+        clean: all
+      jobs:
+      - job: Windows_NT
+        timeoutInMinutes: 90
+        pool:
+          name: NetCore-Public
+          demands: ImageOverride -equals Windows.vs2022.amd64.open
+
+        strategy:
+          matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+        preSteps:
+        - checkout: self
+          clean: true
+        steps:
+        - task: UseDotNet@2
+          displayName: Get .NET Core SDK
+          inputs:
+            version: 8.x
+        - task: DotNetCoreCLI@2
+          displayName: Run Tests
+          inputs: 
+            command: test
+
+  - job: LinuxTests
+    timeoutInMinutes: 30
+    container: UbuntuContainer
+    pool:
+      name: NetCore-Public
+      demands: ImageOverride -equals Build.Ubuntu.2004.Amd64.Open
+    steps:
+    - checkout: self
+      displayName: Checkout Self
+      clean: true
+    - task: UseDotNet@2
+      displayName: Get .NET Core SDK
+      inputs:
+        version: 8.x
+    - script: |
+        chmod u+x src/dotnet-install.sh
+      displayName: 'Add permission to execute'
+    - task: DotNetCoreCLI@2
+      displayName: Run Tests
+      inputs: 
+        command: test
+
+  - job: MacOSTests
+    timeoutInMinutes: 30
+    pool: 
+      vmImage: 'macOS-latest'
+    steps:
+    - checkout: self
+      displayName: Checkout Self
+      clean: true
+    - task: UseDotNet@2
+      displayName: Get .NET Core SDK
+      inputs:
+        version: 8.x
+    - script: |
+        chmod u+x src/dotnet-install.sh
+      displayName: 'Add permission to execute'
+    - task: DotNetCoreCLI@2
+      displayName: Run Tests
+      inputs: 
+        command: test
