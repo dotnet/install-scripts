@@ -117,7 +117,7 @@ extends:
         timeoutInMinutes: 30
         pool: 
           name: Azure Pipelines
-          image: macOS-11
+          image: macOS-13
           os: macOS
         steps:
         - checkout: self
