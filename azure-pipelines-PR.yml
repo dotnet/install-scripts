@@ -63,9 +63,7 @@ stages:
   - job: MacOSTests
     timeoutInMinutes: 30
     pool: 
-      name: Azure Pipelines
-      image: macOS-13
-      os: macOS
+      vmImage: 'macOS-latest'
     steps:
     - checkout: self
       displayName: Checkout Self
