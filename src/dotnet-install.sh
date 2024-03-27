@@ -298,6 +298,10 @@ get_machine_architecture() {
     if command -v uname > /dev/null; then
         CPUName=$(uname -m)
         case $CPUName in
+        armv1*|armv2*|armv3*|armv4*|armv5*|armv6*)
+            echo "armv6-or-below"
+            return 0
+            ;;
         armv*l)
             echo "arm"
             return 0
@@ -339,7 +343,13 @@ get_normalized_architecture_from_architecture() {
     local architecture="$(to_lowercase "$1")"
 
     if [[ $architecture == \<auto\> ]]; then
-        echo "$(get_machine_architecture)"
+        machine_architecture="$(get_machine_architecture)"
+        if [[ "$machine_architecture" == "armv6-or-below" ]]; then
+            say_err "Architecture \`$machine_architecture\` not supported. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues"
+            return 1
+        fi
+
+        echo $machine_architecture
         return 0
     fi
 
