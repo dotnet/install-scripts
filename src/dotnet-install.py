@@ -4,6 +4,9 @@ import argparse
 import json
 import requests
 import hashlib
+import platform
+from dataclasses import dataclass
+from typing import Optional
 
 class Channel:
     def __init__(self, kind: str) -> None:
@@ -34,6 +37,45 @@ class Channel:
         if self.is_channel_version:
             return self.channel_version
         return f"{self.channel_version}.{self.feature_band.replace('0', 'x')}"
+
+# TODO: platform.system() doesn't handle musl - need separate detection
+def compute_platform_part(platform: str) -> str:
+    lower = platform.lower()
+    match lower:
+        case "osx" | "freebsd" | "rhel.6" | "linux-musl" | "linux":
+            return lower
+        case "macos":
+            return "osx"
+        case "win" | "windows":
+            return "win"
+
+def compute_arch_part(architecture: str) -> str:
+    match architecture:
+        case "arm64" | "aarch64":
+            return "arm64"
+        case "s390x" | "ppc64le" | "loongarch64":
+            return architecture
+        case _:
+            return "x64"
+
+def compute_runtime_identifier(platform: str, architecture: str) -> str:
+    platform_part = compute_platform_part(platform)
+    arch_part = compute_arch_part(architecture)
+    if platform_part is None or arch_part is None:
+        raise Exception(f"Unable to compute runtime identifier for {platform}/{architecture}")
+    return f"{platform_part}-{arch_part}"
+
+
+@dataclass
+class InstallRequest:
+    channel: Channel
+    runtime: Optional[str]
+    architecture: str
+    os: str
+
+    @property
+    def rid(self):
+        return compute_runtime_identifier(self.os, self.architecture)
 
 def download_releases_index() -> json:
     return requests.get("https://dotnetcli.blob.core.windows.net/dotnet/release-metadata/releases-index.json", ).json()
@@ -96,32 +138,42 @@ def download_file(url: str, hash: str):
 
     return local_filename
 
-def install_sdk(desired_channel: Channel, runtime_identifier: str):
+
+
+def install_sdk(request: InstallRequest):
     index = download_releases_index()
     if index is None:
         raise Exception("Releases index could not be downloaded")
     channels: list = index["releases-index"]
-    channel_information = pick_best_channel(channels, desired_channel)
+    channel_information = pick_best_channel(channels, request.channel)
     channel_version = channel_information["channel-version"]
     if channel_information is None:
         raise Exception(f"No matching channel could be found for desired channel '{channel_version}'")
     channel_releases = download_releases_for_channel(channel_information)
     if channel_releases is None:
         raise Exception(f"No releases found for channel '{channel_version}'")
-    release_information = pick_best_release(channel_releases, desired_channel)
+    release_information = pick_best_release(channel_releases, request.channel)
     if release_information is None:
         raise Exception(f"No best release found in channel '{channel_version}'")
     release_version = release_information['release-version']
-    sdk_information = pick_matching_sdk(release_information['sdks'], desired_channel)
+    sdk_information = pick_matching_sdk(release_information['sdks'], request.channel)
     if sdk_information is None:
         raise Exception(f"No matching SDK found in release '{release_version}'")
-    file_to_download = pick_file_to_download(sdk_information['files'], runtime_identifier)
+    file_to_download = pick_file_to_download(sdk_information['files'], request.rid)
     if file_to_download is None:
-        raise Exception(f"No matching file for runtime identifier {runtime_identifier} found in release '{release_version}'")
+        raise Exception(f"No matching file for runtime identifier {request.rid} found in release '{release_version}'")
     download_file(file_to_download['url'], file_to_download['hash'])
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("dotnet-install.py", description="%(prog)s ia a simple command line interface for obtaining the .NET SDK and Runtime", add_help=True, exit_on_error=True)
     parser.add_argument("--channel", "-c", type=Channel, help="The release grouping to download from. Can have a variety of formats: sts, lts, two-part version number (8.0) or three-part version number in major.minor.patchxx format (8.0.2xx)")
-    args = parser.parse_args()
-    install_sdk(args.channel, 'win-x64')
+    parser.add_argument("--runtime", help="Installs a shared runtime only, without the SDK", choices=["dotnet", "aspnetcore"])
+    parser.add_argument("--architecture", help="Architecture of the .NET binaries to be installed, defaults to the current system.", default=platform.machine())
+    parser.add_argument("--os", help="Specifies the operating system to be used when selecting the installer", default=platform.system())
+    try:
+        args = parser.parse_args()
+        request = InstallRequest(args.channel, args.runtime, args.architecture, args.os)
+        install_sdk(request)
+    except:
+        parser.print_help()
+        exit(1)
