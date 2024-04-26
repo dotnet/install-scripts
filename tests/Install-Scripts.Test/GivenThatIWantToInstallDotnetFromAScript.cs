@@ -38,6 +38,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("7.0", "7\\.0\\..*", Quality.Ga),
                 ("8.0", "8\\.0\\..*", Quality.None),
                 ("8.0", "8\\.0\\..*", Quality.Ga),
+                ("9.0", "9\\.0\\..*", Quality.None),
+                ("9.0", "9\\.0\\..*", Quality.Preview),
+                ("9.0", "9\\.0\\..*", Quality.Ga),
             };
 
         /// <summary>

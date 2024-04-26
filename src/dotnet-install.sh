@@ -1271,6 +1271,12 @@ get_download_link_from_aka_ms() {
     http_codes=$( echo "$response" | awk '$1 ~ /^HTTP/ {print $2}' )
     # They all need to be 301, otherwise some links are broken (except for the last, which is not a redirect but 200 or 404).
     broken_redirects=$( echo "$http_codes" | sed '$d' | grep -v '301' )
+    # The response may end without final code 2xx/4xx/5xx somehow, e.g. network restrictions on www.bing.com causes redirecting to bing.com fails with connection refused.
+    # In this case it should not exclude the last.
+    last_http_code=$(  echo "$http_codes" | tail -n 1 )
+    if ! [[ $last_http_code =~ ^(2|4|5)[0-9][0-9]$ ]]; then
+        broken_redirects=$( echo "$http_codes" | grep -v '301' )
+    fi
 
     # All HTTP codes are 301 (Moved Permanently), the redirect link exists.
     if [[ -z "$broken_redirects" ]]; then
