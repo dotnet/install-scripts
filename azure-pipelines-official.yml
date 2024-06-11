@@ -95,7 +95,7 @@ extends:
         timeoutInMinutes: 30
         pool:
           name: netcore1espool-internal
-          image: 1es-ubuntu-2204-pt
+          image: 1es-ubuntu-2204
           os: linux
         steps:
         - checkout: self
