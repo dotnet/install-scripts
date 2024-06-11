@@ -1,3 +1,11 @@
+# YAML file in the main branch
+schedules:
+- cron: '0 0 * * 0'
+  displayName: Weekly midnight build
+  branches:
+    include:
+    - main
+
 trigger:
   - main
 
@@ -23,7 +31,7 @@ extends:
     sdl:
       sourceAnalysisPool:
         name: NetCore1ESPool-Svc-Internal
-        image: 1es-windows-2022-pt
+        image: 1es-windows-2022
         os: windows
       sbom:
         enabled: false
@@ -54,7 +62,7 @@ extends:
             timeoutInMinutes: 90
             pool:
               name: netcore1espool-internal
-              image: 1es-windows-2022-pt
+              image: 1es-windows-2022
               os: windows
             strategy:
               matrix:
