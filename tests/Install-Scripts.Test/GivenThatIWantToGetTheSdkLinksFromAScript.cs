@@ -6,18 +6,17 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VerifyTests;
+using VerifyXunit;
 using Xunit;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
-    public class GivenThatIWantToGetTheSdkLinksFromAScript : TestBase
+    public class GivenThatIWantToGetTheSdkLinksFromAScript : VerifyBase
     {
-        public GivenThatIWantToGetTheSdkLinksFromAScript(VerifySettings settings = null)
-            : base(settings) { }
+        public GivenThatIWantToGetTheSdkLinksFromAScript(VerifySettings settings = null) { }
 
         [Theory]
         [InlineData("InstallationScriptTests.json")]
@@ -31,10 +30,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             var args = new List<string> { "-dryrun", "-jsonfile", installationScriptTestsJsonFile };
 
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
+            var commandResult = TestUtils.CreateInstallCommand(args)
+                                .ExecuteCommand();
 
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
@@ -58,10 +55,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 args.Add(value);
             }
 
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
+            var commandResult = TestUtils.CreateInstallCommand(args)
+                                .ExecuteCommand();
 
             //  Standard 'dryrun' criterium
             commandResult.Should().Pass();
@@ -85,10 +80,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 args.Add(runtimeType);
             }
 
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
+            var commandResult = TestUtils.CreateInstallCommand(args)
+                                .ExecuteCommand();
 
             //  Standard 'dryrun' criterium
             commandResult.Should().Pass();
@@ -135,7 +128,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("release/2.2", "aspnetcore")]
         //[InlineData("release/3.0", "aspnetcore")] - Broken
         //[InlineData("release/3.1", "aspnetcore")] - Broken
-        //[InlineData("release/5.0", "aspnetcore")] - Broken 
+        //[InlineData("release/5.0", "aspnetcore")] - Broken
         [InlineData("STS", "windowsdesktop")]
         [InlineData("STS", "windowsdesktop", true)]
         [InlineData("LTS", "windowsdesktop")]
@@ -162,10 +155,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 args.Add(feedCredentials);
             }
 
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
+            var commandResult = TestUtils.CreateInstallCommand(args)
+                                .ExecuteCommand();
 
             //  Standard 'dryrun' criterium
             commandResult.Should().Pass();
@@ -238,10 +229,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 args.Add(feedCredentials);
             }
 
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
+            var commandResult = TestUtils.CreateInstallCommand(args)
+                                .ExecuteCommand();
 
             //  Standard 'dryrun' criterium
             commandResult.Should().Pass();
@@ -271,10 +260,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             }
             string expectedLinkLog = $"Constructed primary named payload URL: {Environment.NewLine}https://dotnetcli.azureedge.net/dotnet/{location}/{version}";
             var args = new string[] { "-version", version, "-runtime", "windowsdesktop", "-verbose", "-dryrun" };
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
+            var commandResult = TestUtils.CreateInstallCommand(args)
+                                .ExecuteCommand();
 
             commandResult.Should().Pass().And.HaveStdOutContaining(expectedLinkLog);
         }
@@ -288,10 +275,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             string feedCredentials = Guid.NewGuid().ToString();
             var args = new[] { "-dryrun", "-channel", channel, "-internal", "-feedCredential", feedCredentials };
 
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
+            var commandResult = TestUtils.CreateInstallCommand(args)
+                                .ExecuteCommand();
 
             //  Standard 'dryrun' criterium
             commandResult.Should().Fail();
@@ -304,10 +289,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [Fact]
         public void WhenInstallDirAliasIsUsed()
         {
-            var commandResult = CreateInstallCommand(new[] { "-DryRun", "-i", "installation_path" })
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
+            var commandResult = TestUtils.CreateInstallCommand(new[] { "-DryRun", "-i", "installation_path" })
+                            .ExecuteCommand();
 
             //  Standard 'dryrun' criterium
             commandResult.Should().Pass();
@@ -363,10 +346,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                     "-dryrun" };
             }
 
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
+            var commandResult = TestUtils.CreateInstallCommand(args)
+                                .ExecuteCommand();
 
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
@@ -386,10 +367,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                     "-installdir", "dotnet-sdk",
                     "-dryrun" };
 
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
+            var commandResult = TestUtils.CreateInstallCommand(args)
+                                .ExecuteCommand();
 
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
@@ -435,10 +414,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                     "-dryrun" };
             }
 
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
+            var commandResult = TestUtils.CreateInstallCommand(args)
+                                .ExecuteCommand();
 
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
@@ -468,10 +445,8 @@ dotnet-install.sh is a simple command line interface for obtaining dotnet cli.
             string[] args = new string[] {
                 "-help" };
 
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
+            var commandResult = TestUtils.CreateInstallCommand(args)
+                                .ExecuteCommand();
 
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
@@ -492,7 +467,7 @@ dotnet-install.sh is a simple command line interface for obtaining dotnet cli.
 VERBOSE: dotnet-install: Note that the intended use of this script is for Continuous Integration (CI) scenarios, where:
 VERBOSE: dotnet-install: - The SDK needs to be installed without user interaction and without admin rights.
 VERBOSE: dotnet-install: - The SDK installation doesn't need to persist across multiple CI runs.
-VERBOSE: dotnet-install: To set up a development environment or to run apps, use installers rather than this script. 
+VERBOSE: dotnet-install: To set up a development environment or to run apps, use installers rather than this script.
 ";
 
             string[] args = new string[] {
@@ -500,10 +475,8 @@ VERBOSE: dotnet-install: To set up a development environment or to run apps, use
                 "-installdir", "dotnet-sdk",
                 "-dryrun",
                 "-verbose" };
-            var commandResult = CreateInstallCommand(args)
-                            .CaptureStdOut()
-                            .CaptureStdErr()
-                            .Execute();
+            var commandResult = TestUtils.CreateInstallCommand(args)
+                                .ExecuteCommand();
 
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();

@@ -5,7 +5,7 @@ using System;
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using Microsoft.DotNet.Cli.Utils;
+using static Install_Scripts.Test.Utils.InstallDotNetCommand;
 
 namespace Microsoft.NET.TestFramework.Assertions
 {
@@ -172,7 +172,7 @@ namespace Microsoft.NET.TestFramework.Assertions
                        $"StdErr:{Environment.NewLine}{_commandResult.StdErr}{Environment.NewLine}"; ;
         }
 
-    public AndConstraint<CommandResultAssertions> HaveSkippedProjectCompilation(string skippedProject, string frameworkFullName)
+        public AndConstraint<CommandResultAssertions> HaveSkippedProjectCompilation(string skippedProject, string frameworkFullName)
         {
             _commandResult.StdOut.Should().Contain($"Project {skippedProject} ({frameworkFullName}) was previously compiled. Skipping compilation.");
 

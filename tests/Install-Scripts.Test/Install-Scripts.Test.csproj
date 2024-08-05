@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>Install_Scripts.Test</RootNamespace>
     <IsPackable>false</IsPackable>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
@@ -31,7 +32,6 @@
 
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
-    <PackageReference Include="Microsoft.DotNet.Cli.Utils" Version="2.2.402" />
     <PackageReference Include="NuGet.Frameworks" Version="6.8.1" />
     <PackageReference Include="NuGet.Versioning" Version="6.8.1" />
     <PackageReference Include="NuGet.Packaging" Version="6.8.1" />
