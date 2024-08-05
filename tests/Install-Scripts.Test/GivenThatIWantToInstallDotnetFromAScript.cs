@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using Xunit;
 using Xunit.Abstractions;
@@ -202,6 +203,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         public void WhenInstallingTheSdk(string channel, string? quality, string versionRegex)
         {
             // Run install script to download and install.
+            var e = Encoding.UTF8;
             var args = GetInstallScriptArgs(channel, null, quality, _sdkInstallationDirectory);
 
             var commandResult = TestUtils.CreateInstallCommand(args)

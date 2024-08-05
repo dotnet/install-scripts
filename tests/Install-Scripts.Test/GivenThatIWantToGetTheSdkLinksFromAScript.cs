@@ -9,14 +9,14 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VerifyTests;
-using VerifyXunit;
 using Xunit;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
-    public class GivenThatIWantToGetTheSdkLinksFromAScript : VerifyBase
+    public class GivenThatIWantToGetTheSdkLinksFromAScript : TestBase
     {
-        public GivenThatIWantToGetTheSdkLinksFromAScript(VerifySettings settings = null) { }
+        public GivenThatIWantToGetTheSdkLinksFromAScript(VerifySettings settings = null) 
+            : base(settings) { }
 
         [Theory]
         [InlineData("InstallationScriptTests.json")]

@@ -12,21 +12,18 @@ namespace Install_Scripts.Test.Utils
     /// <summary>
     /// This command is designed to automate the installation of .NET Core SDK.
     /// </summary>
-    public sealed class InstallDotNetCommand
+    public sealed class InstallDotNetCommand(IEnumerable<string> args, string? processPath = null)
     {
         private const string ScriptName = "dotnet-install";
 
         private static bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-        private IEnumerable<string> _args = Enumerable.Empty<string>();
+        private readonly IEnumerable<string> _scriptArgs = args;
 
-        private string? _processName;
-
-        public InstallDotNetCommand(IEnumerable<string> args, string? processName = null)
-        {
-            _args = args;
-            _processName = processName;
-        }
+        /// <summary>
+        /// Represents path to the installed dotnet.
+        /// </summary>
+        private readonly string? _processPath = processPath;
 
         public CommandResult ExecuteCommand()
         {
@@ -44,7 +41,7 @@ namespace Install_Scripts.Test.Utils
         {
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
-                FileName = string.IsNullOrEmpty(_processName) ? GetProcessName() : _processName,
+                FileName = GetProcessName(),
                 Arguments = executionSettings.ExecutableArgs,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -73,9 +70,18 @@ namespace Install_Scripts.Test.Utils
         {
             string scriptExtension = IsWindows ? "ps1" : "sh";
             string scriptPath = Path.Combine(Path.Combine(GetRepoRoot() ?? string.Empty, "src", $"{ScriptName}.{scriptExtension}"));
-            string scriptArgs = IsWindows
-                ? $"-ExecutionPolicy Bypass -NoProfile -NoLogo -Command \" {scriptPath} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_args)} + \""
-                : $"{scriptPath} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_args)}";
+            string scriptArgs = string.Empty;
+
+            if (string.IsNullOrEmpty(_processPath))
+            {
+                scriptArgs = IsWindows
+                    ? $"-ExecutionPolicy Bypass -NoProfile -NoLogo -Command \" {scriptPath} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_scriptArgs)}"
+                    : $"{scriptPath} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_scriptArgs)}";
+            }
+            else 
+            {
+                scriptArgs = $"{Path.Combine(_processPath, "dotnet")} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_scriptArgs)}";
+            }
 
             return new ScriptExecutionSettings($"{ScriptName}.{scriptExtension}", scriptPath, scriptArgs);
         }
