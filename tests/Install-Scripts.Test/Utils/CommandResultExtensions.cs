@@ -5,11 +5,8 @@ using static Install_Scripts.Test.Utils.InstallDotNetCommand;
 
 namespace Microsoft.NET.TestFramework.Assertions
 {
-    public static class CommandResultExtensions
+    internal static class CommandResultExtensions
     {
-        public static CommandResultAssertions Should(this CommandResult commandResult)
-        {
-            return new CommandResultAssertions(commandResult);
-        }
+        internal static CommandResultAssertions Should(this CommandResult commandResult) => new CommandResultAssertions(commandResult);
     }
 }
