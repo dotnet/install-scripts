@@ -10,9 +10,9 @@ using System.Runtime.InteropServices;
 namespace Install_Scripts.Test.Utils
 {
     /// <summary>
-    /// This command is designed to automate the installation of .NET Core SDK.
+    /// This command is designed to automate the installation and invocation of .NET Core SDK.
     /// </summary>
-    public sealed class InstallDotNetCommand(IEnumerable<string> args, string? processPath = null)
+    internal sealed class InstallDotNetCommand(IEnumerable<string> args, string? dotnetPath = null)
     {
         private const string ScriptName = "dotnet-install";
 
@@ -20,29 +20,18 @@ namespace Install_Scripts.Test.Utils
 
         private readonly IEnumerable<string> _scriptArgs = args;
 
-        /// <summary>
-        /// Represents path to the installed dotnet.
-        /// </summary>
-        private readonly string? _processPath = processPath;
+        private readonly string? _dotnetPath = dotnetPath ?? string.Empty;
 
-        public CommandResult ExecuteCommand()
-        {
-            ScriptExecutionSettings executionSettings = SetupScriptsExecutionSettings();
+        internal CommandResult ExecuteInstallation() => RunProcess(SetupScriptsExecutionArgs());
 
-            return RunScript(executionSettings);
-        }
+        internal CommandResult ExecuteDotnetCommand() => RunProcess(SetupDotnetExecutionArgs());
 
-        /// <summary>
-        /// Runs the .NET Core installation script with the specified settings.
-        /// </summary>
-        /// <param name="executionSettings">The settings required for script execution.</param>
-        /// <returns>True if the script executed successfully; otherwise, false.</returns>
-        private CommandResult RunScript(ScriptExecutionSettings executionSettings)
+        private CommandResult RunProcess(string processArgs)
         {
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
                 FileName = GetProcessName(),
-                Arguments = executionSettings.ExecutableArgs,
+                Arguments = processArgs,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -60,31 +49,31 @@ namespace Install_Scripts.Test.Utils
             return new CommandResult(startInfo, process.ExitCode, output, errors);
         }
 
-        private static string GetProcessName() => IsWindows ? "powershell.exe" : @"/bin/bash";
+        private string GetProcessName() => IsWindows ? "powershell.exe" : @"/bin/bash";
+
+        private string GetDotnetExecutablePath() => string.IsNullOrEmpty(dotnetPath) ? string.Empty : $"{Path.Combine(_dotnetPath!, "dotnet")}";
 
         /// <summary>
-        /// Sets up the settings required for executing the .NET Core installation script.
+        /// Sets up the args required for executing the .NET Core installation script.
         /// </summary>
-        /// <returns>The settings required for script execution.</returns>
-        private ScriptExecutionSettings SetupScriptsExecutionSettings()
+        /// <returns>The args required for script execution.</returns>
+        private string SetupScriptsExecutionArgs()
         {
             string scriptExtension = IsWindows ? "ps1" : "sh";
             string scriptPath = Path.Combine(Path.Combine(GetRepoRoot() ?? string.Empty, "src", $"{ScriptName}.{scriptExtension}"));
-            string scriptArgs = string.Empty;
-
-            if (string.IsNullOrEmpty(_processPath))
-            {
-                scriptArgs = IsWindows
+            
+            return IsWindows
                     ? $"-ExecutionPolicy Bypass -NoProfile -NoLogo -Command \" {scriptPath} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_scriptArgs)}"
                     : $"{scriptPath} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_scriptArgs)}";
-            }
-            else 
-            {
-                scriptArgs = $"{Path.Combine(_processPath, "dotnet")} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_scriptArgs)}";
-            }
-
-            return new ScriptExecutionSettings($"{ScriptName}.{scriptExtension}", scriptPath, scriptArgs);
         }
+
+        /// <summary>
+        /// Sets args required for invocation for the installed dotnet.
+        /// </summary>
+        /// <returns>The args required for dotnet invocation.</returns>
+        private string SetupDotnetExecutionArgs() => IsWindows
+                    ? $" {GetDotnetExecutablePath()} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_scriptArgs)}"
+                    : $"-c \"{GetDotnetExecutablePath()} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_scriptArgs)}\"";
 
         private static string? GetRepoRoot()
         {
@@ -103,19 +92,7 @@ namespace Install_Scripts.Test.Utils
             return directory;
         }
 
-        /// <summary>
-        /// A private struct to hold settings for script execution.
-        /// </summary>
-        private readonly struct ScriptExecutionSettings(string scriptName, string scriptsFullPath, string executableArgs)
-        {
-            public string ScriptName { get; } = scriptName;
-
-            public string ScriptsFullPath { get; } = scriptsFullPath;
-
-            public string ExecutableArgs { get; } = executableArgs;
-        }
-
-        public readonly struct CommandResult
+        internal readonly struct CommandResult
         {
             internal static readonly CommandResult Empty;
 

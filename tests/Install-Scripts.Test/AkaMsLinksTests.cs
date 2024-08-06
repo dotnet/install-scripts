@@ -63,8 +63,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                args.Add(quality);
            }
 
-           var commandResult = TestUtils.CreateInstallCommand(args)
-                                .ExecuteCommand();
+           var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
            commandResult.Should().Pass();
            commandResult.Should().NotHaveStdErr();
@@ -154,8 +153,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                args.Add(quality);
            }
 
-           var commandResult = TestUtils.CreateInstallCommand(args)
-                                .ExecuteCommand();
+           var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
            commandResult.Should().Pass();
            commandResult.Should().NotHaveStdErr();
@@ -219,8 +217,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                args.Add(feedCredentials);
            }
 
-           var commandResult = TestUtils.CreateInstallCommand(args)
-                                .ExecuteCommand();
+           var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
            commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
 
@@ -305,8 +302,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                args.Add(feedCredentials);
            }
 
-           var commandResult = TestUtils.CreateInstallCommand(args)
-                                .ExecuteCommand();
+           var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
            commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
 
@@ -353,8 +349,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                args.Add(runtime);
            }
 
-           var commandResult = TestUtils.CreateInstallCommand(args)
-                                .ExecuteCommand();
+           var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
            commandResult.Should().HaveStdOutContaining("Specifying quality for STS or LTS channel is not supported, the quality will be ignored.");
            commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, expectedLinkPattern));
@@ -381,8 +376,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                args.Add(runtime);
            }
 
-           var commandResult = TestUtils.CreateInstallCommand(args)
-                                .ExecuteCommand();
+           var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
            commandResult.Should().Fail();
            commandResult.Should().HaveStdErrContaining("Failed to locate the latest version in the channel");
@@ -393,8 +387,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        {
            var args = new string[] { "-dryrun", "-version", "3.1.100", "-verbose" };
 
-           var commandResult = TestUtils.CreateInstallCommand(args)
-                                .ExecuteCommand();
+           var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
            commandResult.Should().Pass();
            commandResult.Should().NotHaveStdErr();
@@ -409,8 +402,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
              "Assets", "InstallationScriptTests.json");
            var args = new string[] { "-dryrun", "-jsonfile", installationScriptTestsJsonFile, "-verbose" };
 
-           var commandResult = TestUtils.CreateInstallCommand(args)
-                                .ExecuteCommand();
+           var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
            commandResult.Should().Pass();
            commandResult.Should().NotHaveStdErr();

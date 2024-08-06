@@ -206,8 +206,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             var e = Encoding.UTF8;
             var args = GetInstallScriptArgs(channel, null, quality, _sdkInstallationDirectory);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                                .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdErr();
@@ -216,8 +215,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
 
-            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs) 
-                .ExecuteCommand();
+            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs).ExecuteDotnetCommand();
 
             // On MacOS, installation directory has an extra /private at the beginning.
             string installPathRegex = "\\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "sdk")) + "\\]";
@@ -233,8 +231,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, "dotnet", quality, _sdkInstallationDirectory);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                                .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdErr();
@@ -243,8 +240,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
 
-            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs)
-                                      .ExecuteCommand();
+            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs).ExecuteDotnetCommand();
 
             string lineStartRegex = Regex.Escape(" Microsoft.NETCore.App ");
             string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.NETCore.App")) + "\\]";
@@ -268,8 +264,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, "aspnetcore", quality, _sdkInstallationDirectory);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                            .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdErr();
@@ -278,10 +273,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
 
-            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs)
-
-
-                .ExecuteCommand();
+            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs).ExecuteDotnetCommand();
 
             string lineStartRegex = Regex.Escape(" Microsoft.AspNetCore.App ");
             string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.AspNetCore.App")) + "\\]";
@@ -319,7 +311,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, "windowsdesktop", quality, _sdkInstallationDirectory);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)                            .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             //commandResult.Should().NotHaveStdErr();
             //commandResult.Should().HaveStdOutContaining("Installation finished");
@@ -340,8 +332,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, null, quality, _sdkInstallationDirectory, feedCredential, verboseLogging: true);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                            .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Installation finished");
@@ -358,8 +349,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, "dotnet", quality, _sdkInstallationDirectory, feedCredential, verboseLogging: true);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                            .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Installation finished");
@@ -377,8 +367,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel: null, runtime: null, quality: null, _sdkInstallationDirectory, version: version);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                            .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdErr();
@@ -387,10 +376,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
 
-            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs)
-
-
-                .ExecuteCommand();
+            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs).ExecuteDotnetCommand();
 
             // On MacOS, installation directory has an extra /private at the beginning.
             string installPathRegex = "\\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "sdk")) + "\\]";
@@ -409,8 +395,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel: null, "dotnet", quality: null, _sdkInstallationDirectory, version: version);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                            .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdErr();
@@ -419,10 +404,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
 
-            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs)
-
-
-                .ExecuteCommand();
+            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs).ExecuteDotnetCommand();
 
             string lineStartRegex = Regex.Escape(" Microsoft.NETCore.App ");
             string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.NETCore.App")) + "\\]";
@@ -441,8 +423,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel: null, "aspnetcore", quality: null, _sdkInstallationDirectory, version: version);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                            .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdErr();
@@ -451,10 +432,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
 
-            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs)
-
-
-                .ExecuteCommand();
+            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs).ExecuteDotnetCommand();
 
             string lineStartRegex = Regex.Escape(" Microsoft.AspNetCore.App ");
             string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.AspNetCore.App")) + "\\]";
@@ -480,8 +458,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel: null, "windowsdesktop", quality: null, _sdkInstallationDirectory, version: version);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                            .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining("Installation finished");
@@ -514,16 +491,14 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel: null, runtime, quality: null, _sdkInstallationDirectory, version: version);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                            .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().Pass();
 
             // Run the same command. This time, it should say "already installed".
-            commandResult = TestUtils.CreateInstallCommand(args)
-                            .ExecuteCommand();
+            commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().NotHaveStdOutContaining("Installation finished");
             commandResult.Should().HaveStdOutContaining($"with version '{effectiveVersion ?? version}' is already installed.");
@@ -549,8 +524,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, runtime, quality, _sdkInstallationDirectory, feedCredential, verboseLogging: true);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                            .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().HaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("Installation finished");
@@ -564,8 +538,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             var args = GetInstallScriptArgs(null, null, quality.ToString(), _sdkInstallationDirectory, version: version);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                            .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().Fail();
             commandResult.Should().HaveStdErrContaining("Quality and Version options are not allowed to be specified simultaneously.");
@@ -580,8 +553,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run install script to download and install.
             var args = GetInstallScriptArgs(null, null, quality?.ToString(), _sdkInstallationDirectory, version: version);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                            .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdErr();
@@ -593,8 +565,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             var args = GetInstallScriptArgs(null, null, null, installDir: _sdkInstallationDirectory);
 
-            var commandResult = TestUtils.CreateInstallCommand(args)
-                            .ExecuteCommand();
+            var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
             commandResult.Should().HaveStdOutContaining("Installation finished");
             commandResult.Should().NotHaveStdErr();
