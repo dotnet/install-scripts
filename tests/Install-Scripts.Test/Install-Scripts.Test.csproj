@@ -5,6 +5,7 @@
     <RootNamespace>Install_Scripts.Test</RootNamespace>
     <IsPackable>false</IsPackable>
     <Nullable>enable</Nullable>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
 
