@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 // Download SDK using branches as channels.
                 foreach (var sdkBranchInfo in _sdkBranches)
                 {
-                    foreach (string quality in GetQualityOptionsFromFlags(sdkBranchInfo.quality).DefaultIfEmpty())
+                    foreach (string? quality in GetQualityOptionsFromFlags(sdkBranchInfo.quality).DefaultIfEmpty())
                     {
                         yield return new object?[]
                         {
@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 // Download SDK from darc channels.
                 foreach (var channelInfo in _channels)
                 {
-                    foreach(string quality in GetQualityOptionsFromFlags(channelInfo.quality).DefaultIfEmpty())
+                    foreach(string? quality in GetQualityOptionsFromFlags(channelInfo.quality).DefaultIfEmpty())
                     {
                         yield return new object?[]
                         {
@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 // Download runtimes using branches as channels.
                 foreach (var runtimeBranchInfo in _runtimeBranches)
                 {
-                    foreach (string quality in GetQualityOptionsFromFlags(runtimeBranchInfo.quality).DefaultIfEmpty())
+                    foreach (string? quality in GetQualityOptionsFromFlags(runtimeBranchInfo.quality).DefaultIfEmpty())
                     {
                         yield return new object?[]
                         {
@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 // Download runtimes using darc channels.
                 foreach (var channelInfo in _channels)
                 {
-                    foreach (string quality in GetQualityOptionsFromFlags(channelInfo.quality).DefaultIfEmpty())
+                    foreach (string? quality in GetQualityOptionsFromFlags(channelInfo.quality).DefaultIfEmpty())
                     {
                         yield return new object?[]
                         {
@@ -215,7 +215,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
 
-            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs).ExecuteDotnetCommand();
+            var dotnetCommandResult = TestUtils.CreateDotnetCommand(dotnetArgs).ExecuteDotnetCommand(_sdkInstallationDirectory);
 
             // On MacOS, installation directory has an extra /private at the beginning.
             string installPathRegex = "\\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "sdk")) + "\\]";
@@ -240,7 +240,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
 
-            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs).ExecuteDotnetCommand();
+            var dotnetCommandResult = TestUtils.CreateDotnetCommand(dotnetArgs).ExecuteDotnetCommand(_sdkInstallationDirectory);
 
             string lineStartRegex = Regex.Escape(" Microsoft.NETCore.App ");
             string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.NETCore.App")) + "\\]";
@@ -273,7 +273,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
 
-            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs).ExecuteDotnetCommand();
+            var dotnetCommandResult = TestUtils.CreateDotnetCommand(dotnetArgs).ExecuteDotnetCommand(_sdkInstallationDirectory);
 
             string lineStartRegex = Regex.Escape(" Microsoft.AspNetCore.App ");
             string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.AspNetCore.App")) + "\\]";
@@ -376,7 +376,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
 
-            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs).ExecuteDotnetCommand();
+            var dotnetCommandResult = TestUtils.CreateDotnetCommand(dotnetArgs).ExecuteDotnetCommand(_sdkInstallationDirectory);
 
             // On MacOS, installation directory has an extra /private at the beginning.
             string installPathRegex = "\\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "sdk")) + "\\]";
@@ -404,7 +404,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
 
-            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs).ExecuteDotnetCommand();
+            var dotnetCommandResult = TestUtils.CreateDotnetCommand(dotnetArgs).ExecuteDotnetCommand(_sdkInstallationDirectory);
 
             string lineStartRegex = Regex.Escape(" Microsoft.NETCore.App ");
             string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.NETCore.App")) + "\\]";
@@ -432,7 +432,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             // Run dotnet to verify that the version is installed into correct folder.
             var dotnetArgs = new List<string> { "--info" };
 
-            var dotnetCommandResult = TestUtils.CreateDotnetCommand(_sdkInstallationDirectory, dotnetArgs).ExecuteDotnetCommand();
+            var dotnetCommandResult = TestUtils.CreateDotnetCommand(dotnetArgs).ExecuteDotnetCommand(_sdkInstallationDirectory);
 
             string lineStartRegex = Regex.Escape(" Microsoft.AspNetCore.App ");
             string lineEndRegex = "\\ \\[(/private)?" + Regex.Escape(Path.Combine(_sdkInstallationDirectory, "shared", "Microsoft.AspNetCore.App")) + "\\]";

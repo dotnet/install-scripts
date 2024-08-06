@@ -6,8 +6,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 {
     internal static class TestUtils
     {
-        internal static InstallDotNetCommand CreateDotnetCommand(string workingDirectory, IEnumerable<string> args) => new InstallDotNetCommand(args, workingDirectory);
+        internal static DotNetCommand CreateDotnetCommand(IEnumerable<string> args) => new DotNetCommand(args);
 
-        internal static InstallDotNetCommand CreateInstallCommand(IEnumerable<string> args) => new InstallDotNetCommand(args);
+        internal static DotNetCommand CreateInstallCommand(IEnumerable<string> args) => new DotNetCommand(args);
     }
 }

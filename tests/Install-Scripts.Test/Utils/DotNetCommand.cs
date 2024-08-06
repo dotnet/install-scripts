@@ -12,7 +12,7 @@ namespace Install_Scripts.Test.Utils
     /// <summary>
     /// This command is designed to automate the installation and invocation of .NET Core SDK.
     /// </summary>
-    internal sealed class InstallDotNetCommand(IEnumerable<string> args, string? dotnetPath = null)
+    internal sealed class DotNetCommand(IEnumerable<string> args)
     {
         private const string ScriptName = "dotnet-install";
 
@@ -20,11 +20,9 @@ namespace Install_Scripts.Test.Utils
 
         private readonly IEnumerable<string> _scriptArgs = args;
 
-        private readonly string? _dotnetPath = dotnetPath ?? string.Empty;
-
         internal CommandResult ExecuteInstallation() => RunProcess(SetupScriptsExecutionArgs());
 
-        internal CommandResult ExecuteDotnetCommand() => RunProcess(SetupDotnetExecutionArgs());
+        internal CommandResult ExecuteDotnetCommand(string dotnetPath) => RunProcess(SetupDotnetExecutionArgs(dotnetPath));
 
         private CommandResult RunProcess(string processArgs)
         {
@@ -51,7 +49,7 @@ namespace Install_Scripts.Test.Utils
 
         private string GetProcessName() => IsWindows ? "powershell.exe" : @"/bin/bash";
 
-        private string GetDotnetExecutablePath() => string.IsNullOrEmpty(dotnetPath) ? string.Empty : $"{Path.Combine(_dotnetPath!, "dotnet")}";
+        private string GetDotnetExecutablePath(string? dotnetPath) => string.IsNullOrEmpty(dotnetPath) ? string.Empty : $"{Path.Combine(dotnetPath!, "dotnet")}";
 
         /// <summary>
         /// Sets up the args required for executing the .NET Core installation script.
@@ -71,9 +69,9 @@ namespace Install_Scripts.Test.Utils
         /// Sets args required for invocation for the installed dotnet.
         /// </summary>
         /// <returns>The args required for dotnet invocation.</returns>
-        private string SetupDotnetExecutionArgs() => IsWindows
-                    ? $" {GetDotnetExecutablePath()} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_scriptArgs)}"
-                    : $"-c \"{GetDotnetExecutablePath()} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_scriptArgs)}\"";
+        private string SetupDotnetExecutionArgs(string dotnetPath) => IsWindows
+                    ? $" {GetDotnetExecutablePath(dotnetPath)} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_scriptArgs)}"
+                    : $"-c \"{GetDotnetExecutablePath(dotnetPath)} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_scriptArgs)}\"";
 
         private static string? GetRepoRoot()
         {

@@ -5,7 +5,7 @@ using System;
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using FluentAssertions.Execution;
-using static Install_Scripts.Test.Utils.InstallDotNetCommand;
+using static Install_Scripts.Test.Utils.DotNetCommand;
 
 namespace Microsoft.NET.TestFramework.Assertions
 {
