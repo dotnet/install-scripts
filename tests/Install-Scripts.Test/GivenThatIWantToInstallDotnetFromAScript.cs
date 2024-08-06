@@ -250,7 +250,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
-        [Trait("MonitoringTest", "true")]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingAspNetCoreRuntime(string channel, string? quality, string versionRegex)
         {
@@ -283,7 +282,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
-        [Trait("MonitoringTest", "true")]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingWindowsdesktopRuntime(string channel, string? quality, string versionRegex)
         {
@@ -358,7 +356,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
-        [Trait("MonitoringTest", "true")]
         [InlineData("5.0.404-servicing.21560.14", "5.0.404")]
         [InlineData("6.0.100-preview.6.21364.34")]
         [InlineData("7.0.100-alpha.1.22054.9")]
@@ -386,7 +383,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
-        [Trait("MonitoringTest", "true")]
         [InlineData("5.0.13-servicing.21560.6", "5.0.13")]
         [InlineData("6.0.0-preview.4.21176.7")]
         [InlineData("7.0.0-alpha.1.21528.8")]
@@ -414,7 +410,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
-        [Trait("MonitoringTest", "true")]
         [InlineData("5.0.13-servicing.21552.32", "5.0.13")]
         [InlineData("6.0.0-preview.4.21176.7")]
         [InlineData("7.0.0-alpha.1.21567.15")]
@@ -442,7 +437,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
-        [Trait("MonitoringTest", "true")]
         // productVersion files are broken prior to 6.0 release.
         // [InlineData("5.0.14-servicing.21614.9")]
         [InlineData("6.0.1-servicing.21568.2")]
@@ -573,10 +567,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         private static IEnumerable<string> GetInstallScriptArgs(
-            string? channel, 
+            string? channel,
             string? runtime,
-            string? quality, 
-            string? installDir, 
+            string? quality,
+            string? installDir,
             string? feedCredentials = null,
             bool verboseLogging = false,
             string? version = null)

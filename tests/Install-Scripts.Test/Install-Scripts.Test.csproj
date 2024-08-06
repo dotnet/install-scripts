@@ -7,49 +7,16 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="Assets\.gitattributes" />
-    <None Remove="Assets\InstallationScriptTests.json" />
-    <None Remove="Assets\InstallationScriptTestsWithMultipleSdkFields.json" />
-    <None Remove="Assets\InstallationScriptTestsWithVersionFieldInTheMiddle.json" />
-    <None Remove="Assets\InstallationScriptTestsWithWindowsLineEndings.json" />
-  </ItemGroup>
 
   <ItemGroup>
-    <Content Include="Assets\InstallationScriptTests.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\InstallationScriptTestsWithWindowsLineEndings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\InstallationScriptTestsWithMultipleSdkFields.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Assets\InstallationScriptTestsWithVersionFieldInTheMiddle.json">
+    <Content Include="Assets\*.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
-    <PackageReference Include="NuGet.Frameworks" Version="6.8.1" />
-    <PackageReference Include="NuGet.Versioning" Version="6.8.1" />
-    <PackageReference Include="NuGet.Packaging" Version="6.8.1" />
-    <PackageReference Include="NuGet.Packaging.Core" Version="6.8.0" />
-    <PackageReference Include="NuGet.ProjectModel" Version="6.8.0" />
-    <PackageReference Include="Microsoft.Build" Version="16.3.0" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.3.0" />
-    <PackageReference Include="Microsoft.Extensions.CommandLineUtils" Version="1.1.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Verify.Xunit" Version="19.10.0" />
     <PackageReference Include="xunit" Version="2.4.2" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.2">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="coverlet.collector" Version="1.3.0">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
   </ItemGroup>
 </Project>
