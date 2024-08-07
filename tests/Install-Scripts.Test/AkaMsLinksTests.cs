@@ -208,7 +208,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                args.Add(quality);
            }
 
-           string feedCredentials = default;
+           string? feedCredentials = default;
            if (isInternal)
            {
                feedCredentials = Guid.NewGuid().ToString();
@@ -223,7 +223,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
            if(isInternal)
            {
-               commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
+               commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials ?? string.Empty);
            }
        }
 
@@ -293,7 +293,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                args.Add(quality);
            }
 
-           string feedCredentials = default;
+           string? feedCredentials = default;
            if (isInternal)
            {
                feedCredentials = Guid.NewGuid().ToString();
@@ -308,7 +308,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
            if(isInternal)
            {
-               commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
+               commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials ?? string.Empty);
            }
        }
 

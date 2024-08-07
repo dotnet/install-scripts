@@ -92,8 +92,6 @@ namespace Install_Scripts.Test.Utils
 
         internal readonly struct CommandResult
         {
-            internal static readonly CommandResult Empty;
-
             internal CommandResult(ProcessStartInfo startInfo, int exitCode, string? stdOut, string? stdErr)
             {
                 StartInfo = startInfo;

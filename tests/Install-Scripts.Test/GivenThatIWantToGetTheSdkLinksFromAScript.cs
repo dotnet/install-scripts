@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 {
     public class GivenThatIWantToGetTheSdkLinksFromAScript : TestBase
     {
-        public GivenThatIWantToGetTheSdkLinksFromAScript(VerifySettings settings = null) 
+        public GivenThatIWantToGetTheSdkLinksFromAScript(VerifySettings? settings = null) 
             : base(settings) { }
 
         [Theory]
@@ -144,7 +144,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             }
             var args = new List<string> { "-dryrun", "-channel", channel, "-runtime", runtimeType };
 
-            string feedCredentials = default;
+            string? feedCredentials = default;
             if (useCustomFeedCredential)
             {
                 feedCredentials = Guid.NewGuid().ToString();
@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             if (useCustomFeedCredential)
             {
-                commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
+                commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials ?? string.Empty);
             }
         }
 
@@ -217,7 +217,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             var args = new List<string> { "-dryrun", "-channel", channel };
 
-            string feedCredentials = default;
+            string? feedCredentials = default;
             if (useFeedCredential)
             {
                 feedCredentials = Guid.NewGuid().ToString();
@@ -239,7 +239,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             if (useFeedCredential)
             {
-                commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
+                commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials ?? string.Empty);
             }
         }
 
@@ -364,7 +364,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().HaveStdOutContaining(output => Regex.IsMatch(output, "osx-(x86|x64|arm|arm64)\\.(zip|tar\\.gz)"));
 
-            string output = commandResult.StdOut;
+            string output = commandResult.StdOut ?? string.Empty;
 
             var match = Regex.Match(output, "--version \\\"(.*?)\\\"", RegexOptions.Multiline);
             match.Success.Should().BeTrue();
@@ -438,7 +438,7 @@ dotnet-install.sh is a simple command line interface for obtaining dotnet cli.
 
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
-            commandResult.StdOut.StartsWith(IntroBlurb);
+            commandResult.StdOut?.StartsWith(IntroBlurb);
         }
 
         [Fact]
@@ -467,7 +467,7 @@ VERBOSE: dotnet-install: To set up a development environment or to run apps, use
 
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
-            commandResult.StdOut.StartsWith(IntroBlurb);
+            commandResult.StdOut?.StartsWith(IntroBlurb);
         }
     }
 }

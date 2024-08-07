@@ -48,42 +48,42 @@ namespace Microsoft.NET.TestFramework.Assertions
 
         internal AndConstraint<CommandResultAssertions> HaveStdOut(string expectedOutput)
         {
-            Execute.Assertion.ForCondition(_commandResult.StdOut.Equals(expectedOutput, StringComparison.Ordinal))
+            Execute.Assertion.ForCondition(_commandResult.StdOut!.Equals(expectedOutput, StringComparison.Ordinal))
                 .FailWith(AppendDiagnosticsTo($"Command did not output with Expected Output. Expected: {expectedOutput}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdOutContaining(string pattern)
         {
-            Execute.Assertion.ForCondition(_commandResult.StdOut.Contains(pattern))
+            Execute.Assertion.ForCondition(_commandResult.StdOut!.Contains(pattern))
                 .FailWith(AppendDiagnosticsTo($"The command output did not contain expected result: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdOutContaining(Func<string, bool> predicate, string description = "")
         {
-            Execute.Assertion.ForCondition(predicate(_commandResult.StdOut))
+            Execute.Assertion.ForCondition(predicate(_commandResult.StdOut!))
                 .FailWith(AppendDiagnosticsTo($"The command output did not contain expected result: {description} {Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> NotHaveStdOutContaining(string pattern)
         {
-            Execute.Assertion.ForCondition(!_commandResult.StdOut.Contains(pattern))
+            Execute.Assertion.ForCondition(!_commandResult.StdOut!.Contains(pattern))
                 .FailWith(AppendDiagnosticsTo($"The command output contained a result it should not have contained: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> NotHaveStdOutContainingIgnoreCase(string pattern)
         {
-            Execute.Assertion.ForCondition(!_commandResult.StdOut.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+            Execute.Assertion.ForCondition(!_commandResult.StdOut!.Contains(pattern, StringComparison.OrdinalIgnoreCase))
                 .FailWith(AppendDiagnosticsTo($"The command output contained a result it should not have contained (ignoring case): {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdOutContainingIgnoreSpaces(string pattern)
         {
-            string commandResultNoSpaces = _commandResult.StdOut.Replace(" ", "");
+            string commandResultNoSpaces = _commandResult.StdOut!.Replace(" ", "");
 
             Execute.Assertion
                 .ForCondition(commandResultNoSpaces.Contains(pattern))
@@ -94,21 +94,21 @@ namespace Microsoft.NET.TestFramework.Assertions
 
         internal AndConstraint<CommandResultAssertions> HaveStdOutContainingIgnoreCase(string pattern)
         {
-            Execute.Assertion.ForCondition(_commandResult.StdOut.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+            Execute.Assertion.ForCondition(_commandResult.StdOut!.Contains(pattern, StringComparison.OrdinalIgnoreCase))
                 .FailWith(AppendDiagnosticsTo($"The command output did not contain expected result (ignoring case): {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdOutMatching(string pattern, RegexOptions options = RegexOptions.None)
         {
-            Execute.Assertion.ForCondition(Regex.Match(_commandResult.StdOut, pattern, options).Success)
+            Execute.Assertion.ForCondition(Regex.Match(_commandResult.StdOut!, pattern, options).Success)
                 .FailWith(AppendDiagnosticsTo($"Matching the command output failed. Pattern: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> NotHaveStdOutMatching(string pattern, RegexOptions options = RegexOptions.None)
         {
-            Execute.Assertion.ForCondition(!Regex.Match(_commandResult.StdOut, pattern, options).Success)
+            Execute.Assertion.ForCondition(!Regex.Match(_commandResult.StdOut!, pattern, options).Success)
                 .FailWith(AppendDiagnosticsTo($"The command output matched a pattern it should not have. Pattern: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
@@ -122,28 +122,28 @@ namespace Microsoft.NET.TestFramework.Assertions
 
         internal AndConstraint<CommandResultAssertions> HaveStdErrContaining(string pattern)
         {
-            Execute.Assertion.ForCondition(_commandResult.StdErr.Contains(pattern))
+            Execute.Assertion.ForCondition(_commandResult.StdErr!.Contains(pattern))
                 .FailWith(AppendDiagnosticsTo($"The command error output did not contain expected result: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> NotHaveStdErrContaining(string pattern)
         {
-            Execute.Assertion.ForCondition(!_commandResult.StdErr.Contains(pattern))
+            Execute.Assertion.ForCondition(!_commandResult.StdErr!.Contains(pattern))
                 .FailWith(AppendDiagnosticsTo($"The command error output contained a result it should not have contained: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> NotHaveStdErrContainingIgnoreCase(string pattern)
         {
-            Execute.Assertion.ForCondition(!_commandResult.StdErr.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+            Execute.Assertion.ForCondition(!_commandResult.StdErr!.Contains(pattern, StringComparison.OrdinalIgnoreCase))
                 .FailWith(AppendDiagnosticsTo($"The command error output contained a result it should not have contained (ignoring case): {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdErrMatching(string pattern, RegexOptions options = RegexOptions.None)
         {
-            Execute.Assertion.ForCondition(Regex.Match(_commandResult.StdErr, pattern, options).Success)
+            Execute.Assertion.ForCondition(Regex.Match(_commandResult.StdErr!, pattern, options).Success)
                 .FailWith(AppendDiagnosticsTo($"Matching the command error output failed. Pattern: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
@@ -174,14 +174,14 @@ namespace Microsoft.NET.TestFramework.Assertions
 
         internal AndConstraint<CommandResultAssertions> HaveSkippedProjectCompilation(string skippedProject, string frameworkFullName)
         {
-            _commandResult.StdOut.Should().Contain($"Project {skippedProject} ({frameworkFullName}) was previously compiled. Skipping compilation.");
+            _commandResult.StdOut!.Should().Contain($"Project {skippedProject} ({frameworkFullName}) was previously compiled. Skipping compilation.");
 
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveCompiledProject(string compiledProject, string frameworkFullName)
         {
-            _commandResult.StdOut.Should().Contain($"Project {compiledProject} ({frameworkFullName}) will be compiled");
+            _commandResult.StdOut!.Should().Contain($"Project {compiledProject} ({frameworkFullName}) will be compiled");
 
             return new AndConstraint<CommandResultAssertions>(this);
         }
