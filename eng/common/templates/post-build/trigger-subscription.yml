@@ -2,14 +2,12 @@ parameters:
   ChannelId: 0
 
 steps:
-- task: AzureCLI@2
+- task: PowerShell@2
   displayName: Triggering subscriptions
   inputs:
-    azureSubscription: "Darc: Maestro Production"
-    scriptType: ps
-    scriptLocation: scriptPath
-    scriptPath: $(Build.SourcesDirectory)/eng/common/post-build/trigger-subscriptions.ps1
+    filePath: $(Build.SourcesDirectory)/eng/common/post-build/trigger-subscriptions.ps1
     arguments: -SourceRepo $(Build.Repository.Uri)
       -ChannelId ${{ parameters.ChannelId }}
+      -MaestroApiAccessToken $(MaestroAccessToken)
       -MaestroApiEndPoint $(MaestroApiEndPoint)
       -MaestroApiVersion $(MaestroApiVersion)
