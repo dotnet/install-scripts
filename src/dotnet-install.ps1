@@ -1361,7 +1361,7 @@ if (-not $KeepZip) {
 
 Measure-Action "Setting up shell environment" { Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot }
 
-Say "Note that the script does not resolve dependencies during installation."
-Say "To check the list of dependencies, go to https://learn.microsoft.com/dotnet/core/install/windows#dependencies"
+Say "Note that the script does not ensure your Windows version is supported during the installation."
+Say "To check the list of supported versions, go to https://learn.microsoft.com/en-us/dotnet/core/install/windows#supported-versions"
 Say "Installed version is $($DownloadedLink.effectiveVersion)"
 Say "Installation finished"
