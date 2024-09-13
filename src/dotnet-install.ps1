@@ -1222,7 +1222,7 @@ Measure-Action "Product discovery" {
 
 $InstallRoot = Resolve-Installation-Path $InstallDir
 if (-not (Test-User-Write-Access $InstallRoot)) {
-    Say-Error "Current user doesn't have write access to the installation root $InstallRoot to install dotnet. Please try running as administrator to resolve."
+    Say-Error "The current user doesn't have write access to the installation root '$InstallRoot' to install .NET. Please try specifying a different installation directory using the -InstallDir parameter, or ensure the selected directory has the appropriate permissions."
     throw
 }
 Say-Verbose "InstallRoot: $InstallRoot"
