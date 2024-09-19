@@ -771,6 +771,9 @@ function Get-User-Share-Path() {
     if (!$InstallRoot) {
         $InstallRoot = "$env:LocalAppData\Microsoft\dotnet"
     }
+    elseif ($InstallRoot -like "$env:ProgramFiles\dotnet\?*") {
+        Say-Warning "The install root specified by the environment variable DOTNET_INSTALL_DIR points to the sub folder of $env:ProgramFiles\dotnet which is the default dotnet install root using .NET SDK installer. It is better to keep aligned with .NET SDK installer."
+    }
     return $InstallRoot
 }
 
@@ -781,6 +784,18 @@ function Resolve-Installation-Path([string]$InstallDir) {
         return Get-User-Share-Path
     }
     return $InstallDir
+}
+
+function Test-User-Write-Access([string]$InstallDir) {
+    try {
+        $tempFileName=[guid]::NewGuid().ToString()
+        $tempFilePath=Join-Path -Path $InstallDir -ChildPath $tempFileName
+        New-Item -Path $tempFilePath -ItemType File -Force
+        Remove-Item $tempFilePath -Force
+        return $true
+    } catch {
+        return $false
+    }
 }
 
 function Is-Dotnet-Package-Installed([string]$InstallRoot, [string]$RelativePathToPackage, [string]$SpecificVersion) {
@@ -1206,6 +1221,10 @@ Measure-Action "Product discovery" {
 }
 
 $InstallRoot = Resolve-Installation-Path $InstallDir
+if (-not (Test-User-Write-Access $InstallRoot)) {
+    Say-Error "The current user doesn't have write access to the installation root '$InstallRoot' to install .NET. Please try specifying a different installation directory using the -InstallDir parameter, or ensure the selected directory has the appropriate permissions."
+    throw
+}
 Say-Verbose "InstallRoot: $InstallRoot"
 $ScriptName = $MyInvocation.MyCommand.Name
 ($assetName, $dotnetPackageRelativePath) = Resolve-AssetName-And-RelativePath -Runtime $Runtime
