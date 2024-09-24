@@ -39,6 +39,10 @@ extends:
         enabled: true
         break: true
         additionalTargetsGlobPattern: -|**\Install-Scripts.Test\**;
+      policheck:
+        enabled: true
+      tsa:
+        enabled: true
     pool:
       name: NetCore1ESPool-Svc-Internal
       image: windows.vs2022preview.amd64
