@@ -427,12 +427,16 @@ is_arm64_supported() {
     major_version="${1%%.*}"
 
     # Check if the major version is a valid number and less than 6
-    if [[ "$major_version" -lt 6 ]]; then
-        echo false
-    else
-        echo true
-    fi
+    case "$major_version" in
+        [0-9]*)  
+            if [ "$major_version" -lt 6 ]; then
+                echo false
+                return 0
+            fi
+            ;;
+    esac
 
+    echo true
     return 0
 }
 
