@@ -423,14 +423,16 @@ get_normalized_architecture_for_specific_sdk_version() {
 # args:
 # version or channel - $1
 is_arm64_supported() {
-    #any channel or version that starts with the specified versions
-    case "$1" in
-        ( "1"* | "2"* | "3"*  | "4"* | "5"*) 
-            echo false
-            return 0
-    esac
+    # Extract the major version by splitting on the dot
+    major_version="${1%%.*}"
 
-    echo true
+    # Check if the major version is a valid number and less than 6
+    if [[ "$major_version" -lt 6 ]]; then
+        echo false
+    else
+        echo true
+    fi
+
     return 0
 }
 
