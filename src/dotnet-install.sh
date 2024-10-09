@@ -970,7 +970,7 @@ copy_files_or_dirs_from_list() {
     local override_switch="-n"
 
     # use -u instead of -n when it's available
-    [ "$override" = false ] && cp -u --help 2>/dev/null && override_switch="-u"
+    [ "$override" = false ] && cp -u --help >/dev/null 2>&1 && override_switch="-u"
 
     cat | uniq | while read -r file_path; do
         local path="$(remove_beginning_slash "${file_path#$root_path}")"
