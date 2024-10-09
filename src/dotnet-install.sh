@@ -969,9 +969,10 @@ copy_files_or_dirs_from_list() {
     local override="$3"
     local override_switch=""
 
-    # use -u instead of -n when it's available
     if [ "$override" = false ]; then
         override_switch="-n"
+
+        # use -u instead of -n when it's available
         if cp -u --help >/dev/null 2>&1; then
             override_switch="-u"
         fi
