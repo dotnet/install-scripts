@@ -1741,7 +1741,7 @@ do
             zip_path="$1"
             ;;
         -?|--?|-h|--help|-[Hh]elp)
-            script_name="$(basename "$0")"
+            script_name="dotnet-install.sh"
             echo ".NET Tools Installer"
             echo "Usage:"
             echo "       # Install a .NET SDK of a given Quality from a given Channel"
