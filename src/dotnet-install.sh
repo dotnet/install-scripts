@@ -967,15 +967,16 @@ copy_files_or_dirs_from_list() {
     local root_path="$(remove_trailing_slash "$1")"
     local out_path="$(remove_trailing_slash "$2")"
     local override="$3"
-    local osname="$(get_current_os_name)"
-    local override_switch=$(
-        if [ "$override" = false ]; then
-            if [ "$osname" = "linux-musl" ]; then
-                printf -- "-u";
-            else
-                printf -- "-n";
-            fi
-        fi)
+    local override_switch=""
+
+    if [ "$override" = false ]; then
+        override_switch="-n"
+
+        # use -u instead of -n when it's available
+        if cp -u --help >/dev/null 2>&1; then
+            override_switch="-u"
+        fi
+    fi
 
     cat | uniq | while read -r file_path; do
         local path="$(remove_beginning_slash "${file_path#$root_path}")"
