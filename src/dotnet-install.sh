@@ -1176,10 +1176,10 @@ downloadcurl() {
     local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
     local curl_exit_code=0;
     if [ -z "$out_path" ]; then
-        curl $curl_options "$remote_path_with_credential" 2>&1
+        curl $curl_options "$remote_path_with_credential" 2>/dev/null
         curl_exit_code=$?
     else
-        curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>&1
+        curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>/dev/null
         curl_exit_code=$?
     fi
     
@@ -1225,10 +1225,10 @@ downloadwget() {
     fi
 
     if [ -z "$out_path" ]; then
-        wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential" 2>&1
+        wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential" 2>/dev/null
         wget_result=$?
     else
-        wget $wget_options $wget_options_extra -O "$out_path" "$remote_path_with_credential" 2>&1
+        wget $wget_options $wget_options_extra -O "$out_path" "$remote_path_with_credential" 2>/dev/null
         wget_result=$?
     fi
 
