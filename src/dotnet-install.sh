@@ -1176,24 +1176,24 @@ downloadcurl() {
     local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
     local curl_exit_code=0;
     if [ -z "$out_path" ]; then
-        curl $curl_options "$remote_path_with_credential" 2>/dev/null
+        output="$(curl $curl_options "$remote_path_with_credential" 2>&1)"
         curl_exit_code=$?
     else
-        curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>/dev/null
+        output="$(curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>&1)"
         curl_exit_code=$?
     fi
 
     if [ $curl_exit_code -gt 0 ]; then
-        download_error_msg="Unable to download $remote_path."
+        download_error_msg="Unable to download. path: $remote_path, output: $output"
         # Check for curl timeout codes
         if [[ $curl_exit_code == 7 || $curl_exit_code == 28 ]]; then
-            download_error_msg+=" Failed to reach the server: connection timeout."
+            download_error_msg+=", more_info: failed to reach the server: connection timeout."
         else
             local disable_feed_credential=false
             local response=$(get_http_header_curl $remote_path $disable_feed_credential)
             http_code=$( echo "$response" | awk '/^HTTP/{print $2}' | tail -1 )
             if  [[ ! -z $http_code && $http_code != 2* ]]; then
-                download_error_msg+=" Returned HTTP status code: $http_code."
+                download_error_msg+=", more_info: returned HTTP status code: $http_code."
             fi
         fi
         say_verbose "$download_error_msg"
@@ -1225,10 +1225,10 @@ downloadwget() {
     fi
 
     if [ -z "$out_path" ]; then
-        wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential" 2>/dev/null
+        output="$(wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential" 2>&1)"
         wget_result=$?
     else
-        wget $wget_options $wget_options_extra -O "$out_path" "$remote_path_with_credential" 2>/dev/null
+        output="$(wget $wget_options $wget_options_extra -O "$out_path" "$remote_path_with_credential" 2>&1)"
         wget_result=$?
     fi
 
@@ -1236,12 +1236,12 @@ downloadwget() {
         local disable_feed_credential=false
         local response=$(get_http_header_wget $remote_path $disable_feed_credential)
         http_code=$( echo "$response" | awk '/^  HTTP/{print $2}' | tail -1 )
-        download_error_msg="Unable to download $remote_path."
+        download_error_msg="Unable to download. path: $remote_path, output: $output"
         if  [[ ! -z $http_code && $http_code != 2* ]]; then
-            download_error_msg+=" Returned HTTP status code: $http_code."
+            download_error_msg+=", more_info: returned HTTP status code $http_code."
         # wget exit code 4 stands for network-issue
         elif [[ $wget_result == 4 ]]; then
-            download_error_msg+=" Failed to reach the server: connection timeout."
+            download_error_msg+=", more_info: failed to reach the server: connection timeout."
         fi
         say_verbose "$download_error_msg"
         return 1
