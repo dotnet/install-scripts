@@ -1175,11 +1175,15 @@ downloadcurl() {
     local remote_path_with_credential="${remote_path}${feed_credential}"
     local curl_options="--retry 20 --retry-delay 2 --connect-timeout 15 -sSL -f --create-dirs "
     local curl_exit_code=0;
+
+    # Setup stream 4 for writing stdout
+    exec 4>&1
+
     if [ -z "$out_path" ]; then
-        output="$(curl $curl_options "$remote_path_with_credential" 2>&1 1>/dev/tty)"
+        output="$( { curl $curl_options "$remote_path_with_credential" 2>&1 1>&4; } 4>&1 )"
         curl_exit_code=$?
     else
-        output="$(curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>&1 1>/dev/tty)"
+        output="$( { curl $curl_options -o "$out_path" "$remote_path_with_credential" 2>&1 1>&4; } 4>&1 )"
         curl_exit_code=$?
     fi
 
@@ -1199,6 +1203,10 @@ downloadcurl() {
         say_verbose "$download_error_msg"
         return 1
     fi
+
+    # Close file descriptor 4 to restore normal behavior
+    exec 4>&-
+
     return 0
 }
 
@@ -1224,11 +1232,14 @@ downloadwget() {
         say "wget extra options are unavailable for this environment"
     fi
 
+    # Setup stream 4 for writing stdout
+    exec 4>&1
+
     if [ -z "$out_path" ]; then
-        output="$(wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential" 2>&1 1>/dev/tty)"
+        output="$( { wget -q $wget_options $wget_options_extra -O - "$remote_path_with_credential" 2>&1 1>&4; } 4>&1 )"
         wget_result=$?
     else
-        output="$(wget $wget_options $wget_options_extra -O "$out_path" "$remote_path_with_credential" 2>&1 1>/dev/tty)"
+        output="$( { wget $wget_options $wget_options_extra -O "$out_path" "$remote_path_with_credential" 2>&1 1>&4; } 4>&1 )"
         wget_result=$?
     fi
 
@@ -1246,6 +1257,9 @@ downloadwget() {
         say_verbose "$download_error_msg"
         return 1
     fi
+
+    # Close file descriptor 4 to restore normal behavior
+    exec 4>&-
 
     return 0
 }
