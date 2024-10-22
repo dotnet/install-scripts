@@ -972,10 +972,19 @@ copy_files_or_dirs_from_list() {
     if [ "$override" = false ]; then
         override_switch="-n"
 
+        tmp_dir=$(mktemp -d)
+        tmp_file="$tmp_dir/testfile"
+        tmp_file2="$tmp_dir/testfile2"
+
+        touch "$tmp_file"
+
         # use -u instead of -n when it's available
-        if cp -u --help >/dev/null 2>&1; then
+        if cp -u "$tmp_file" "$tmp_file2" 2>/dev/null; then
             override_switch="-u"
         fi
+
+        rm -f "$tmp_file" "$tmp_file2"
+        rm -rf "$tmp_dir"
     fi
 
     cat | uniq | while read -r file_path; do
