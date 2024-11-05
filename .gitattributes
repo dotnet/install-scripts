@@ -2,6 +2,3 @@
 *.sh text eol=lf
 # powershell script must have CRLF line endings for signature validation to work
 *.ps1 text eol=crlf
-
-# VerifyTests
-*.verified.txt text eol=lf working-tree-encoding=UTF-8
