@@ -186,7 +186,7 @@ function Say-Verbose($str) {
 function Measure-Action($name, $block) {
     $time = Measure-Command $block
     $totalSeconds = $time.TotalSeconds
-    Say-Verbose "⏱ Action '$name' took $totalSeconds seconds"
+    Say-Verbose "Action '$name' took $totalSeconds seconds"
 }
 
 function Get-Remote-File-Size($zipUri) {
