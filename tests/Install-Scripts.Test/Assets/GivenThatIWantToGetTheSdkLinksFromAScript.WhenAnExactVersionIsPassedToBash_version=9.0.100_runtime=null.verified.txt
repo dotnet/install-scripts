@@ -1,0 +1,7 @@
+﻿dotnet_install: Warning: Use of --runtime-id is obsolete and should be limited to the versions below 2.1. To override architecture, use --architecture option instead. To override OS, use --os option instead.
+dotnet-install: Payload URLs:
+dotnet-install: URL #0 - primary: https://dotnetcli.azureedge.net/dotnet/Sdk/9.0.100/dotnet-sdk-9.0.100-osx-x64.tar.gz
+dotnet-install: URL #1 - legacy: https://dotnetcli.azureedge.net/dotnet/Sdk/9.0.100/dotnet-dev-osx-x64.9.0.100.tar.gz
+dotnet-install: URL #2 - primary: https://dotnetbuilds.azureedge.net/public/Sdk/9.0.100/dotnet-sdk-9.0.100-osx-x64.tar.gz
+dotnet-install: URL #3 - legacy: https://dotnetbuilds.azureedge.net/public/Sdk/9.0.100/dotnet-dev-osx-x64.9.0.100.tar.gz
+dotnet-install: Repeatable invocation: ./dotnet-install.sh --version "9.0.100" --install-dir "dotnet-sdk" --architecture "x64" --os "osx" -runtimeid "osx"

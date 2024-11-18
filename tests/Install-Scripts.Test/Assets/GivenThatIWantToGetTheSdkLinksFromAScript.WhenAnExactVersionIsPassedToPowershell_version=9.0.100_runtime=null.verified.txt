@@ -1,0 +1,6 @@
+﻿dotnet-install: Payload URLs:
+dotnet-install: URL #0 - primary: https://dotnetcli.azureedge.net/dotnet/Sdk/9.0.100/dotnet-sdk-9.0.100-win-x64.zip
+dotnet-install: URL #1 - legacy: https://dotnetcli.azureedge.net/dotnet/Sdk/9.0.100/dotnet-dev-win-x64.9.0.100.zip
+dotnet-install: URL #2 - primary: https://dotnetbuilds.azureedge.net/public/Sdk/9.0.100/dotnet-sdk-9.0.100-win-x64.zip
+dotnet-install: URL #3 - legacy: https://dotnetbuilds.azureedge.net/public/Sdk/9.0.100/dotnet-dev-win-x64.9.0.100.zip
+dotnet-install: Repeatable invocation: .\dotnet-install.ps1 -Version "9.0.100" -InstallDir "dotnet-sdk" -Architecture "x64"

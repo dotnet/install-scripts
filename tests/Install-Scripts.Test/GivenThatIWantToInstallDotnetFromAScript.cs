@@ -31,15 +31,18 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("5.0", "5\\.0\\..*", Quality.None),
                 ("6.0", "6\\.0\\..*", Quality.Daily),
                 ("6.0", "6\\.0\\..*", Quality.None),
-                ("STS", "7\\.0\\..*", Quality.None),
                 ("LTS", "8\\.0\\..*", Quality.None),
                 ("7.0", "7\\.0\\..*", Quality.None),
                 ("7.0", "7\\.0\\..*", Quality.Ga),
                 ("8.0", "8\\.0\\..*", Quality.None),
                 ("8.0", "8\\.0\\..*", Quality.Ga),
+                ("STS", "9\\.0\\..*", Quality.None),
                 ("9.0", "9\\.0\\..*", Quality.None),
-                ("9.0", "9\\.0\\..*", Quality.Preview),
                 ("9.0", "9\\.0\\..*", Quality.Ga),
+                // 10 not available yet
+                //("10.0", "10\\.0\\..*", Quality.None),
+                //("10.0", "10\\.0\\..*", Quality.Preview),
+                //("10.0", "10\\.0\\..*", Quality.Ga),
             };
 
         /// <summary>
@@ -57,6 +60,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("6.0-preview2", "6\\.0\\..*", Quality.Daily | Quality.Signed),
                 ("6.0-preview3", "6\\.0\\..*", Quality.Daily),
                 ("6.0-preview4", "6\\.0\\..*", Quality.Daily),
+                ("6.0", "6\\.0\\..*", Quality.None),
+                ("7.0", "7\\.0\\..*", Quality.None),
+                ("8.0", "8\\.0\\..*", Quality.None),
+                ("9.0", "9\\.0\\..*", Quality.None),
             };
 
         /// <summary>
@@ -78,6 +85,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("6.0.1xx-preview4", "6\\.0\\.1.*", Quality.Daily),
                 ("7.0.1xx", "7\\.0\\..*", Quality.Daily),
                 ("8.0.1xx", "8\\.0\\..*", Quality.Daily),
+                ("9.0.1xx", "9\\.0\\..*", Quality.Daily),
             };
 
         public static IEnumerable<object?[]> InstallSdkFromChannelTestCases
@@ -386,6 +394,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("5.0.13-servicing.21560.6", "5.0.13")]
         [InlineData("6.0.0-preview.4.21176.7")]
         [InlineData("7.0.0-alpha.1.21528.8")]
+        [InlineData("8.0.303")]
+        [InlineData("9.0.100")]
         public void WhenInstallingASpecificVersionOfDotnetRuntime(string version, string? effectiveVersion = null)
         {
             // Run install script to download and install.
@@ -413,6 +423,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("5.0.13-servicing.21552.32", "5.0.13")]
         [InlineData("6.0.0-preview.4.21176.7")]
         [InlineData("7.0.0-alpha.1.21567.15")]
+        [InlineData("8.0.303")]
+        [InlineData("9.0.100")]
         public void WhenInstallingASpecificVersionOfAspNetCoreRuntime(string version, string? effectiveVersion = null)
         {
             // Run install script to download and install.
@@ -441,6 +453,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         // [InlineData("5.0.14-servicing.21614.9")]
         [InlineData("6.0.1-servicing.21568.2")]
         [InlineData("7.0.0-alpha.1.21472.1")]
+        [InlineData("8.0.303")]
+        [InlineData("9.0.100")]
         public void WhenInstallingASpecificVersionOfWindowsdesktopRuntime(string version)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -466,6 +480,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("5.0.404-servicing.21560.14", "5.0.404")]
         [InlineData("6.0.100-preview.6.21364.34")]
         [InlineData("7.0.100-alpha.1.22054.9")]
+        [InlineData("8.0.303")]
+        [InlineData("9.0.100")]
         [InlineData("5.0.13-servicing.21552.32", "5.0.13", "aspnetcore")]
         [InlineData("6.0.0-preview.4.21176.7", null, "aspnetcore")]
         [InlineData("7.0.0-alpha.1.21567.15", null, "aspnetcore")]
@@ -526,8 +542,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
-        [InlineData("7.0.1", Quality.Daily)]
-        [InlineData("6.0.1", Quality.Signed)]
+        [InlineData("8.0.303", Quality.Daily)]
+        [InlineData("9.0.100", Quality.Signed)]
         public void WhenBothVersionAndQualityWereSpecified(string version, Quality quality)
         {
             var args = GetInstallScriptArgs(null, null, quality.ToString(), _sdkInstallationDirectory, version: version);
@@ -541,7 +557,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [InlineData(null, Quality.Signed)]
-        [InlineData("6.0.301", null)]
+        [InlineData("8.0.303", null)]
         public void WhenEitherVersionOrQualityWasSpecified(string? version, Quality? quality)
         {
             // Run install script to download and install.
