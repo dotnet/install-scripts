@@ -187,7 +187,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("5.0.2xx", "validated", true, @"https://aka.ms/dotnet/internal/5.0.2xx/validated/dotnet-sdk-")]
        [InlineData("6.0.2xx", "validated", true, @"https://aka.ms/dotnet/internal/6.0.2xx/validated/dotnet-sdk-")]
        [InlineData("7.0.1xx", "validated", true, @"https://aka.ms/dotnet/internal/7.0.1xx/validated/dotnet-sdk-")]
-       [InlineData("8.0.3xx", "validated", true, @"https://aka.ms/dotnet/internal/8.0.4xx/validated/dotnet-sdk-")]
+       [InlineData("8.0.3xx", "validated", true, @"https://aka.ms/dotnet/internal/8.0.3xx/validated/dotnet-sdk-")]
        [InlineData("9.0.1xx", "validated", true, @"https://aka.ms/dotnet/internal/9.0.1xx/validated/dotnet-sdk-")]
        public void LinkCanBeCreatedForSdk(string channel, string quality, bool isInternal, string expectedLink)
        {

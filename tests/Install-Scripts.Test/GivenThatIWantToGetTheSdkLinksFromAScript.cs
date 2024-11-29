@@ -337,7 +337,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("1.0.5", "dotnet")]
         [InlineData("2.1.0", "aspnetcore")]
         [InlineData("6.0.100", null)]
-        [InlineData("8.0.404", null)]
+        [InlineData("8.0.303", null)]
         [InlineData("9.0.100", null)]
         public async Task WhenAnExactVersionIsPassedToBash(string version, string runtime)
         {
@@ -409,7 +409,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("1.0.5", "dotnet")]
         [InlineData("2.1.0", "aspnetcore")]
         [InlineData("6.0.100", null)]
-        [InlineData("8.0.404", null)]
+        [InlineData("8.0.303", null)]
         [InlineData("9.0.100", null)]
         public async Task WhenAnExactVersionIsPassedToPowershell(string version, string? runtime)
         {
