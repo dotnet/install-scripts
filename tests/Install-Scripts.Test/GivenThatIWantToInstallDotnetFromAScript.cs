@@ -57,7 +57,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("release/3.1", "3\\.1\\..*", Quality.None),
                 // ("release/5.0", "5\\.0\\..*", Quality.None), Broken scenario
                 // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
-                ("6.0-preview2", "6\\.0\\..*", Quality.Daily | Quality.Signed),
+                // this storage account does not allow public access
+                // ("6.0-preview2", "6\\.0\\..*", Quality.Daily | Quality.Signed),
                 ("6.0-preview3", "6\\.0\\..*", Quality.Daily),
                 ("6.0-preview4", "6\\.0\\..*", Quality.Daily),
                 ("6.0", "6\\.0\\..*", Quality.None),
@@ -80,7 +81,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("release/5.0.1xx", "5\\.0\\.1.*", Quality.None),
                 ("release/5.0.2xx", "5\\.0\\.2.*", Quality.None),
                 // Branches are no longer supported starting 6.0, but there are channels that correspond to branches.
-                ("6.0.1xx-preview2", "6\\.0\\.1.*", Quality.Daily | Quality.Signed),
+                // this storage account does not allow public access
+                // ("6.0.1xx-preview2", "6\\.0\\.1.*", Quality.Daily | Quality.Signed),
                 ("6.0.1xx-preview3", "6\\.0\\.1.*", Quality.Daily),
                 ("6.0.1xx-preview4", "6\\.0\\.1.*", Quality.Daily),
                 ("7.0.1xx", "7\\.0\\..*", Quality.Daily),
