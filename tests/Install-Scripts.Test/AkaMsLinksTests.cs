@@ -41,7 +41,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
        [InlineData("6.0", "daily", @"https://aka.ms/dotnet/6.0/daily/dotnet-sdk-")]
        [InlineData("7.0", "daily", @"https://aka.ms/dotnet/7.0/daily/dotnet-sdk-")]
-       [InlineData("9.0", "preview", @"https://aka.ms/dotnet/9.0/preview/dotnet-sdk-")]
+       [InlineData("8.0", "ga", @"https://aka.ms/dotnet/8.0/dotnet-sdk-")]
+       [InlineData("9.0", "ga", @"https://aka.ms/dotnet/9.0/dotnet-sdk-")]
        public void SDK_IntegrationTest(string channel, string quality, string expectedLink)
        {
            string expectedLinkPattern = Regex.Escape(expectedLink);
@@ -186,6 +187,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("5.0.2xx", "validated", true, @"https://aka.ms/dotnet/internal/5.0.2xx/validated/dotnet-sdk-")]
        [InlineData("6.0.2xx", "validated", true, @"https://aka.ms/dotnet/internal/6.0.2xx/validated/dotnet-sdk-")]
        [InlineData("7.0.1xx", "validated", true, @"https://aka.ms/dotnet/internal/7.0.1xx/validated/dotnet-sdk-")]
+       [InlineData("8.0.3xx", "validated", true, @"https://aka.ms/dotnet/internal/8.0.3xx/validated/dotnet-sdk-")]
+       [InlineData("9.0.1xx", "validated", true, @"https://aka.ms/dotnet/internal/9.0.1xx/validated/dotnet-sdk-")]
        public void LinkCanBeCreatedForSdk(string channel, string quality, bool isInternal, string expectedLink)
        {
            string expectedLinkPattern = Regex.Escape(expectedLink);
@@ -265,6 +268,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("5.0", "windowsdesktop", "ga", true, @"https://aka.ms/dotnet/internal/5.0/windowsdesktop-runtime-")]
        [InlineData("6.0", "windowsdesktop", "ga", true, @"https://aka.ms/dotnet/internal/6.0/windowsdesktop-runtime-")]
        [InlineData("7.0", "windowsdesktop", "ga", true, @"https://aka.ms/dotnet/internal/7.0/windowsdesktop-runtime-")]
+       [InlineData("8.0", "windowsdesktop", "ga", true, @"https://aka.ms/dotnet/internal/8.0/windowsdesktop-runtime-")]
+       [InlineData("9.0", "windowsdesktop", "ga", true, @"https://aka.ms/dotnet/internal/9.0/windowsdesktop-runtime-")]
        public void LinkCanBeCreatedForGivenRuntime(string channel, string runtime, string quality, bool isInternal, string expectedLink)
        {
            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop")
