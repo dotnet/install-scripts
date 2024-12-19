@@ -2,6 +2,6 @@
 dotnet-install: Payload URLs:
 dotnet-install: URL #0 - primary: https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-osx-x64.tar.gz
 dotnet-install: URL #1 - legacy: https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.100/dotnet-dev-osx-x64.6.0.100.tar.gz
-dotnet-install: URL #2 - primary: https://dotnetbuilds.azureedge.net/public/Sdk/6.0.100/dotnet-sdk-6.0.100-osx-x64.tar.gz
-dotnet-install: URL #3 - legacy: https://dotnetbuilds.azureedge.net/public/Sdk/6.0.100/dotnet-dev-osx-x64.6.0.100.tar.gz
+dotnet-install: URL #2 - primary: https://ci.dot.net/public/Sdk/6.0.100/dotnet-sdk-6.0.100-osx-x64.tar.gz
+dotnet-install: URL #3 - legacy: https://ci.dot.net/public/Sdk/6.0.100/dotnet-dev-osx-x64.6.0.100.tar.gz
 dotnet-install: Repeatable invocation: ./dotnet-install.sh --version "6.0.100" --install-dir "dotnet-sdk" --architecture "x64" --os "osx" -runtimeid "osx"
