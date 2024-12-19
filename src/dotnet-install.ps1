@@ -1121,7 +1121,7 @@ function Get-Feeds-To-Use()
 {
     $feeds = @(
     "https://dotnetcli.azureedge.net/dotnet",
-    "https://dotnetbuilds.azureedge.net/public"
+    "https://ci.dot.net/public"
     )
 
     if (-not [string]::IsNullOrEmpty($AzureFeed)) {
