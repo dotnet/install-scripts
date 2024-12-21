@@ -1395,9 +1395,11 @@ get_download_link_from_aka_ms() {
 get_feeds_to_use()
 {
     feeds=(
-    "https://builds.dotnet.microsoft.com/dotnet"
+    "https://dotnetcli-f0e9dzh5e5eze7cd.b02.azurefd.net/dotnet" # direct-access alias for builds.dotnet.microsoft.com until certs are ready for that alias
+    #"https://builds.dotnet.microsoft.com/dotnet"
     "https://dotnetcli.azureedge.net/dotnet"
-    "https://ci.dot.net/public"
+    "https://dotnetbuilds-bgf9bthjbvdca2ar.b02.azurefd.net/public" # direct-access alias for ci.dot.net until certs are ready for that alias
+    #"https://ci.dot.net/public"
     "https://dotnetbuilds.azureedge.net/public"
     )
 
