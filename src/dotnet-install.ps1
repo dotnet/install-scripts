@@ -1069,11 +1069,6 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
                     return $null
                 }
 
-                $actualRedirectUrl = Sanitize-RedirectUrl $akaMsDownloadLink
-                if ($null -ne $actualRedirectUrl) {
-                    $akaMsDownloadLink = $actualRedirectUrl
-                }
-
                 Say-Verbose "The redirect location retrieved: '$akaMsDownloadLink'."
                 # This may yet be a link to another redirection. Attempt to retrieve the page again.
                 $akaMsLink = $akaMsDownloadLink
@@ -1086,6 +1081,11 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
         }
         elseif ((($Response.StatusCode -lt 300) -or ($Response.StatusCode -ge 400)) -and (-not [string]::IsNullOrEmpty($akaMsDownloadLink))) {
             # Redirections have ended.
+            $actualRedirectUrl = Sanitize-RedirectUrl $akaMsDownloadLink
+            if ($null -ne $actualRedirectUrl) {
+                $akaMsDownloadLink = $actualRedirectUrl
+            }
+
             return $akaMsDownloadLink
         }
 
