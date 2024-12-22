@@ -111,35 +111,35 @@
 #>
 [cmdletbinding()]
 param(
-   [string]$Channel="LTS",
-   [string]$Quality,
-   [string]$Version="Latest",
-   [switch]$Internal,
-   [string]$JSonFile,
-   [Alias('i')][string]$InstallDir="<auto>",
-   [string]$Architecture="<auto>",
-   [string]$Runtime,
-   [Obsolete("This parameter may be removed in a future version of this script. The recommended alternative is '-Runtime dotnet'.")]
-   [switch]$SharedRuntime,
-   [switch]$DryRun,
-   [switch]$NoPath,
-   [string]$AzureFeed,
-   [string]$UncachedFeed,
-   [string]$FeedCredential,
-   [string]$ProxyAddress,
-   [switch]$ProxyUseDefaultCredentials,
-   [string[]]$ProxyBypassList=@(),
-   [switch]$SkipNonVersionedFiles,
-   [switch]$NoCdn,
-   [int]$DownloadTimeout=1200,
-   [switch]$KeepZip,
-   [string]$ZipPath=[System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName()),
-   [switch]$Help
+    [string]$Channel = "LTS",
+    [string]$Quality,
+    [string]$Version = "Latest",
+    [switch]$Internal,
+    [string]$JSonFile,
+    [Alias('i')][string]$InstallDir = "<auto>",
+    [string]$Architecture = "<auto>",
+    [string]$Runtime,
+    [Obsolete("This parameter may be removed in a future version of this script. The recommended alternative is '-Runtime dotnet'.")]
+    [switch]$SharedRuntime,
+    [switch]$DryRun,
+    [switch]$NoPath,
+    [string]$AzureFeed,
+    [string]$UncachedFeed,
+    [string]$FeedCredential,
+    [string]$ProxyAddress,
+    [switch]$ProxyUseDefaultCredentials,
+    [string[]]$ProxyBypassList = @(),
+    [switch]$SkipNonVersionedFiles,
+    [switch]$NoCdn,
+    [int]$DownloadTimeout = 1200,
+    [switch]$KeepZip,
+    [string]$ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName()),
+    [switch]$Help
 )
 
 Set-StrictMode -Version Latest
-$ErrorActionPreference="Stop"
-$ProgressPreference="SilentlyContinue"
+$ErrorActionPreference = "Stop"
+$ProgressPreference = "SilentlyContinue"
 
 function Say($str) {
     try {
@@ -243,14 +243,13 @@ function Get-Machine-Architecture() {
     # To get the correct architecture, we need to use PROCESSOR_ARCHITEW6432.
     # PS x64 doesn't define this, so we fall back to PROCESSOR_ARCHITECTURE.
     # Possible values: amd64, x64, x86, arm64, arm
-    if( $ENV:PROCESSOR_ARCHITEW6432 -ne $null ) {
+    if ( $ENV:PROCESSOR_ARCHITEW6432 -ne $null ) {
         return $ENV:PROCESSOR_ARCHITEW6432
     }
 
     try {        
-        if( ((Get-CimInstance -ClassName CIM_OperatingSystem).OSArchitecture) -like "ARM*") {
-            if( [Environment]::Is64BitOperatingSystem )
-            {
+        if ( ((Get-CimInstance -ClassName CIM_OperatingSystem).OSArchitecture) -like "ARM*") {
+            if ( [Environment]::Is64BitOperatingSystem ) {
                 return "arm64"
             }  
             return "arm"
@@ -279,13 +278,13 @@ function Get-CLIArchitecture-From-Architecture([string]$Architecture) {
     }
 }
 
-function ValidateFeedCredential([string] $FeedCredential)
-{
+function ValidateFeedCredential([string] $FeedCredential) {
     if ($Internal -and [string]::IsNullOrWhitespace($FeedCredential)) {
         $message = "Provide credentials via -FeedCredential parameter."
         if ($DryRun) {
             Say-Warning "$message"
-        } else {
+        }
+        else {
             throw "$message"
         }
     }
@@ -362,7 +361,7 @@ function Get-Version-From-LatestVersion-File-Content([string]$VersionText) {
 
     $VersionInfo = @{
         CommitHash = $(if ($Data.Count -gt 1) { $Data[0] })
-        Version = $Data[-1] # last line is always the version number.
+        Version    = $Data[-1] # last line is always the version number.
     }
     return $VersionInfo
 }
@@ -377,8 +376,7 @@ function Load-Assembly([string] $Assembly) {
     }
 }
 
-function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, [bool]$DisableFeedCredential)
-{
+function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, [bool]$DisableFeedCredential) {
     $cts = New-Object System.Threading.CancellationTokenSource
 
     $downloadScript = {
@@ -389,19 +387,21 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
             # HttpClient is used vs Invoke-WebRequest in order to support Nano Server which doesn't support the Invoke-WebRequest cmdlet.
             Load-Assembly -Assembly System.Net.Http
 
-            if(-not $ProxyAddress) {
+            if (-not $ProxyAddress) {
                 try {
                     # Despite no proxy being explicitly specified, we may still be behind a default proxy
                     $DefaultProxy = [System.Net.WebRequest]::DefaultWebProxy;
-                    if($DefaultProxy -and (-not $DefaultProxy.IsBypassed($Uri))) {
+                    if ($DefaultProxy -and (-not $DefaultProxy.IsBypassed($Uri))) {
                         if ($null -ne $DefaultProxy.GetProxy($Uri)) {
                             $ProxyAddress = $DefaultProxy.GetProxy($Uri).OriginalString
-                        } else {
+                        }
+                        else {
                             $ProxyAddress = $null
                         }
                         $ProxyUseDefaultCredentials = $true
                     }
-                } catch {
+                }
+                catch {
                     # Eat the exception and move forward as the above code is an attempt
                     #    at resolving the DefaultProxy that may not have been a problem.
                     $ProxyAddress = $null
@@ -410,15 +410,14 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
             }
 
             $HttpClientHandler = New-Object System.Net.Http.HttpClientHandler
-            if($ProxyAddress) {
-                $HttpClientHandler.Proxy =  New-Object System.Net.WebProxy -Property @{
-                    Address=$ProxyAddress;
-                    UseDefaultCredentials=$ProxyUseDefaultCredentials;
-                    BypassList = $ProxyBypassList;
+            if ($ProxyAddress) {
+                $HttpClientHandler.Proxy = New-Object System.Net.WebProxy -Property @{
+                    Address               = $ProxyAddress;
+                    UseDefaultCredentials = $ProxyUseDefaultCredentials;
+                    BypassList            = $ProxyBypassList;
                 }
             }       
-            if ($DisableRedirect)
-            {
+            if ($DisableRedirect) {
                 $HttpClientHandler.AllowAutoRedirect = $false
             }
             $HttpClient = New-Object System.Net.Http.HttpClient -ArgumentList $HttpClientHandler
@@ -427,7 +426,7 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
             # Defaulting to 20 minutes allows it to work over much slower connections.
             $HttpClient.Timeout = New-TimeSpan -Seconds $DownloadTimeout
 
-            if ($HeaderOnly){
+            if ($HeaderOnly) {
                 $completionOption = [System.Net.Http.HttpCompletionOption]::ResponseHeadersRead
             }
             else {
@@ -452,8 +451,7 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
                     $DownloadException.Data["StatusCode"] = [int] $Response.StatusCode
                     $DownloadException.Data["ErrorMessage"] = "Unable to download $Uri. Returned HTTP status code: " + $DownloadException.Data["StatusCode"]
 
-                    if (404 -eq [int] $Response.StatusCode)
-                    {
+                    if (404 -eq [int] $Response.StatusCode) {
                         $cts.Cancel()
                     }
                 }
@@ -470,8 +468,8 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
             $CurrentException = $PSItem.Exception
             $ErrorMsg = $CurrentException.Message + "`r`n"
             while ($CurrentException.InnerException) {
-              $CurrentException = $CurrentException.InnerException
-              $ErrorMsg += $CurrentException.Message + "`r`n"
+                $CurrentException = $CurrentException.InnerException
+                $ErrorMsg += $CurrentException.Message + "`r`n"
             }
 
             # Check if there is an issue concerning TLS.
@@ -483,7 +481,7 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
             throw $DownloadException
         }
         finally {
-             if ($null -ne $HttpClient) {
+            if ($null -ne $HttpClient) {
                 $HttpClient.Dispose()
             }
         }
@@ -492,10 +490,8 @@ function GetHTTPResponse([Uri] $Uri, [bool]$HeaderOnly, [bool]$DisableRedirect, 
     try {
         return Invoke-With-Retry $downloadScript $cts.Token
     }
-    finally
-    {
-        if ($null -ne $cts)
-        {
+    finally {
+        if ($null -ne $cts) {
             $cts.Dispose()
         }
     }
@@ -613,11 +609,9 @@ function Get-Download-Link([string]$AzureFeed, [string]$SpecificVersion, [string
     elseif ($Runtime -eq "windowsdesktop") {
         # The windows desktop runtime is part of the core runtime layout prior to 5.0
         $PayloadURL = "$AzureFeed/Runtime/$SpecificVersion/windowsdesktop-runtime-$SpecificProductVersion-win-$CLIArchitecture.zip"
-        if ($SpecificVersion -match '^(\d+)\.(.*)$')
-        {
+        if ($SpecificVersion -match '^(\d+)\.(.*)$') {
             $majorVersion = [int]$Matches[1]
-            if ($majorVersion -ge 5)
-            {
+            if ($majorVersion -ge 5) {
                 $PayloadURL = "$AzureFeed/WindowsDesktop/$SpecificVersion/windowsdesktop-runtime-$SpecificProductVersion-win-$CLIArchitecture.zip"
             }
         }
@@ -667,8 +661,7 @@ function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion, [stri
 
             if ($productVersionResponse.StatusCode -eq 200) {
                 $productVersion = $productVersionResponse.Content.ReadAsStringAsync().Result.Trim()
-                if ($productVersion -ne $SpecificVersion)
-                {
+                if ($productVersion -ne $SpecificVersion) {
                     Say "Using alternate version $productVersion found in $ProductVersionTxtURL"
                 }
                 return $productVersion
@@ -683,8 +676,7 @@ function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion, [stri
     }
 
     # Getting the version number with productVersion.txt has failed. Try parsing the download link for a version number.
-    if ([string]::IsNullOrEmpty($PackageDownloadLink))
-    {
+    if ([string]::IsNullOrEmpty($PackageDownloadLink)) {
         Say-Verbose "Using the default value '$SpecificVersion' as the product version."
         return $SpecificVersion
     }
@@ -696,21 +688,21 @@ function Get-Product-Version([string]$AzureFeed, [string]$SpecificVersion, [stri
 function Get-Product-Version-Url([string]$AzureFeed, [string]$SpecificVersion, [string]$PackageDownloadLink, [bool]$Flattened) {
     Say-Invocation $MyInvocation
 
-    $majorVersion=$null
+    $majorVersion = $null
     if ($SpecificVersion -match '^(\d+)\.(.*)') {
-        $majorVersion = $Matches[1] -as[int]
+        $majorVersion = $Matches[1] -as [int]
     }
 
-    $pvFileName='productVersion.txt'
-    if($Flattened) {
-        if(-not $Runtime) {
-            $pvFileName='sdk-productVersion.txt'
+    $pvFileName = 'productVersion.txt'
+    if ($Flattened) {
+        if (-not $Runtime) {
+            $pvFileName = 'sdk-productVersion.txt'
         }
-        elseif($Runtime -eq "dotnet") {
-            $pvFileName='runtime-productVersion.txt'
+        elseif ($Runtime -eq "dotnet") {
+            $pvFileName = 'runtime-productVersion.txt'
         }
         else {
-            $pvFileName="$Runtime-productVersion.txt"
+            $pvFileName = "$Runtime-productVersion.txt"
         }
     }
 
@@ -736,7 +728,7 @@ function Get-Product-Version-Url([string]$AzureFeed, [string]$SpecificVersion, [
         }
     }
     else {
-        $ProductVersionTxtURL = $PackageDownloadLink.Substring(0, $PackageDownloadLink.LastIndexOf("/"))  + "/$pvFileName"
+        $ProductVersionTxtURL = $PackageDownloadLink.Substring(0, $PackageDownloadLink.LastIndexOf("/")) + "/$pvFileName"
     }
 
     Say-Verbose "Constructed productVersion link: $ProductVersionTxtURL"
@@ -744,16 +736,14 @@ function Get-Product-Version-Url([string]$AzureFeed, [string]$SpecificVersion, [
     return $ProductVersionTxtURL
 }
 
-function Get-ProductVersionFromDownloadLink([string]$PackageDownloadLink, [string]$SpecificVersion)
-{
+function Get-ProductVersionFromDownloadLink([string]$PackageDownloadLink, [string]$SpecificVersion) {
     Say-Invocation $MyInvocation
 
     #product specific version follows the product name
     #for filename 'dotnet-sdk-3.1.404-win-x64.zip': the product version is 3.1.400
     $filename = $PackageDownloadLink.Substring($PackageDownloadLink.LastIndexOf("/") + 1)
     $filenameParts = $filename.Split('-')
-    if ($filenameParts.Length -gt 2)
-    {
+    if ($filenameParts.Length -gt 2) {
         $productVersion = $filenameParts[2]
         Say-Verbose "Extracted product version '$productVersion' from download link '$PackageDownloadLink'."
     }
@@ -788,12 +778,13 @@ function Resolve-Installation-Path([string]$InstallDir) {
 
 function Test-User-Write-Access([string]$InstallDir) {
     try {
-        $tempFileName=[guid]::NewGuid().ToString()
-        $tempFilePath=Join-Path -Path $InstallDir -ChildPath $tempFileName
+        $tempFileName = [guid]::NewGuid().ToString()
+        $tempFilePath = Join-Path -Path $InstallDir -ChildPath $tempFileName
         New-Item -Path $tempFilePath -ItemType File -Force
         Remove-Item $tempFilePath -Force
         return $true
-    } catch {
+    }
+    catch {
         return $false
     }
 }
@@ -873,7 +864,7 @@ function Extract-Dotnet-Package([string]$ZipPath, [string]$OutPath) {
             if (($null -eq $PathWithVersion) -Or ($DirectoriesToUnpack -contains $PathWithVersion)) {
                 $DestinationPath = Get-Absolute-Path $(Join-Path -Path $OutPath -ChildPath $entry.FullName)
                 $DestinationDir = Split-Path -Parent $DestinationPath
-                $OverrideFiles=$OverrideNonVersionedFiles -Or (-Not (Test-Path $DestinationPath))
+                $OverrideFiles = $OverrideNonVersionedFiles -Or (-Not (Test-Path $DestinationPath))
                 if ((-Not $DestinationPath.EndsWith("\")) -And $OverrideFiles) {
                     New-Item -ItemType Directory -Force -Path $DestinationDir | Out-Null
                     [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $DestinationPath, $OverrideNonVersionedFiles)
@@ -881,8 +872,7 @@ function Extract-Dotnet-Package([string]$ZipPath, [string]$OutPath) {
             }
         }
     }
-    catch
-    {
+    catch {
         Say-Error "Failed to extract package. Exception: $_"
         throw;
     }
@@ -969,7 +959,8 @@ function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot) {
         if (-Not $env:path.Contains($SuffixedBinPath)) {
             Say "Adding to current process PATH: `"$BinPath`". Note: This change will not be visible if PowerShell was run as a child process."
             $env:path = $SuffixedBinPath + $env:path
-        } else {
+        }
+        else {
             Say-Verbose "Current process PATH already contains `"$BinPath`""
         }
     }
@@ -978,33 +969,57 @@ function Prepend-Sdk-InstallRoot-To-Path([string]$InstallRoot) {
     }
 }
 
-function PrintDryRunOutput($Invocation, $DownloadLinks)
-{
+function PrintDryRunOutput($Invocation, $DownloadLinks) {
     Say "Payload URLs:"
     
-    for ($linkIndex=0; $linkIndex -lt $DownloadLinks.count; $linkIndex++) {
+    for ($linkIndex = 0; $linkIndex -lt $DownloadLinks.count; $linkIndex++) {
         Say "URL #$linkIndex - $($DownloadLinks[$linkIndex].type): $($DownloadLinks[$linkIndex].downloadLink)"
     }
     $RepeatableCommand = ".\$ScriptName -Version `"$SpecificVersion`" -InstallDir `"$InstallRoot`" -Architecture `"$CLIArchitecture`""
     if ($Runtime -eq "dotnet") {
-       $RepeatableCommand+=" -Runtime `"dotnet`""
+        $RepeatableCommand += " -Runtime `"dotnet`""
     }
     elseif ($Runtime -eq "aspnetcore") {
-       $RepeatableCommand+=" -Runtime `"aspnetcore`""
+        $RepeatableCommand += " -Runtime `"aspnetcore`""
     }
 
     foreach ($key in $Invocation.BoundParameters.Keys) {
-        if (-not (@("Architecture","Channel","DryRun","InstallDir","Runtime","SharedRuntime","Version","Quality","FeedCredential") -contains $key)) {
-            $RepeatableCommand+=" -$key `"$($Invocation.BoundParameters[$key])`""
+        if (-not (@("Architecture", "Channel", "DryRun", "InstallDir", "Runtime", "SharedRuntime", "Version", "Quality", "FeedCredential") -contains $key)) {
+            $RepeatableCommand += " -$key `"$($Invocation.BoundParameters[$key])`""
         }
     }
     if ($Invocation.BoundParameters.Keys -contains "FeedCredential") {
-        $RepeatableCommand+=" -FeedCredential `"<feedCredential>`""
+        $RepeatableCommand += " -FeedCredential `"<feedCredential>`""
     }
     Say "Repeatable invocation: $RepeatableCommand"
-    if ($SpecificVersion -ne $EffectiveVersion)
-    {
+    if ($SpecificVersion -ne $EffectiveVersion) {
         Say "NOTE: Due to finding a version manifest with this runtime, it would actually install with version '$EffectiveVersion'"
+    }
+}
+
+# grab the 'stem' of the redirect and check it against all of our configured feeds, 
+# if it matches, we can be sure that the redirect is valid and we should use it for
+# subsequent processing
+function Sanitize-RedirectUrl([string]$url) {
+    $urlSegments = ([System.Uri]$url).Segments;
+    $urlStem = $urlSegments[2..($urlSegments.Length - 1)] -join "";
+    Write-Verbose "Checking configured feeds for the asset at $urlStem"
+    foreach ($prospectiveFeed in $feeds) {
+        $trialUrl = "$prospectiveFeed/$urlStem";
+        Write-Verbose "Checking $trialUrl"
+        try {
+            $trialResponse = Invoke-WebRequest -Uri $trialUrl -Method HEAD
+            if ($trialResponse.StatusCode -eq 200) {
+                Write-Verbose "Found a match at $trialUrl"
+                return $trialUrl;
+            }
+            else {
+                Write-Verbose "No match at $trialUrl"
+            }
+        }
+        catch {
+            Write-Verbose "Failed to check $trialUrl"
+        }
     }
 }
 
@@ -1025,19 +1040,18 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
     }
     $akaMsLink += "/$Channel"
     if (-not [string]::IsNullOrEmpty($Quality)) {
-        $akaMsLink +="/$Quality"
+        $akaMsLink += "/$Quality"
     }
-    $akaMsLink +="/$Product-win-$Architecture.zip"
+    $akaMsLink += "/$Product-win-$Architecture.zip"
     Say-Verbose  "Constructed aka.ms link: '$akaMsLink'."
-    $akaMsDownloadLink=$null
+    $akaMsDownloadLink = $null
 
-    for ($maxRedirections = 9; $maxRedirections -ge 0; $maxRedirections--)
-    {
+    for ($maxRedirections = 9; $maxRedirections -ge 0; $maxRedirections--) {
         #get HTTP response
         #do not pass credentials as a part of the $akaMsLink and do not apply credentials in the GetHTTPResponse function
         #otherwise the redirect link would have credentials as well
         #it would result in applying credentials twice to the resulting link and thus breaking it, and in echoing credentials to the output as a part of redirect link
-        $Response= GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true -DisableFeedCredential $true
+        $Response = GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true -DisableFeedCredential $true
         Say-Verbose "Received response:`n$Response"
 
         if ([string]::IsNullOrEmpty($Response)) {
@@ -1046,8 +1060,7 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
         }
 
         #if HTTP code is 301 (Moved Permanently), the redirect link exists
-        if  ($Response.StatusCode -eq 301)
-        {
+        if ($Response.StatusCode -eq 301) {
             try {
                 $akaMsDownloadLink = $Response.Headers.GetValues("Location")[0]
 
@@ -1066,9 +1079,13 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
                 return $null
             }
         }
-        elseif ((($Response.StatusCode -lt 300) -or ($Response.StatusCode -ge 400)) -and (-not [string]::IsNullOrEmpty($akaMsDownloadLink)))
-        {
+        elseif ((($Response.StatusCode -lt 300) -or ($Response.StatusCode -ge 400)) -and (-not [string]::IsNullOrEmpty($akaMsDownloadLink))) {
             # Redirections have ended.
+            $actualRedirectUrl = Sanitize-RedirectUrl $akaMsDownloadLink
+            if ($null -ne $actualRedirectUrl) {
+                $akaMsDownloadLink = $actualRedirectUrl
+            }
+
             return $akaMsDownloadLink
         }
 
@@ -1084,7 +1101,7 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
 function Get-AkaMsLink-And-Version([string] $NormalizedChannel, [string] $NormalizedQuality, [bool] $Internal, [string] $ProductName, [string] $Architecture) {
     $AkaMsDownloadLink = Get-AkaMSDownloadLink -Channel $NormalizedChannel -Quality $NormalizedQuality -Internal $Internal -Product $ProductName -Architecture $Architecture
    
-    if ([string]::IsNullOrEmpty($AkaMsDownloadLink)){
+    if ([string]::IsNullOrEmpty($AkaMsDownloadLink)) {
         if (-not [string]::IsNullOrEmpty($NormalizedQuality)) {
             # if quality is specified - exit with error - there is no fallback approach
             Say-Error "Failed to locate the latest version in the channel '$NormalizedChannel' with '$NormalizedQuality' quality for '$ProductName', os: 'win', architecture: '$Architecture'."
@@ -1117,11 +1134,14 @@ function Get-AkaMsLink-And-Version([string] $NormalizedChannel, [string] $Normal
     }
 }
 
-function Get-Feeds-To-Use()
-{
+function Get-Feeds-To-Use() {
     $feeds = @(
-    "https://dotnetcli.azureedge.net/dotnet",
-    "https://dotnetbuilds.azureedge.net/public"
+        "https://dotnetcli-f0e9dzh5e5eze7cd.b02.azurefd.net/dotnet" # direct-access alias for builds.dotnet.microsoft.com until certs are ready for that alias
+        #"https://builds.dotnet.microsoft.com/dotnet"
+        "https://dotnetcli.azureedge.net/dotnet"
+        "https://dotnetbuilds-bgf9bthjbvdca2ar.b02.azurefd.net/public" # direct-access alias for ci.dot.net until certs are ready for that alias
+        #"https://ci.dot.net/public"
+        "https://dotnetbuilds.azureedge.net/public"
     )
 
     if (-not [string]::IsNullOrEmpty($AzureFeed)) {
@@ -1130,14 +1150,16 @@ function Get-Feeds-To-Use()
 
     if ($NoCdn) {
         $feeds = @(
-        "https://dotnetcli.blob.core.windows.net/dotnet",
-        "https://dotnetbuilds.blob.core.windows.net/public"
+            "https://dotnetcli.blob.core.windows.net/dotnet",
+            "https://dotnetbuilds.blob.core.windows.net/public"
         )
 
         if (-not [string]::IsNullOrEmpty($UncachedFeed)) {
             $feeds = @($UncachedFeed)
         }
     }
+
+    Write-Verbose "Initialized feeds: $feeds"
 
     return $feeds
 }
@@ -1192,8 +1214,7 @@ function Prepare-Install-Directory {
     }
 }
 
-if ($Help)
-{
+if ($Help) {
     Get-Help $PSCommandPath -Examples
     exit
 }
@@ -1241,13 +1262,12 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
     ($DownloadLink, $SpecificVersion, $EffectiveVersion) = Get-AkaMsLink-And-Version $NormalizedChannel $NormalizedQuality $Internal $NormalizedProduct $CLIArchitecture
     
     if ($null -ne $DownloadLink) {
-        $DownloadLinks += New-Object PSObject -Property @{downloadLink="$DownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='aka.ms'}
+        $DownloadLinks += New-Object PSObject -Property @{downloadLink = "$DownloadLink"; specificVersion = "$SpecificVersion"; effectiveVersion = "$EffectiveVersion"; type = 'aka.ms' }
         Say-Verbose "Generated aka.ms link $DownloadLink with version $EffectiveVersion"
         
         if (-Not $DryRun) {
             Say-Verbose "Checking if the version $EffectiveVersion is already installed"
-            if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
-            {
+            if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion) {
                 Say "$assetName with version '$EffectiveVersion' is already installed."
                 Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
                 return
@@ -1258,34 +1278,31 @@ if ([string]::IsNullOrEmpty($JSonFile) -and ($Version -eq "latest")) {
 
 # Primary and legacy links cannot be used if a quality was specified.
 # If we already have an aka.ms link, no need to search the blob feeds.
-if ([string]::IsNullOrEmpty($NormalizedQuality) -and 0 -eq $DownloadLinks.count)
-{
+if ([string]::IsNullOrEmpty($NormalizedQuality) -and 0 -eq $DownloadLinks.count) {
     foreach ($feed in $feeds) {
         try {
             $SpecificVersion = Get-Specific-Version-From-Version -AzureFeed $feed -Channel $Channel -Version $Version -JSonFile $JSonFile
             $DownloadLink, $EffectiveVersion = Get-Download-Link -AzureFeed $feed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
             $LegacyDownloadLink = Get-LegacyDownload-Link -AzureFeed $feed -SpecificVersion $SpecificVersion -CLIArchitecture $CLIArchitecture
             
-            $DownloadLinks += New-Object PSObject -Property @{downloadLink="$DownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='primary'}
+            $DownloadLinks += New-Object PSObject -Property @{downloadLink = "$DownloadLink"; specificVersion = "$SpecificVersion"; effectiveVersion = "$EffectiveVersion"; type = 'primary' }
             Say-Verbose "Generated primary link $DownloadLink with version $EffectiveVersion"
     
             if (-not [string]::IsNullOrEmpty($LegacyDownloadLink)) {
-                $DownloadLinks += New-Object PSObject -Property @{downloadLink="$LegacyDownloadLink";specificVersion="$SpecificVersion";effectiveVersion="$EffectiveVersion";type='legacy'}
+                $DownloadLinks += New-Object PSObject -Property @{downloadLink = "$LegacyDownloadLink"; specificVersion = "$SpecificVersion"; effectiveVersion = "$EffectiveVersion"; type = 'legacy' }
                 Say-Verbose "Generated legacy link $LegacyDownloadLink with version $EffectiveVersion"
             }
     
             if (-Not $DryRun) {
                 Say-Verbose "Checking if the version $EffectiveVersion is already installed"
-                if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion)
-                {
+                if (Is-Dotnet-Package-Installed -InstallRoot $InstallRoot -RelativePathToPackage $dotnetPackageRelativePath -SpecificVersion $EffectiveVersion) {
                     Say "$assetName with version '$EffectiveVersion' is already installed."
                     Prepend-Sdk-InstallRoot-To-Path -InstallRoot $InstallRoot
                     return
                 }
             }
         }
-        catch
-        {
+        catch {
             Say-Verbose "Failed to acquire download links from feed $feed. Exception: $_"
         }
     }
@@ -1308,8 +1325,7 @@ $DownloadSucceeded = $false
 $DownloadedLink = $null
 $ErrorMessages = @()
 
-foreach ($link in $DownloadLinks)
-{
+foreach ($link in $DownloadLinks) {
     Say-Verbose "Downloading `"$($link.type)`" link $($link.downloadLink)"
 
     try {
@@ -1329,7 +1345,8 @@ foreach ($link in $DownloadLinks)
     
         if ($PSItem.Exception.Data.Contains("ErrorMessage")) {
             $ErrorMessage = $PSItem.Exception.Data["ErrorMessage"]
-        } else {
+        }
+        else {
             $ErrorMessage = $PSItem.Exception.Message
         }
 

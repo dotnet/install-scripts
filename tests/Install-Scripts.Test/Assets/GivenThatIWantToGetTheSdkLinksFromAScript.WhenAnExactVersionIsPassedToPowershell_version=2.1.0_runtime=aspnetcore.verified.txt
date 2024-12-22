@@ -1,4 +1,6 @@
 ﻿dotnet-install: Payload URLs:
-dotnet-install: URL #0 - primary: https://dotnetcli.azureedge.net/dotnet/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-win-x64.zip
-dotnet-install: URL #1 - primary: https://dotnetbuilds.azureedge.net/public/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-win-x64.zip
+dotnet-install: URL #0 - primary: https://dotnetcli-f0e9dzh5e5eze7cd.b02.azurefd.net/dotnet/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-win-x64.zip
+dotnet-install: URL #1 - primary: https://dotnetcli.azureedge.net/dotnet/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-win-x64.zip
+dotnet-install: URL #2 - primary: https://dotnetbuilds-bgf9bthjbvdca2ar.b02.azurefd.net/public/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-win-x64.zip
+dotnet-install: URL #3 - primary: https://dotnetbuilds.azureedge.net/public/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-win-x64.zip
 dotnet-install: Repeatable invocation: .\dotnet-install.ps1 -Version "2.1.0" -InstallDir "dotnet-sdk" -Architecture "x64" -Runtime "aspnetcore"
