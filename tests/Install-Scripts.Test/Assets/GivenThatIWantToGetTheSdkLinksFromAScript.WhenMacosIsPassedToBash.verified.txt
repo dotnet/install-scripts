@@ -1,3 +1,3 @@
 ﻿dotnet-install: Payload URLs:
-dotnet-install: URL #0 - aka.ms: https://dotnetcli-f0e9dzh5e5eze7cd.b02.azurefd.net/dotnet/Sdk/%VERSION%/dotnet-sdk-%VERSION%-osx-x64.tar.gz
+dotnet-install: URL #0 - aka.ms: https://builds.dotnet.microsoft.com/dotnet/Sdk/%VERSION%/dotnet-sdk-%VERSION%-osx-x64.tar.gz
 dotnet-install: Repeatable invocation: ./dotnet-install.sh --version "%VERSION%" --install-dir "dotnet-sdk" --architecture "x64" --os "osx"
