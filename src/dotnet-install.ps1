@@ -72,7 +72,7 @@
 .PARAMETER Verbose
     Displays diagnostics information.
 .PARAMETER AzureFeed
-    Default: https://dotnetcli.azureedge.net/dotnet
+    Default: https://builds.dotnet.microsoft.com/dotnet
     For internal use only.
     Allows using a different storage to download SDK archives from.
     This parameter is only used if $NoCdn is false.
