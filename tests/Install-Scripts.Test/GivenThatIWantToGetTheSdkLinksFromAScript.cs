@@ -43,8 +43,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [Theory]
         [InlineData("-nopath", "")]
         [InlineData("-verbose", "")]
-        [InlineData("-nocdn", "")]
-        [InlineData("-azurefeed", "https://dotnetcli.azureedge.net/dotnet")]
+        [InlineData("-azurefeed", "https://builds.dotnet.microsoft.com/dotnet")]
         [InlineData("-uncachedfeed", "https://dotnetcli.blob.core.windows.net/dotnet")]
         public void WhenVariousParametersArePassedToInstallScripts(string parameter, string value)
         {
@@ -281,7 +280,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 //do not run windowsdesktop test on Linux environment
                 return;
             }
-            string expectedLinkLog = $"Constructed primary named payload URL: {Environment.NewLine}https://dotnetcli.azureedge.net/dotnet/{location}/{version}";
+            string expectedLinkLog = $"Constructed primary named payload URL: {Environment.NewLine}https://builds.dotnet.microsoft.com/dotnet/{location}/{version}";
             var args = new string[] { "-version", version, "-runtime", "windowsdesktop", "-verbose", "-dryrun" };
             var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 

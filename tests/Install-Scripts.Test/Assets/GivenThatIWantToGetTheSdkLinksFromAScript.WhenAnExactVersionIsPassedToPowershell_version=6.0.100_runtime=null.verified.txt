@@ -1,10 +1,6 @@
 ﻿dotnet-install: Payload URLs:
 dotnet-install: URL #0 - primary: https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-win-x64.zip
 dotnet-install: URL #1 - legacy: https://builds.dotnet.microsoft.com/dotnet/Sdk/6.0.100/dotnet-dev-win-x64.6.0.100.zip
-dotnet-install: URL #2 - primary: https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.100/dotnet-sdk-6.0.100-win-x64.zip
-dotnet-install: URL #3 - legacy: https://dotnetcli.azureedge.net/dotnet/Sdk/6.0.100/dotnet-dev-win-x64.6.0.100.zip
-dotnet-install: URL #4 - primary: https://ci.dot.net/public/Sdk/6.0.100/dotnet-sdk-6.0.100-win-x64.zip
-dotnet-install: URL #5 - legacy: https://ci.dot.net/public/Sdk/6.0.100/dotnet-dev-win-x64.6.0.100.zip
-dotnet-install: URL #6 - primary: https://dotnetbuilds.azureedge.net/public/Sdk/6.0.100/dotnet-sdk-6.0.100-win-x64.zip
-dotnet-install: URL #7 - legacy: https://dotnetbuilds.azureedge.net/public/Sdk/6.0.100/dotnet-dev-win-x64.6.0.100.zip
+dotnet-install: URL #2 - primary: https://ci.dot.net/public/Sdk/6.0.100/dotnet-sdk-6.0.100-win-x64.zip
+dotnet-install: URL #3 - legacy: https://ci.dot.net/public/Sdk/6.0.100/dotnet-dev-win-x64.6.0.100.zip
 dotnet-install: Repeatable invocation: .\dotnet-install.ps1 -Version "6.0.100" -InstallDir "dotnet-sdk" -Architecture "x64"

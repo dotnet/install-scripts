@@ -1,7 +1,5 @@
 ﻿dotnet_install: Warning: Use of --runtime-id is obsolete and should be limited to the versions below 2.1. To override architecture, use --architecture option instead. To override OS, use --os option instead.
 dotnet-install: Payload URLs:
 dotnet-install: URL #0 - primary: https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-osx-x64.tar.gz
-dotnet-install: URL #1 - primary: https://dotnetcli.azureedge.net/dotnet/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-osx-x64.tar.gz
-dotnet-install: URL #2 - primary: https://ci.dot.net/public/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-osx-x64.tar.gz
-dotnet-install: URL #3 - primary: https://dotnetbuilds.azureedge.net/public/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-osx-x64.tar.gz
+dotnet-install: URL #1 - primary: https://ci.dot.net/public/aspnetcore/Runtime/2.1.0/aspnetcore-runtime-2.1.0-osx-x64.tar.gz
 dotnet-install: Repeatable invocation: ./dotnet-install.sh --version "2.1.0" --install-dir "dotnet-sdk" --architecture "x64" --os "osx" --runtime "aspnetcore" -runtimeid "osx"
