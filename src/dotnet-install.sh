@@ -1648,7 +1648,7 @@ install_dotnet() {
                 say "The resource at $link_type link '$download_link' is not available."
                 ;;
             *)
-                say "Failed to download $link_type link '$download_link': $download_error_msg"
+                say "Failed to download $link_type link '$download_link': $http_code $download_error_msg"
                 ;;
             esac
             rm -f "$zip_path" 2>&1 && say_verbose "Temporary archive file $zip_path was removed"
