@@ -75,11 +75,9 @@
     Default: https://builds.dotnet.microsoft.com/dotnet
     For internal use only.
     Allows using a different storage to download SDK archives from.
-    This parameter is only used if $NoCdn is false.
 .PARAMETER UncachedFeed
     For internal use only.
     Allows using a different storage to download SDK archives from.
-    This parameter is only used if $NoCdn is true.
 .PARAMETER ProxyAddress
     If set, the installer will use the proxy when making web requests
 .PARAMETER ProxyUseDefaultCredentials
@@ -90,8 +88,6 @@
 .PARAMETER SkipNonVersionedFiles
     Default: false
     Skips installing non-versioned files if they already exist, such as dotnet.exe.
-.PARAMETER NoCdn
-    Disable downloading from the Azure CDN, and use the uncached feed directly.
 .PARAMETER JSonFile
     Determines the SDK version from a user specified global.json file
     Note: global.json must have a value for 'SDK:Version'
@@ -130,7 +126,6 @@ param(
     [switch]$ProxyUseDefaultCredentials,
     [string[]]$ProxyBypassList = @(),
     [switch]$SkipNonVersionedFiles,
-    [switch]$NoCdn,
     [int]$DownloadTimeout = 1200,
     [switch]$KeepZip,
     [string]$ZipPath = [System.IO.Path]::combine([System.IO.Path]::GetTempPath(), [System.IO.Path]::GetRandomFileName()),
@@ -1137,24 +1132,15 @@ function Get-AkaMsLink-And-Version([string] $NormalizedChannel, [string] $Normal
 function Get-Feeds-To-Use() {
     $feeds = @(
         "https://builds.dotnet.microsoft.com/dotnet"
-        "https://dotnetcli.azureedge.net/dotnet"
         "https://ci.dot.net/public"
-        "https://dotnetbuilds.azureedge.net/public"
     )
 
     if (-not [string]::IsNullOrEmpty($AzureFeed)) {
         $feeds = @($AzureFeed)
     }
 
-    if ($NoCdn) {
-        $feeds = @(
-            "https://dotnetcli.blob.core.windows.net/dotnet",
-            "https://dotnetbuilds.blob.core.windows.net/public"
-        )
-
-        if (-not [string]::IsNullOrEmpty($UncachedFeed)) {
+    if (-not [string]::IsNullOrEmpty($UncachedFeed)) {
             $feeds = @($UncachedFeed)
-        }
     }
 
     Write-Verbose "Initialized feeds: $feeds"

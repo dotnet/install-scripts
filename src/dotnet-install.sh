@@ -1396,24 +1396,15 @@ get_feeds_to_use()
 {
     feeds=(
     "https://builds.dotnet.microsoft.com/dotnet"
-    "https://dotnetcli.azureedge.net/dotnet"
     "https://ci.dot.net/public"
-    "https://dotnetbuilds.azureedge.net/public"
     )
 
     if [[ -n "$azure_feed" ]]; then
         feeds=("$azure_feed")
     fi
 
-    if [[ "$no_cdn" == "true" ]]; then
-        feeds=(
-        "https://dotnetcli.blob.core.windows.net/dotnet"
-        "https://dotnetbuilds.blob.core.windows.net/public"
-        )
-
-        if [[ -n "$uncached_feed" ]]; then
-            feeds=("$uncached_feed")
-        fi
+    if [[ -n "$uncached_feed" ]]; then
+        feeds=("$uncached_feed")
     fi
 }
 
@@ -1709,7 +1700,6 @@ install_dir="<auto>"
 architecture="<auto>"
 dry_run=false
 no_path=false
-no_cdn=false
 azure_feed=""
 uncached_feed=""
 feed_credential=""
@@ -1780,10 +1770,6 @@ do
             ;;
         --verbose|-[Vv]erbose)
             verbose=true
-            non_dynamic_parameters+=" $name"
-            ;;
-        --no-cdn|-[Nn]o[Cc]dn)
-            no_cdn=true
             non_dynamic_parameters+=" $name"
             ;;
         --azure-feed|-[Aa]zure[Ff]eed)
@@ -1890,13 +1876,10 @@ do
             echo "  --verbose,-Verbose                 Display diagnostics information."
             echo "  --azure-feed,-AzureFeed            For internal use only."
             echo "                                     Allows using a different storage to download SDK archives from."
-            echo "                                     This parameter is only used if --no-cdn is false."
             echo "  --uncached-feed,-UncachedFeed      For internal use only."
             echo "                                     Allows using a different storage to download SDK archives from."
-            echo "                                     This parameter is only used if --no-cdn is true."
             echo "  --skip-non-versioned-files         Skips non-versioned files if they already exist, such as the dotnet executable."
             echo "      -SkipNonVersionedFiles"
-            echo "  --no-cdn,-NoCdn                    Disable downloading from the Azure CDN, and use the uncached feed directly."
             echo "  --jsonfile <JSONFILE>              Determines the SDK version from a user specified global.json file."
             echo "                                     Note: global.json must have a value for 'SDK:Version'"
             echo "  --keep-zip,-KeepZip                If set, downloaded file is kept."
