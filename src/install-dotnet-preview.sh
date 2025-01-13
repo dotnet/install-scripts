@@ -2,7 +2,7 @@
 
 # System must first have curl installed.
 # The following command will download the installation script and run it.
-# curl -L https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/install-dotnet-$PRERELEASETYPE.sh -o install-dotnet-$PRERELEASETYPE.sh && bash install-dotnet-$PRERELEASETYPE.sh
+# curl -L https://builds.dotnet.microsoft.com/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/install-dotnet-$PRERELEASETYPE.sh -o install-dotnet-$PRERELEASETYPE.sh && bash install-dotnet-$PRERELEASETYPE.sh
 # The script will
 #   - install any additional dependences needed for the script to continue
 #   - download a tar.gz containing the .NET preview installer packages to the current directory
@@ -62,29 +62,37 @@ function distro_check()
           PACKAGE_TYPE="deb"
           ADDITIONAL_DEPS=("tar" "gzip" "curl")
           ;;
+        *"Ubuntu 24.04"* | *"Jammy"*)
+          PACKAGE_TYPE="deb"
+          ADDITIONAL_DEPS=("tar" "gzip" "curl")
+          ;;
+        *"Ubuntu 24.10"* | *"Oracular"*)
+          PACKAGE_TYPE="deb"
+          ADDITIONAL_DEPS=("tar" "gzip" "curl")
+          ;;
         *"Fedora"* | *"Red Hat"*)
           PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-fedora.34-x64.rpm"
+          DEPS_PACKAGE="https://builds.dotnet.microsoft.com/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-fedora.34-x64.rpm"
           ADDITIONAL_DEPS=("tar" "gzip" "compat-openssl10" "libicu")
           ;;
         *"openSUSE"*)
           PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-opensuse.42-x64.rpm"
+          DEPS_PACKAGE="https://builds.dotnet.microsoft.com/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-opensuse.42-x64.rpm"
           ADDITIONAL_DEPS=("tar" "gzip" "libopenssl1_0_0" "libicu")
           ;;
         *"sles"**)
           PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-sles.12-x64.rpm"
+          DEPS_PACKAGE="https://builds.dotnet.microsoft.com/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-sles.12-x64.rpm"
           ADDITIONAL_DEPS=("tar" "gzip" "libopenssl1_0_0" "libicu")
           ;;
         *"Oracle"*)
           PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-oraclelinux.8-x64.rpm"
+          DEPS_PACKAGE="https://builds.dotnet.microsoft.com/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-oraclelinux.8-x64.rpm"
           ADDITIONAL_DEPS=("tar" "gzip" "libicu")
           ;;
         *"CentOS"*)
           PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-centos.8-x64.rpm"
+          DEPS_PACKAGE="https://builds.dotnet.microsoft.com/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-centos.8-x64.rpm"
           ADDITIONAL_DEPS=("tar" "gzip" "libicu")
           ;;
         *) SUPPORTED_DISTRO=0 ;;
@@ -107,9 +115,9 @@ function download_preview()
 
     echo "*** Download source: ${DOTNET_SRC}"
     echo
-    echo "*** Downloading https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/$DOTNET_SRC to $DOWNLOAD_DIR ..."
+    echo "*** Downloading https://builds.dotnet.microsoft.com/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/$DOTNET_SRC to $DOWNLOAD_DIR ..."
 
-    curl "https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/"$DOTNET_SRC -o $DOWNLOAD_DIR/$DOTNET_SRC
+    curl "https://builds.dotnet.microsoft.com/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/"$DOTNET_SRC -o $DOWNLOAD_DIR/$DOTNET_SRC
     
     echo
     echo "*** Unpacking ${DOTNET_SRC} ..."
