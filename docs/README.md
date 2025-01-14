@@ -15,4 +15,4 @@ Information about the usage of install dotnet preview is provided here:
 https://github.com/dotnet/core/blob/main/release-notes/7.0/install-linux.md#install-using-debrpm-packages
 
 The latest stable versions of install dotnet preview is available here:
--  https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/install-dotnet-preview.sh
+-  https://builds.dotnet.microsoft.com/dotnet/release/install-preview/install-dotnet-preview.sh
