@@ -62,6 +62,14 @@ function distro_check()
           PACKAGE_TYPE="deb"
           ADDITIONAL_DEPS=("tar" "gzip" "curl")
           ;;
+        *"Ubuntu 24.04"* | *"Jammy"*)
+          PACKAGE_TYPE="deb"
+          ADDITIONAL_DEPS=("tar" "gzip" "curl")
+          ;;
+        *"Ubuntu 24.10"* | *"Oracular"*)
+          PACKAGE_TYPE="deb"
+          ADDITIONAL_DEPS=("tar" "gzip" "curl")
+          ;;
         *"Fedora"* | *"Red Hat"*)
           PACKAGE_TYPE="rpm"
           DEPS_PACKAGE="https://builds.dotnet.microsoft.com/dotnet/release/install-preview/9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-9.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-fedora.34-x64.rpm"
