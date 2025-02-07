@@ -992,32 +992,6 @@ function PrintDryRunOutput($Invocation, $DownloadLinks) {
     }
 }
 
-# grab the 'stem' of the redirect and check it against all of our configured feeds, 
-# if it matches, we can be sure that the redirect is valid and we should use it for
-# subsequent processing
-function Sanitize-RedirectUrl([string]$url) {
-    $urlSegments = ([System.Uri]$url).Segments;
-    $urlStem = $urlSegments[2..($urlSegments.Length - 1)] -join "";
-    Write-Verbose "Checking configured feeds for the asset at $urlStem"
-    foreach ($prospectiveFeed in $feeds) {
-        $trialUrl = "$prospectiveFeed/$urlStem";
-        Write-Verbose "Checking $trialUrl"
-        try {
-            $trialResponse = Invoke-WebRequest -Uri $trialUrl -Method HEAD
-            if ($trialResponse.StatusCode -eq 200) {
-                Write-Verbose "Found a match at $trialUrl"
-                return $trialUrl;
-            }
-            else {
-                Write-Verbose "No match at $trialUrl"
-            }
-        }
-        catch {
-            Write-Verbose "Failed to check $trialUrl"
-        }
-    }
-}
-
 function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Internal, [string]$Product, [string]$Architecture) {
     Say-Invocation $MyInvocation 
 
@@ -1076,11 +1050,6 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
         }
         elseif ((($Response.StatusCode -lt 300) -or ($Response.StatusCode -ge 400)) -and (-not [string]::IsNullOrEmpty($akaMsDownloadLink))) {
             # Redirections have ended.
-            $actualRedirectUrl = Sanitize-RedirectUrl $akaMsDownloadLink
-            if ($null -ne $actualRedirectUrl) {
-                $akaMsDownloadLink = $actualRedirectUrl
-            }
-
             return $akaMsDownloadLink
         }
 
