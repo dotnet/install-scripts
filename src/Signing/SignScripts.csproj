@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
     <GenerateDependencyFile>false</GenerateDependencyFile>
     <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
     <CopyBuildOutputToPublishDirectory>false</CopyBuildOutputToPublishDirectory>
@@ -8,14 +8,12 @@
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <AssemblyName>UNUSED</AssemblyName>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="1.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
-  
   <ItemGroup>
     <None Include="..\dotnet-install.ps1" Link="dotnet-install.ps1">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -30,21 +28,17 @@
       <Authenticode>Linux500046PGPDetached</Authenticode>
     </FilesToSign>
   </ItemGroup>
-
   <Target Name="CopyBeforeSign" BeforeTargets="SignFiles">
     <!-- MicroBuild signing overwrites original file. As we have detached signature for Bash script, we will create a copy that will be rewriten. -->
-    <Copy SourceFiles="$(OutDir)\dotnet-install.sh" DestinationFiles="$(OutDir)\dotnet-install.sig"/>
+    <Copy SourceFiles="$(OutDir)\dotnet-install.sh" DestinationFiles="$(OutDir)\dotnet-install.sig" />
   </Target>
-
   <Target Name="DeleteRefAfterSign" AfterTargets="SignFiles">
     <Delete Files="$(OutDir)\ref\UNUSED.dll" />
   </Target>
-
   <Target Name="Delete Unused" AfterTargets="Build">
     <Delete Files="$(OutDir)\UNUSED.dll" />
     <Delete Files="$(OutDir)\UNUSED.pdb" />
   </Target>
-  
   <Target Name="ArtifactsDir Setup" AfterTargets="Build">
     <!-- To prevent "directory not found" errors, create empty directory -->
     <MakeDir Directories="$(ArtifactsPackagesDir)" />
