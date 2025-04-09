@@ -1,6 +1,8 @@
-[![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet.install-scripts?branchName=main)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=846&branchName=main)
+[![Build Status](https://dev.azure.com/dnceng-public/public/_apis/build/status/73?branchName=main&label=Public)](https://dev.azure.com/dnceng-public/public/_build?definitionId=73)
 
 This repo is the central place for dotnet install and install dotnet preview scripts.
+
+**Please be advised that the project is currently in maintenance mode. This implies that we are focusing on addressing high-priority bugs and providing assistance with any issues that may arise. During this phase, no new features or significant improvements are anticipated.**
 
 For more information about the usage of dotnet install, see:
 https://learn.microsoft.com/dotnet/core/tools/dotnet-install-script

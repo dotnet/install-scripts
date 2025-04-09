@@ -1,0 +1,174 @@
+# YAML file in the main branch
+schedules:
+- cron: '0 0 * * 0'
+  displayName: Weekly midnight build
+  branches:
+    include:
+    - main
+
+trigger:
+  - main
+
+pr:
+  - main
+
+variables:
+  - group: DotNet-Install-Scripts-BuildPipeline-Params
+  - template: eng/common-variables.yml
+
+resources:
+  repositories:
+  - repository: 1ESPipelineTemplates
+    type: git
+    name: 1ESPipelineTemplates/1ESPipelineTemplates
+    ref: refs/tags/release
+
+extends:
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  parameters:
+    featureFlags:
+      autoBaseline: true
+    sdl:
+      sourceAnalysisPool:
+        name: NetCore1ESPool-Svc-Internal
+        image: 1es-windows-2022
+        os: windows
+      sbom:
+        enabled: false
+      codeSignValidation:
+        enabled: true
+        break: true
+        additionalTargetsGlobPattern: -|**\Install-Scripts.Test\**;
+    pool:
+      name: NetCore1ESPool-Svc-Internal
+      image: windows.vs2022preview.amd64
+      os: windows
+    customBuildTags:
+    - ES365AIMigrationTooling
+    
+    stages:
+    - stage: build
+      displayName: Build
+      jobs:
+      - template: /eng/common/templates-official/jobs/jobs.yml@self
+        parameters:
+          artifacts:
+            publish:
+              artifacts: true
+              logs: true
+              manifests: true
+          enableMicrobuild: true
+          enablePublishUsingPipelines: true
+          workspace:
+            clean: all
+          jobs:
+          - job: Windows_NT
+            timeoutInMinutes: 90
+            pool:
+              name: netcore1espool-internal
+              image: 1es-windows-2022
+              os: windows
+            strategy:
+              matrix:
+                  Build_Release:
+                    _BuildConfig: Release
+
+            preSteps:
+            - checkout: self
+              clean: true
+            steps:
+            - task: UseDotNet@2
+              displayName: Get .NET Core SDK
+              inputs:
+                version: 8.x
+            - task: DotNetCoreCLI@2
+              displayName: Run Tests
+              inputs: 
+                command: test
+            - script: eng\common\cibuild.cmd
+                -configuration $(_BuildConfig)
+                -projects src/Signing/SignScripts.csproj
+                -prepareMachine
+                $(_InternalBuildArgs)
+                /p:Test=false
+                /p:DotNetSignType=$(_SignType)
+                /p:TeamName=$(_TeamName)
+              displayName: Sign scripts
+              env:
+                SIGNTOOL_DISABLE_TELEMETRY: 'true'
+            - task: PowerShell@2
+              displayName: Validate Signature
+              inputs:
+                filePath: eng/common/sdk-task.ps1
+                arguments: -task SigningValidation -restore -msbuildEngine vs 
+                  /p:InputFiles='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/**/*.ps1'
+                  /p:PackageBasePath='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/'
+      - job: LinuxTests
+        timeoutInMinutes: 30
+        pool:
+          name: netcore1espool-internal
+          image: 1es-ubuntu-2204
+          os: linux
+        steps:
+        - checkout: self
+          displayName: Checkout Self
+          clean: true
+        - task: UseDotNet@2
+          displayName: Get .NET Core SDK
+          inputs:
+            version: 8.x
+        - script: |
+            chmod u+x src/dotnet-install.sh
+          displayName: 'Add permission to execute'
+        - task: DotNetCoreCLI@2
+          displayName: Run Tests
+          inputs: 
+            command: test
+
+      - job: MacOSTests
+        timeoutInMinutes: 30
+        pool: 
+          name: Azure Pipelines
+          image: macOS-13
+          os: macOS
+        steps:
+        - checkout: self
+          displayName: Checkout Self
+          clean: true
+        - task: UseDotNet@2
+          displayName: Get .NET Core SDK
+          inputs:
+            version: 8.x
+        - script: |
+            chmod u+x src/dotnet-install.sh
+          displayName: 'Add permission to execute'
+        - task: DotNetCoreCLI@2
+          displayName: Run Tests
+          inputs: 
+            command: test
+
+    - template: eng\common\templates-official\post-build\post-build.yml@self
+      parameters:
+        enableSigningValidation: false
+        enableNugetValidation: false
+        enableSymbolValidation: true
+        enableSourceLinkValidation: true
+        publishingInfraVersion: 3
+        publishDependsOn:
+        - Validate
+        # This is to enable SDL runs part of Post-Build Validation Stage
+        SDLValidationParameters:
+          enable: true
+          continueOnError: false
+          params: ' -SourceToolsList @("policheck","credscan")
+          -TsaInstanceURL $(_TsaInstanceURL)
+          -TsaProjectName $(_TsaProjectName)
+          -TsaNotificationEmail $(_TsaNotificationEmail)
+          -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
+          -TsaBugAreaPath $(_TsaBugAreaPath)
+          -TsaIterationPath $(_TsaIterationPath)
+          -TsaRepositoryName "Install-Scripts"
+          -TsaCodebaseName "Install-Scripts"
+          -TsaPublish $True
+          -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)\eng\policheck_exclusions.xml")'
+        

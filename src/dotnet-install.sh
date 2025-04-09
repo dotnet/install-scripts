@@ -298,11 +298,20 @@ get_machine_architecture() {
     if command -v uname > /dev/null; then
         CPUName=$(uname -m)
         case $CPUName in
+        armv1*|armv2*|armv3*|armv4*|armv5*|armv6*)
+            echo "armv6-or-below"
+            return 0
+            ;;
         armv*l)
             echo "arm"
             return 0
             ;;
         aarch64|arm64)
+            if [ "$(getconf LONG_BIT)" -lt 64 ]; then
+                # This is 32-bit OS running on 64-bit CPU (for example Raspberry Pi OS)
+                echo "arm"
+                return 0
+            fi
             echo "arm64"
             return 0
             ;;
@@ -316,6 +325,14 @@ get_machine_architecture() {
             ;;
         loongarch64)
             echo "loongarch64"
+            return 0
+            ;;
+        riscv64)
+            echo "riscv64"
+            return 0
+            ;;
+        powerpc|ppc)
+            echo "ppc"
             return 0
             ;;
         esac
@@ -334,7 +351,13 @@ get_normalized_architecture_from_architecture() {
     local architecture="$(to_lowercase "$1")"
 
     if [[ $architecture == \<auto\> ]]; then
-        echo "$(get_machine_architecture)"
+        machine_architecture="$(get_machine_architecture)"
+        if [[ "$machine_architecture" == "armv6-or-below" ]]; then
+            say_err "Architecture \`$machine_architecture\` not supported. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues"
+            return 1
+        fi
+
+        echo $machine_architecture
         return 0
     fi
 
@@ -1008,7 +1031,7 @@ extract_dotnet_package() {
     
     rm -rf "$temp_out_path"
     if [ -z ${keep_zip+x} ]; then
-        rm -f "$zip_path" && say_verbose "Temporary zip file $zip_path was removed"
+        rm -f "$zip_path" && say_verbose "Temporary archive file $zip_path was removed"
     fi
 
     if [ "$failed" = true ]; then
@@ -1256,6 +1279,12 @@ get_download_link_from_aka_ms() {
     http_codes=$( echo "$response" | awk '$1 ~ /^HTTP/ {print $2}' )
     # They all need to be 301, otherwise some links are broken (except for the last, which is not a redirect but 200 or 404).
     broken_redirects=$( echo "$http_codes" | sed '$d' | grep -v '301' )
+    # The response may end without final code 2xx/4xx/5xx somehow, e.g. network restrictions on www.bing.com causes redirecting to bing.com fails with connection refused.
+    # In this case it should not exclude the last.
+    last_http_code=$(  echo "$http_codes" | tail -n 1 )
+    if ! [[ $last_http_code =~ ^(2|4|5)[0-9][0-9]$ ]]; then
+        broken_redirects=$( echo "$http_codes" | grep -v '301' )
+    fi
 
     # All HTTP codes are 301 (Moved Permanently), the redirect link exists.
     if [[ -z "$broken_redirects" ]]; then
@@ -1507,7 +1536,7 @@ install_dotnet() {
 
     mkdir -p "$install_root"
     zip_path="${zip_path:-$(mktemp "$temporary_file_template")}"
-    say_verbose "Zip path: $zip_path"
+    say_verbose "Archive path: $zip_path"
 
     for link_index in "${!download_links[@]}"
     do
@@ -1531,7 +1560,7 @@ install_dotnet() {
                 say "Failed to download $link_type link '$download_link': $download_error_msg"
                 ;;
             esac
-            rm -f "$zip_path" 2>&1 && say_verbose "Temporary zip file $zip_path was removed"
+            rm -f "$zip_path" 2>&1 && say_verbose "Temporary archive file $zip_path was removed"
         else
             download_completed=true
             break
@@ -1546,7 +1575,7 @@ install_dotnet() {
 
     remote_file_size="$(get_remote_file_size "$download_link")"
 
-    say "Extracting zip from $download_link"
+    say "Extracting archive from $download_link"
     extract_dotnet_package "$zip_path" "$install_root" "$remote_file_size" || return 1
 
     #  Check if the SDK version is installed; if not, fail the installation.
@@ -1708,7 +1737,11 @@ do
         -?|--?|-h|--help|-[Hh]elp)
             script_name="$(basename "$0")"
             echo ".NET Tools Installer"
-            echo "Usage: $script_name [-c|--channel <CHANNEL>] [-v|--version <VERSION>] [-p|--prefix <DESTINATION>]"
+            echo "Usage:"
+            echo "       # Install a .NET SDK of a given Quality from a given Channel"
+            echo "       $script_name [-c|--channel <CHANNEL>] [-q|--quality <QUALITY>]"
+            echo "       # Install a .NET SDK of a specific public version"
+            echo "       $script_name [-v|--version <VERSION>]"
             echo "       $script_name -h|-?|--help"
             echo ""
             echo "$script_name is a simple command line interface for obtaining dotnet cli."

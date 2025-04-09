@@ -24,7 +24,6 @@ variables:
       value: real
     - name: _UseBuildManifest
       value: False
-    - group: DotNet-Blob-Feed
     - group: Publish-Build-Assets
     - group: DotNet-HelixApi-Access
     - group: DotNet-Install-Scripts-SDLValidation-Params
