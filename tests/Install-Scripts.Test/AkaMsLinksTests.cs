@@ -27,15 +27,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        //[InlineData("5.0.2xx", null, @"https://aka.ms/dotnet/5.0.2xx/dotnet-sdk-")]
        //[InlineData("STS", null, @"https://aka.ms/dotnet/STS/dotnet-sdk-")]
        //[InlineData("LTS", null, @"https://aka.ms/dotnet/LTS/dotnet-sdk-")]
-       //[InlineData("5.0.2xx", "signed", @"https://aka.ms/dotnet/5.0.2xx/signed/dotnet-sdk-")]
        //[InlineData("5.0.2xx", "daily", @"https://aka.ms/dotnet/5.0.2xx/daily/dotnet-sdk-")]
-       //[InlineData("5.0.2xx", "validated", @"https://aka.ms/dotnet/5.0.2xx/validated/dotnet-sdk-")]
        //[InlineData("5.0.2xx", "preview", @"https://aka.ms/dotnet/5.0.2xx/preview/dotnet-sdk-")]
        //[InlineData("5.0.2xx", "ga", @"https://aka.ms/dotnet/5.0.2xx/dotnet-sdk-")]
         
-       // 6.0 doesn't have a signed. validated, preview or ga build yet.
-       // [InlineData("6.0", "signed", @"https://aka.ms/dotnet/6.0/signed/dotnet-sdk-")]
-       //[InlineData("6.0", "validated", @"https://aka.ms/dotnet/6.0/validated/dotnet-sdk-")]
        //[InlineData("6.0", "preview", @"https://aka.ms/dotnet/6.0/preview/dotnet-sdk-")]
        //[InlineData("6.0", "ga", @"https://aka.ms/dotnet/6.0/dotnet-sdk-")]
 
@@ -91,9 +86,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        //[InlineData("5.0", "dotnet", null, @"https://aka.ms/dotnet/5.0/dotnet-runtime-")]
        //[InlineData("STS", "dotnet", null, @"https://aka.ms/dotnet/STS/dotnet-runtime-")]
        //[InlineData("LTS", "dotnet", null, @"https://aka.ms/dotnet/LTS/dotnet-runtime-")]
-       //[InlineData("5.0", "dotnet", "signed", @"https://aka.ms/dotnet/5.0/signed/dotnet-runtime-")]
        //[InlineData("5.0", "dotnet", "daily", @"https://aka.ms/dotnet/5.0/daily/dotnet-runtime-")]
-       //[InlineData("5.0", "dotnet", "validated", @"https://aka.ms/dotnet/5.0/validated/dotnet-runtime-")]
        //[InlineData("5.0", "dotnet", "preview", @"https://aka.ms/dotnet/5.0/preview/dotnet-runtime-")]
        //[InlineData("5.0", "dotnet", "ga", @"https://aka.ms/dotnet/5.0/dotnet-runtime-")]
        //[InlineData("2.0", "aspnetcore", null, @"https://aka.ms/dotnet/2.0/aspnetcore-runtime-")]
@@ -103,9 +96,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        //[InlineData("5.0", "aspnetcore", null, @"https://aka.ms/dotnet/5.0/aspnetcore-runtime-")]
        //[InlineData("STS", "aspnetcore", null, @"https://aka.ms/dotnet/STS/aspnetcore-runtime-")]
        //[InlineData("LTS", "aspnetcore", null, @"https://aka.ms/dotnet/LTS/aspnetcore-runtime-")]
-       //[InlineData("5.0", "aspnetcore", "signed", @"https://aka.ms/dotnet/5.0/signed/aspnetcore-runtime-")]
        //[InlineData("5.0", "aspnetcore", "daily", @"https://aka.ms/dotnet/5.0/daily/aspnetcore-runtime-")]
-       //[InlineData("5.0", "aspnetcore", "validated", @"https://aka.ms/dotnet/5.0/validated/aspnetcore-runtime-")]
        //[InlineData("5.0", "aspnetcore", "preview", @"https://aka.ms/dotnet/5.0/preview/aspnetcore-runtime-")]
        //[InlineData("5.0", "aspnetcore", "ga", @"https://aka.ms/dotnet/5.0/aspnetcore-runtime-")]
        //[InlineData("3.0", "windowsdesktop", null, @"https://aka.ms/dotnet/3.0/windowsdesktop-runtime-")]
@@ -113,15 +104,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        //[InlineData("5.0", "windowsdesktop", null, @"https://aka.ms/dotnet/5.0/windowsdesktop-runtime-")]
        //[InlineData("STS", "windowsdesktop", null, @"https://aka.ms/dotnet/STS/windowsdesktop-runtime-")]
        //[InlineData("LTS", "windowsdesktop", null, @"https://aka.ms/dotnet/LTS/windowsdesktop-runtime-")]
-       //[InlineData("5.0", "windowsdesktop", "signed", @"https://aka.ms/dotnet/5.0/signed/windowsdesktop-runtime-")]
        //[InlineData("5.0", "windowsdesktop", "daily", @"https://aka.ms/dotnet/5.0/daily/windowsdesktop-runtime-")]
-       //[InlineData("5.0", "windowsdesktop", "validated", @"https://aka.ms/dotnet/5.0/validated/windowsdesktop-runtime-")]
        //[InlineData("5.0", "windowsdesktop", "preview", @"https://aka.ms/dotnet/5.0/preview/windowsdesktop-runtime-")]
        //[InlineData("5.0", "windowsdesktop", "ga", @"https://aka.ms/dotnet/5.0/windowsdesktop-runtime-")]
 
-       // 6.0 doesn't have a signed. validated, preview or ga build yet.
-       // [InlineData("6.0", "windowsdesktop", "signed", @"https://aka.ms/dotnet/6.0/signed/windowsdesktop-runtime-")]
-       // [InlineData("6.0", "windowsdesktop", "validated", @"https://aka.ms/dotnet/6.0/validated/windowsdesktop-runtime-")]
        // [InlineData("6.0", "windowsdesktop", "preview", @"https://aka.ms/dotnet/6.0/preview/windowsdesktop-runtime-")]
        // [InlineData("6.0", "windowsdesktop", "ga", @"https://aka.ms/dotnet/6.0/windowsdesktop-runtime-")]
         
@@ -175,20 +161,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("5.0.2xx", null, false, @"https://aka.ms/dotnet/5.0.2xx/dotnet-sdk-")]
        [InlineData("STS", null, false, @"https://aka.ms/dotnet/STS/dotnet-sdk-")]
        [InlineData("LTS", null, false, @"https://aka.ms/dotnet/LTS/dotnet-sdk-")]
-       [InlineData("5.0.2xx", "signed", false, @"https://aka.ms/dotnet/5.0.2xx/signed/dotnet-sdk-")]
        [InlineData("5.0.2xx", "daily", false, @"https://aka.ms/dotnet/5.0.2xx/daily/dotnet-sdk-")]
-       [InlineData("5.0.2xx", "validated", false, @"https://aka.ms/dotnet/5.0.2xx/validated/dotnet-sdk-")]
        [InlineData("5.0.2xx", "preview", false, @"https://aka.ms/dotnet/5.0.2xx/preview/dotnet-sdk-")]
        [InlineData("5.0.2xx", "ga", false, @"https://aka.ms/dotnet/5.0.2xx/dotnet-sdk-")]
        [InlineData("3.1", null, true, @"https://aka.ms/dotnet/internal/3.1/dotnet-sdk-")]
        [InlineData("5.0.2xx", null, true, @"https://aka.ms/dotnet/internal/5.0.2xx/dotnet-sdk-")]
        [InlineData("STS", null, true, @"https://aka.ms/dotnet/internal/STS/dotnet-sdk-")]
        [InlineData("LTS", null, true, @"https://aka.ms/dotnet/internal/LTS/dotnet-sdk-")]
-       [InlineData("5.0.2xx", "validated", true, @"https://aka.ms/dotnet/internal/5.0.2xx/validated/dotnet-sdk-")]
-       [InlineData("6.0.2xx", "validated", true, @"https://aka.ms/dotnet/internal/6.0.2xx/validated/dotnet-sdk-")]
-       [InlineData("7.0.1xx", "validated", true, @"https://aka.ms/dotnet/internal/7.0.1xx/validated/dotnet-sdk-")]
-       [InlineData("8.0.3xx", "validated", true, @"https://aka.ms/dotnet/internal/8.0.3xx/validated/dotnet-sdk-")]
-       [InlineData("9.0.1xx", "validated", true, @"https://aka.ms/dotnet/internal/9.0.1xx/validated/dotnet-sdk-")]
        public void LinkCanBeCreatedForSdk(string channel, string quality, bool isInternal, string expectedLink)
        {
            string expectedLinkPattern = Regex.Escape(expectedLink);
@@ -236,9 +215,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("5.0", "dotnet", null, false, @"https://aka.ms/dotnet/5.0/dotnet-runtime-")]
        [InlineData("STS", "dotnet", null, false, @"https://aka.ms/dotnet/STS/dotnet-runtime-")]
        [InlineData("LTS", "dotnet", null, false, @"https://aka.ms/dotnet/LTS/dotnet-runtime-")]
-       [InlineData("5.0", "dotnet", "signed", false, @"https://aka.ms/dotnet/5.0/signed/dotnet-runtime-")]
        [InlineData("5.0", "dotnet", "daily", false, @"https://aka.ms/dotnet/5.0/daily/dotnet-runtime-")]
-       [InlineData("5.0", "dotnet", "validated", false, @"https://aka.ms/dotnet/5.0/validated/dotnet-runtime-")]
        [InlineData("5.0", "dotnet", "preview", false, @"https://aka.ms/dotnet/5.0/preview/dotnet-runtime-")]
        [InlineData("5.0", "dotnet", "ga", false, @"https://aka.ms/dotnet/5.0/dotnet-runtime-")]
        [InlineData("2.1", "aspnetcore", null, false, @"https://aka.ms/dotnet/2.1/aspnetcore-runtime-")]
@@ -246,18 +223,14 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("5.0", "aspnetcore", null, false, @"https://aka.ms/dotnet/5.0/aspnetcore-runtime-")]
        [InlineData("STS", "aspnetcore", null, false, @"https://aka.ms/dotnet/STS/aspnetcore-runtime-")]
        [InlineData("LTS", "aspnetcore", null, false, @"https://aka.ms/dotnet/LTS/aspnetcore-runtime-")]
-       [InlineData("5.0", "aspnetcore", "signed", false, @"https://aka.ms/dotnet/5.0/signed/aspnetcore-runtime-")]
        [InlineData("5.0", "aspnetcore", "daily", false, @"https://aka.ms/dotnet/5.0/daily/aspnetcore-runtime-")]
-       [InlineData("5.0", "aspnetcore", "validated", false, @"https://aka.ms/dotnet/5.0/validated/aspnetcore-runtime-")]
        [InlineData("5.0", "aspnetcore", "preview", false, @"https://aka.ms/dotnet/5.0/preview/aspnetcore-runtime-")]
        [InlineData("5.0", "aspnetcore", "ga", false, @"https://aka.ms/dotnet/5.0/aspnetcore-runtime-")]
        [InlineData("3.1", "windowsdesktop", null, false, @"https://aka.ms/dotnet/3.1/windowsdesktop-runtime-")]
        [InlineData("5.0", "windowsdesktop", null, false, @"https://aka.ms/dotnet/5.0/windowsdesktop-runtime-")]
        [InlineData("STS", "windowsdesktop", null, false, @"https://aka.ms/dotnet/STS/windowsdesktop-runtime-")]
        [InlineData("LTS", "windowsdesktop", null, false, @"https://aka.ms/dotnet/LTS/windowsdesktop-runtime-")]
-       [InlineData("5.0", "windowsdesktop", "signed", false, @"https://aka.ms/dotnet/5.0/signed/windowsdesktop-runtime-")]
        [InlineData("5.0", "windowsdesktop", "daily", false, @"https://aka.ms/dotnet/5.0/daily/windowsdesktop-runtime-")]
-       [InlineData("5.0", "windowsdesktop", "validated", false, @"https://aka.ms/dotnet/5.0/validated/windowsdesktop-runtime-")]
        [InlineData("5.0", "windowsdesktop", "preview", false,  @"https://aka.ms/dotnet/5.0/preview/windowsdesktop-runtime-")]
        [InlineData("5.0", "windowsdesktop", "ga", false, @"https://aka.ms/dotnet/5.0/windowsdesktop-runtime-")]
        [InlineData("LTS", "dotnet", null, true, @"https://aka.ms/dotnet/internal/LTS/dotnet-runtime-")]
@@ -319,12 +292,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
        [Theory]
        [InlineData("STS", null, "daily", @"https://aka.ms/dotnet/STS/dotnet-sdk-")]
-       [InlineData("LTS", null, "signed", @"https://aka.ms/dotnet/LTS/dotnet-sdk-")]
-       [InlineData("STS", "dotnet", "validated", @"https://aka.ms/dotnet/STS/dotnet-runtime-")]
        [InlineData("LTS", "dotnet", "preview", @"https://aka.ms/dotnet/LTS/dotnet-runtime-")]
        [InlineData("STS", "aspnetcore", "daily", @"https://aka.ms/dotnet/STS/aspnetcore-runtime-")]
-       [InlineData("LTS", "aspnetcore", "signed", @"https://aka.ms/dotnet/LTS/aspnetcore-runtime-")]
-       [InlineData("STS", "windowsdesktop", "validated", @"https://aka.ms/dotnet/STS/windowsdesktop-runtime-")]
        [InlineData("LTS", "windowsdesktop", "preview", @"https://aka.ms/dotnet/LTS/windowsdesktop-runtime-")]
        public void QualityIsSkippedForLTSAndCurrentChannel(string channel, string runtime, string quality, string expectedLink)
        {
@@ -362,9 +331,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
        [Theory]
        [InlineData("Fake", null, "daily")]
-       [InlineData("Fake", "dotnet", "validated")]
+       [InlineData("Fake", "dotnet", "daily")]
        [InlineData("Fake", "aspnetcore", "daily")]
-       [InlineData("Fake", "windowsdesktop", "validated")]
+       [InlineData("Fake", "windowsdesktop", "daily")]
        public void NoFallbackIfQualityIsGiven(string channel, string runtime, string quality)
        {
            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop")
