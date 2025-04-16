@@ -175,20 +175,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("5.0.2xx", null, false, @"https://aka.ms/dotnet/5.0.2xx/dotnet-sdk-")]
        [InlineData("STS", null, false, @"https://aka.ms/dotnet/STS/dotnet-sdk-")]
        [InlineData("LTS", null, false, @"https://aka.ms/dotnet/LTS/dotnet-sdk-")]
-       [InlineData("5.0.2xx", "signed", false, @"https://aka.ms/dotnet/5.0.2xx/signed/dotnet-sdk-")]
        [InlineData("5.0.2xx", "daily", false, @"https://aka.ms/dotnet/5.0.2xx/daily/dotnet-sdk-")]
-       [InlineData("5.0.2xx", "validated", false, @"https://aka.ms/dotnet/5.0.2xx/validated/dotnet-sdk-")]
        [InlineData("5.0.2xx", "preview", false, @"https://aka.ms/dotnet/5.0.2xx/preview/dotnet-sdk-")]
        [InlineData("5.0.2xx", "ga", false, @"https://aka.ms/dotnet/5.0.2xx/dotnet-sdk-")]
        [InlineData("3.1", null, true, @"https://aka.ms/dotnet/internal/3.1/dotnet-sdk-")]
        [InlineData("5.0.2xx", null, true, @"https://aka.ms/dotnet/internal/5.0.2xx/dotnet-sdk-")]
        [InlineData("STS", null, true, @"https://aka.ms/dotnet/internal/STS/dotnet-sdk-")]
        [InlineData("LTS", null, true, @"https://aka.ms/dotnet/internal/LTS/dotnet-sdk-")]
-       [InlineData("5.0.2xx", "validated", true, @"https://aka.ms/dotnet/internal/5.0.2xx/validated/dotnet-sdk-")]
-       [InlineData("6.0.2xx", "validated", true, @"https://aka.ms/dotnet/internal/6.0.2xx/validated/dotnet-sdk-")]
-       [InlineData("7.0.1xx", "validated", true, @"https://aka.ms/dotnet/internal/7.0.1xx/validated/dotnet-sdk-")]
-       [InlineData("8.0.3xx", "validated", true, @"https://aka.ms/dotnet/internal/8.0.3xx/validated/dotnet-sdk-")]
-       [InlineData("9.0.1xx", "validated", true, @"https://aka.ms/dotnet/internal/9.0.1xx/validated/dotnet-sdk-")]
        public void LinkCanBeCreatedForSdk(string channel, string quality, bool isInternal, string expectedLink)
        {
            string expectedLinkPattern = Regex.Escape(expectedLink);

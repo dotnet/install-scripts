@@ -28,7 +28,7 @@
     Warning: Value "Current" is deprecated for the Channel parameter. Use "STS" instead.
     Note: The version parameter overrides the channel parameter when any version other than 'latest' is used.
 .PARAMETER Quality
-    Download the latest build of specified quality in the channel. The possible values are: daily, signed, validated, preview, GA.
+    Download the latest build of specified quality in the channel. The possible values are: daily, preview, GA.
     Works only in combination with channel. Not applicable for STS and LTS channels and will be ignored if those channels are used. 
     For SDK use channel in A.B.Cxx format: using quality together with channel in A.B format is not supported.
     Supported since 5.0 release.
@@ -300,10 +300,10 @@ function Get-NormalizedQuality([string]$Quality) {
     }
 
     switch ($Quality) {
-        { @("daily", "signed", "validated", "preview") -contains $_ } { return $Quality.ToLowerInvariant() }
+        { @("daily", "preview") -contains $_ } { return $Quality.ToLowerInvariant() }
         #ga quality is available without specifying quality, so normalizing it to empty
         { $_ -eq "ga" } { return "" }
-        default { throw "'$Quality' is not a supported value for -Quality option. Supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues." }
+        default { throw "'$Quality' is not a supported value for -Quality option. Supported values are: daily, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues." }
     }
 }
 
