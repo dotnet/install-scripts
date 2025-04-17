@@ -3,8 +3,8 @@
 
 using System;
 using System.Text.RegularExpressions;
-using FluentAssertions;
-using FluentAssertions.Execution;
+using AwesomeAssertions;
+using AwesomeAssertions.Execution;
 using static Install_Scripts.Test.Utils.DotNetCommand;
 
 namespace Microsoft.NET.TestFramework.Assertions

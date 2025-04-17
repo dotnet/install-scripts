@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 
-using FluentAssertions;
+using AwesomeAssertions;
 using Install_Scripts.Test.Utils;
 using Microsoft.NET.TestFramework.Assertions;
 using System;
