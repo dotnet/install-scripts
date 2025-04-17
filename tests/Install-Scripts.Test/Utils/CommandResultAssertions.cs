@@ -3,9 +3,9 @@
 
 using System;
 using System.Text.RegularExpressions;
-using AwesomeAssertions;
-using AwesomeAssertions.Execution;
-using static Install_Scripts.Test.Utils.DotNetCommand;
+using FluentAssertions;
+using FluentAssertions.Execution;
+using CommandResult = Install_Scripts.Test.Utils.DotNetCommand.CommandResult;
 
 namespace Microsoft.NET.TestFramework.Assertions
 {
@@ -20,145 +20,122 @@ namespace Microsoft.NET.TestFramework.Assertions
 
         internal AndConstraint<CommandResultAssertions> ExitWith(int expectedExitCode)
         {
-            Execute.Assertion.ForCondition(_commandResult.ExitCode == expectedExitCode)
-                .FailWith(AppendDiagnosticsTo($"Expected command to exit with {expectedExitCode} but it did not."));
+            _commandResult.ExitCode.Should().Be(expectedExitCode, AppendDiagnosticsTo($"Expected command to exit with {expectedExitCode} but it did not."));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> Pass()
         {
-            Execute.Assertion.ForCondition(_commandResult.ExitCode == 0)
-                .FailWith(AppendDiagnosticsTo($"Expected command to pass but it did not."));
+            _commandResult.ExitCode.Should().Be(0, AppendDiagnosticsTo($"Expected command to pass but it did not."));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> Fail()
         {
-            Execute.Assertion.ForCondition(_commandResult.ExitCode != 0)
-                .FailWith(AppendDiagnosticsTo($"Expected command to fail but it did not."));
+            _commandResult.ExitCode.Should().NotBe(0, AppendDiagnosticsTo($"Expected command to fail but it did not."));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdOut()
         {
-            Execute.Assertion.ForCondition(!string.IsNullOrEmpty(_commandResult.StdOut))
-                .FailWith(AppendDiagnosticsTo("Command did not output anything to stdout"));
+            _commandResult.StdOut.Should().NotBeNullOrEmpty(AppendDiagnosticsTo("Command did not output anything to stdout"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdOut(string expectedOutput)
         {
-            Execute.Assertion.ForCondition(_commandResult.StdOut!.Equals(expectedOutput, StringComparison.Ordinal))
-                .FailWith(AppendDiagnosticsTo($"Command did not output with Expected Output. Expected: {expectedOutput}"));
+            _commandResult.StdOut.Should().Be(expectedOutput, AppendDiagnosticsTo($"Command did not output with Expected Output. Expected: {expectedOutput}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdOutContaining(string pattern)
         {
-            Execute.Assertion.ForCondition(_commandResult.StdOut!.Contains(pattern))
-                .FailWith(AppendDiagnosticsTo($"The command output did not contain expected result: {pattern}{Environment.NewLine}"));
+            _commandResult.StdOut.Should().Contain(pattern, AppendDiagnosticsTo($"The command output did not contain expected result: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdOutContaining(Func<string, bool> predicate, string description = "")
         {
-            Execute.Assertion.ForCondition(predicate(_commandResult.StdOut!))
-                .FailWith(AppendDiagnosticsTo($"The command output did not contain expected result: {description} {Environment.NewLine}"));
+            predicate(_commandResult.StdOut!).Should().BeTrue(AppendDiagnosticsTo($"The command output did not contain expected result: {description} {Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> NotHaveStdOutContaining(string pattern)
         {
-            Execute.Assertion.ForCondition(!_commandResult.StdOut!.Contains(pattern))
-                .FailWith(AppendDiagnosticsTo($"The command output contained a result it should not have contained: {pattern}{Environment.NewLine}"));
+            _commandResult.StdOut.Should().NotContain(pattern, AppendDiagnosticsTo($"The command output contained a result it should not have contained: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> NotHaveStdOutContainingIgnoreCase(string pattern)
         {
-            Execute.Assertion.ForCondition(!_commandResult.StdOut!.Contains(pattern, StringComparison.OrdinalIgnoreCase))
-                .FailWith(AppendDiagnosticsTo($"The command output contained a result it should not have contained (ignoring case): {pattern}{Environment.NewLine}"));
+            _commandResult.StdOut.Should().NotContainEquivalentOf(pattern, AppendDiagnosticsTo($"The command output contained a result it should not have contained (ignoring case): {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdOutContainingIgnoreSpaces(string pattern)
         {
-            string commandResultNoSpaces = _commandResult.StdOut!.Replace(" ", "");
-
-            Execute.Assertion
-                .ForCondition(commandResultNoSpaces.Contains(pattern))
-                .FailWith(AppendDiagnosticsTo($"The command output did not contain expected result: {pattern}{Environment.NewLine}"));
-
+            var commandResultNoSpaces = _commandResult.StdOut!.Replace(" ", "");
+            commandResultNoSpaces.Should().Contain(pattern, AppendDiagnosticsTo($"The command output did not contain expected result: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdOutContainingIgnoreCase(string pattern)
         {
-            Execute.Assertion.ForCondition(_commandResult.StdOut!.Contains(pattern, StringComparison.OrdinalIgnoreCase))
-                .FailWith(AppendDiagnosticsTo($"The command output did not contain expected result (ignoring case): {pattern}{Environment.NewLine}"));
+            _commandResult.StdOut.Should().ContainEquivalentOf(pattern, AppendDiagnosticsTo($"The command output did not contain expected result (ignoring case): {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdOutMatching(string pattern, RegexOptions options = RegexOptions.None)
         {
-            Execute.Assertion.ForCondition(Regex.Match(_commandResult.StdOut!, pattern, options).Success)
-                .FailWith(AppendDiagnosticsTo($"Matching the command output failed. Pattern: {pattern}{Environment.NewLine}"));
+            _commandResult.StdOut.Should().MatchRegex(pattern, AppendDiagnosticsTo($"Matching the command output failed. Pattern: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> NotHaveStdOutMatching(string pattern, RegexOptions options = RegexOptions.None)
         {
-            Execute.Assertion.ForCondition(!Regex.Match(_commandResult.StdOut!, pattern, options).Success)
-                .FailWith(AppendDiagnosticsTo($"The command output matched a pattern it should not have. Pattern: {pattern}{Environment.NewLine}"));
+            _commandResult.StdOut.Should().NotMatchRegex(pattern, AppendDiagnosticsTo($"The command output matched a pattern it should not have contained: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdErr()
         {
-            Execute.Assertion.ForCondition(!string.IsNullOrEmpty(_commandResult.StdErr))
-                .FailWith(AppendDiagnosticsTo("Command did not output anything to stderr."));
+            _commandResult.StdErr.Should().NotBeNullOrEmpty(AppendDiagnosticsTo("Command did not output anything to stderr."));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdErrContaining(string pattern)
         {
-            Execute.Assertion.ForCondition(_commandResult.StdErr!.Contains(pattern))
-                .FailWith(AppendDiagnosticsTo($"The command error output did not contain expected result: {pattern}{Environment.NewLine}"));
+            _commandResult.StdErr.Should().Contain(pattern, AppendDiagnosticsTo($"The command error output did not contain expected result: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> NotHaveStdErrContaining(string pattern)
         {
-            Execute.Assertion.ForCondition(!_commandResult.StdErr!.Contains(pattern))
-                .FailWith(AppendDiagnosticsTo($"The command error output contained a result it should not have contained: {pattern}{Environment.NewLine}"));
+            _commandResult.StdErr.Should().NotContain(pattern, AppendDiagnosticsTo($"The command error output contained a result it should not have contained: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> NotHaveStdErrContainingIgnoreCase(string pattern)
         {
-            Execute.Assertion.ForCondition(!_commandResult.StdErr!.Contains(pattern, StringComparison.OrdinalIgnoreCase))
-                .FailWith(AppendDiagnosticsTo($"The command error output contained a result it should not have contained (ignoring case): {pattern}{Environment.NewLine}"));
+            _commandResult.StdErr.Should().NotContainEquivalentOf(pattern, AppendDiagnosticsTo($"The command error output contained a result it should not have contained (ignoring case): {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> HaveStdErrMatching(string pattern, RegexOptions options = RegexOptions.None)
         {
-            Execute.Assertion.ForCondition(Regex.Match(_commandResult.StdErr!, pattern, options).Success)
-                .FailWith(AppendDiagnosticsTo($"Matching the command error output failed. Pattern: {pattern}{Environment.NewLine}"));
+            _commandResult.StdErr.Should().MatchRegex(pattern, AppendDiagnosticsTo($"Matching the command error output failed. Pattern: {pattern}{Environment.NewLine}"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> NotHaveStdOut()
         {
-            Execute.Assertion.ForCondition(string.IsNullOrEmpty(_commandResult.StdOut))
-                .FailWith(AppendDiagnosticsTo($"Expected command to not output to stdout but it did:"));
+            _commandResult.StdOut.Should().BeNullOrEmpty(AppendDiagnosticsTo($"Expected command to not output to stdout but it did:"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
         internal AndConstraint<CommandResultAssertions> NotHaveStdErr()
         {
-            Execute.Assertion.ForCondition(string.IsNullOrEmpty(_commandResult.StdErr))
-                .FailWith(AppendDiagnosticsTo("Expected command to not output to stderr but it did:"));
+            _commandResult.StdErr.Should().BeNullOrEmpty(AppendDiagnosticsTo("Expected command to not output to stderr but it did:"));
             return new AndConstraint<CommandResultAssertions>(this);
         }
 
