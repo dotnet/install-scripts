@@ -547,7 +547,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [InlineData("8.0.303", Quality.Daily)]
-        [InlineData("9.0.100", Quality.Signed)]
         public void WhenBothVersionAndQualityWereSpecified(string version, Quality quality)
         {
             var args = GetInstallScriptArgs(null, null, quality.ToString(), _sdkInstallationDirectory, version: version);
@@ -560,7 +559,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
-        [InlineData(null, Quality.Signed)]
         [InlineData("8.0.303", null)]
         public void WhenEitherVersionOrQualityWasSpecified(string? version, Quality? quality)
         {

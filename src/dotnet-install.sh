@@ -477,7 +477,7 @@ get_normalized_quality() {
     local quality="$(to_lowercase "$1")"
     if [ ! -z "$quality" ]; then
         case "$quality" in
-            daily | signed | validated | preview)
+            daily | preview)
                 echo "$quality"
                 return 0
                 ;;
@@ -486,7 +486,7 @@ get_normalized_quality() {
                 return 0
                 ;;
             *)
-                say_err "'$quality' is not a supported value for --quality option. Supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues."
+                say_err "'$quality' is not a supported value for --quality option. Supported values are: daily, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues."
                 return 1
                 ;;
         esac
@@ -1788,7 +1788,7 @@ do
             echo "              examples: 2.0.0-preview2-006120; 1.1.0"
             echo "  -q,--quality <quality>         Download the latest build of specified quality in the channel."
             echo "      -Quality"
-            echo "          The possible values are: daily, signed, validated, preview, GA."
+            echo "          The possible values are: daily, preview, GA."
             echo "          Works only in combination with channel. Not applicable for STS and LTS channels and will be ignored if those channels are used." 
             echo "          For SDK use channel in A.B.Cxx format. Using quality for SDK together with channel in A.B format is not supported." 
             echo "          Supported since 5.0 release." 
