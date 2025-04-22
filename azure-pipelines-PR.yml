@@ -61,7 +61,7 @@ stages:
         command: test
 
   - job: MacOSTests
-    timeoutInMinutes: 30
+    timeoutInMinutes: 45
     pool: 
       vmImage: 'macOS-latest'
     steps:
