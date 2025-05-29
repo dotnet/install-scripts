@@ -2,10 +2,10 @@
     "instanceUrl": "https://devdiv.visualstudio.com/",
     "template": "TFSDEVDIV",
     "projectName": "DEVDIV",
-    "areaPath": "DevDiv\\NET Tools Prague\\install-scripts-incidents",
+    "areaPath": "DevDiv\\NET Fundamentals\\.NET Acquisition\\install-scripts-incidents",
     "iterationPath": "DevDiv",
-    "notificationAliases": [ "devuxteamprague@microsoft.com" ],
+    "notificationAliases": [ "dnsbcgalerts@microsoft.com" ],
     "repositoryName": "install-scripts",
     "codebaseName": "install-scripts",
-    "serviceTreeId": "d0ebbe59-0779-4466-8280-a0ff9cab5550"
+    "serviceTreeId": "33d7954d-0688-4e7b-9208-087c9e57f21a"
 }
