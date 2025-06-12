@@ -1208,7 +1208,7 @@ downloadcurl() {
 
     # Regression in curl causes curl with --retry to return a 0 exit code even when it fails to download a file - https://github.com/curl/curl/issues/17554
     if [ $curl_exit_code -eq 0 ] && echo "$curl_output" | grep -q "^curl: ([0-9]*) "; then
-        curl_exit_code=$(echo "$curl_output" | grep "^curl: ([0-9]*) " | sed 's/curl: (\([0-9]*\)).*/\1/')
+        curl_exit_code=$(echo "$curl_output" | sed 's/curl: (\([0-9]*\)).*/\1/')
     fi
 
     if [ $curl_exit_code -gt 0 ]; then
