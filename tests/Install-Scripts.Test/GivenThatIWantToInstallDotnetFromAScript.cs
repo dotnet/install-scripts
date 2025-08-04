@@ -205,6 +205,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             {
                 // Directory to cleanup may not be there if installation fails. Not an issue. Ignore the exception.
             }
+            catch (UnauthorizedAccessException e)
+            {
+                throw new Exception($"Failed to remove {_sdkInstallationDirectory}");
+            }
         }
 
         [Theory]
