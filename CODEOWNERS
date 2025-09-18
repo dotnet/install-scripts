@@ -6,3 +6,6 @@
 # @dotnet/install-scripts-maintainers will be requested
 # for review when someone opens a pull request.
 * @dotnet/install-scripts-maintainers
+
+# The preview script is not owned by the maintainers of this repo
+/src/install-dotnet-preview.sh @dotnet/dotnet-install-preview-contributors
