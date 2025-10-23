@@ -2,7 +2,7 @@
 
 # System must first have curl installed.
 # The following command will download the installation script and run it.
-# curl -L https://builds.dotnet.microsoft.com/dotnet/release/install-preview/10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/install-dotnet-$PRERELEASETYPE.sh -o install-dotnet-$PRERELEASETYPE.sh && bash install-dotnet-$PRERELEASETYPE.sh
+# curl -L https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/install-dotnet-$PRERELEASETYPE.sh -o install-dotnet-$PRERELEASETYPE.sh && bash install-dotnet-$PRERELEASETYPE.sh
 # The script will
 #   - install any additional dependences needed for the script to continue
 #   - download a tar.gz containing the .NET preview installer packages to the current directory
@@ -29,72 +29,15 @@ DOWNLOAD_DIR=$PWD
 DOTNET_PACKAGE_DIR="dotnet_packages"
 SUPPORTED_DISTRO=1
 
-DEPS_BUILD="25163.2"
-PREVIEW_NUMBER="2"
-PRERELEASETYPE="preview" # rc, preview
+DEPS_BUILD="25451.107"
+PREVIEW_NUMBER="1"
+PRERELEASETYPE="rc" # rc, preview
 
 declare -a ADDITIONAL_DEPS
 
 function distro_check()
 {
     case $DISTRO_NAME in
-        *"Debian"*)
-          PACKAGE_TYPE="deb"
-          ADDITIONAL_DEPS=("tar" "gzip" "curl")
-          ;;
-        *"Ubuntu 18.04"* | *"Mint 19"*)
-          PACKAGE_TYPE="deb"
-          ADDITIONAL_DEPS=("tar" "gzip" "curl")
-          ;;
-        *"Ubuntu 20.04"* | *"Focal"*)
-          PACKAGE_TYPE="deb"
-          ADDITIONAL_DEPS=("tar" "gzip" "curl")
-          ;;
-        *"Ubuntu 22.04"* | *"Jammy"*)
-          PACKAGE_TYPE="deb"
-          ADDITIONAL_DEPS=("tar" "gzip" "curl")
-          ;;
-        *"Ubuntu 23.04"* | *"Lunar"*)
-          PACKAGE_TYPE="deb"
-          ADDITIONAL_DEPS=("tar" "gzip" "curl")
-          ;;
-        *"Ubuntu 23.10"* | *"Mantic"*)
-          PACKAGE_TYPE="deb"
-          ADDITIONAL_DEPS=("tar" "gzip" "curl")
-          ;;
-        *"Ubuntu 24.04"* | *"Jammy"*)
-          PACKAGE_TYPE="deb"
-          ADDITIONAL_DEPS=("tar" "gzip" "curl")
-          ;;
-        *"Ubuntu 24.10"* | *"Oracular"*)
-          PACKAGE_TYPE="deb"
-          ADDITIONAL_DEPS=("tar" "gzip" "curl")
-          ;;
-        *"Fedora"* | *"Red Hat"*)
-          PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://builds.dotnet.microsoft.com/dotnet/release/install-preview/10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-fedora.34-x64.rpm"
-          ADDITIONAL_DEPS=("tar" "gzip" "compat-openssl10" "libicu")
-          ;;
-        *"openSUSE"*)
-          PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://builds.dotnet.microsoft.com/dotnet/release/install-preview/10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-opensuse.42-x64.rpm"
-          ADDITIONAL_DEPS=("tar" "gzip" "libopenssl1_0_0" "libicu")
-          ;;
-        *"sles"**)
-          PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://builds.dotnet.microsoft.com/dotnet/release/install-preview/10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-sles.12-x64.rpm"
-          ADDITIONAL_DEPS=("tar" "gzip" "libopenssl1_0_0" "libicu")
-          ;;
-        *"Oracle"*)
-          PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://builds.dotnet.microsoft.com/dotnet/release/install-preview/10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-oraclelinux.8-x64.rpm"
-          ADDITIONAL_DEPS=("tar" "gzip" "libicu")
-          ;;
-        *"CentOS"*)
-          PACKAGE_TYPE="rpm"
-          DEPS_PACKAGE="https://builds.dotnet.microsoft.com/dotnet/release/install-preview/10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/dotnet-runtime-deps-10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER.$DEPS_BUILD-centos.8-x64.rpm"
-          ADDITIONAL_DEPS=("tar" "gzip" "libicu")
-          ;;
         *) SUPPORTED_DISTRO=0 ;;
     esac
 }
@@ -115,9 +58,9 @@ function download_preview()
 
     echo "*** Download source: ${DOTNET_SRC}"
     echo
-    echo "*** Downloading https://builds.dotnet.microsoft.com/dotnet/release/install-preview/10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/$DOTNET_SRC to $DOWNLOAD_DIR ..."
+    echo "*** Downloading https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/$DOTNET_SRC to $DOWNLOAD_DIR ..."
 
-    curl "https://builds.dotnet.microsoft.com/dotnet/release/install-preview/10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/"$DOTNET_SRC -o $DOWNLOAD_DIR/$DOTNET_SRC
+    curl "https://dotnetcli.blob.core.windows.net/dotnet/release/install-preview/10.0.0-$PRERELEASETYPE.$PREVIEW_NUMBER/"$DOTNET_SRC -o $DOWNLOAD_DIR/$DOTNET_SRC
     
     echo
     echo "*** Unpacking ${DOTNET_SRC} ..."
@@ -198,5 +141,5 @@ then
     echo
     install
 else
-    echo "${DISTRO_NAME} is not supported by the .NET 9 Preview installer. Please use the dotnet-install script - https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script."
+    echo "The install-dotnet-preview script has been deprecated. Please use the dotnet-install script - https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script."
 fi
