@@ -160,7 +160,7 @@ function Say-Warning($str) {
 # Use this function to show a human-readable comment along with an exception.
 function Say-Error($str) {
     try {
-        # Write-Error is quite overly verbose for the purpose of the function, let's write one line with error style settings.
+        # Write-Error is quite verbose for the purpose of the function, let's write one line with error style settings.
         $Host.UI.WriteErrorLine("dotnet-install: $str")
     }
     catch {
