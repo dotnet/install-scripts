@@ -55,13 +55,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
-            //  Standard 'dryrun' criterium
+            //  Standard 'dryrun' criterion
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
             commandResult.Should().HaveStdOutMatching(@"URL\s#0\s-\s(legacy|primary|aka\.ms):\shttps://");
 
-            //  Non-dynamic input parameters should always be on the ouput line
+            //  Non-dynamic input parameters should always be on the output line
             commandResult.Should().HaveStdOutContainingIgnoreCase(parameter);
         }
 
@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
-            //  Standard 'dryrun' criterium
+            //  Standard 'dryrun' criterion
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
@@ -177,7 +177,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
-            //  Standard 'dryrun' criterium
+            //  Standard 'dryrun' criterion
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
@@ -254,7 +254,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
-            //  Standard 'dryrun' criterium
+            //  Standard 'dryrun' criterion
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
@@ -298,7 +298,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
-            //  Standard 'dryrun' criterium
+            //  Standard 'dryrun' criterion
             commandResult.Should().Fail();
             commandResult.Should().HaveStdErrContaining("Failed to resolve the exact version number.");
             commandResult.Should().NotHaveStdOutContaining("Repeatable invocation:");
@@ -311,7 +311,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             var commandResult = TestUtils.CreateInstallCommand(new[] { "-DryRun", "-i", "installation_path" }).ExecuteInstallation();
 
-            //  Standard 'dryrun' criterium
+            //  Standard 'dryrun' criterion
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
@@ -319,7 +319,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             // -i shouldn't be considered ambiguous on powershell.
             commandResult.Should().NotHaveStdOutContaining("the parameter name 'i' is ambiguous");
-            // bash doesn't give error on ambiguity. The first occurance of the alias wins.
+            // bash doesn't give error on ambiguity. The first occurrence of the alias wins.
 
             //  -i should translate to -InstallDir
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
