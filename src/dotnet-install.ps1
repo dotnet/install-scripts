@@ -64,7 +64,7 @@
 .PARAMETER DryRun
     If set it will not perform installation but instead display what command line to use to consistently install
     currently requested version of dotnet cli. In example if you specify version 'latest' it will display a link
-    with specific version so that this command can be used deterministicly in a build script.
+    with specific version so that this command can be used deterministically in a build script.
     It also displays binaries location if you prefer to install or download it yourself.
 .PARAMETER NoPath
     By default this script will set environment variable PATH for the current process to the binaries folder inside installation folder.
@@ -92,7 +92,7 @@
     Determines the SDK version from a user specified global.json file
     Note: global.json must have a value for 'SDK:Version'
 .PARAMETER DownloadTimeout
-    Determines timeout duration in seconds for dowloading of the SDK file
+    Determines timeout duration in seconds for downloading of the SDK file
     Default: 1200 seconds (20 minutes)
 .PARAMETER KeepZip
     If set, downloaded file is kept
@@ -160,7 +160,7 @@ function Say-Warning($str) {
 # Use this function to show a human-readable comment along with an exception.
 function Say-Error($str) {
     try {
-        # Write-Error is quite oververbose for the purpose of the function, let's write one line with error style settings.
+        # Write-Error is quite verbose for the purpose of the function, let's write one line with error style settings.
         $Host.UI.WriteErrorLine("dotnet-install: $str")
     }
     catch {
