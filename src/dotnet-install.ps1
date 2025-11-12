@@ -1013,33 +1013,45 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
     }
     $akaMsLink += "/$Product-win-$Architecture.zip"
     Say-Verbose  "Constructed aka.ms link: '$akaMsLink'."
-    $akaMsDownloadLink = $null
 
-    for ($maxRedirections = 9; $maxRedirections -ge 0; $maxRedirections--) {
-        #get HTTP response
-        #do not pass credentials as a part of the $akaMsLink and do not apply credentials in the GetHTTPResponse function
-        #otherwise the redirect link would have credentials as well
-        #it would result in applying credentials twice to the resulting link and thus breaking it, and in echoing credentials to the output as a part of redirect link
+    # Collect observed status codes and the last Location header observed
+    $statusCodes = @()
+    $akaMsDownloadLink = $null
+    $finalResponse = $null
+
+    for ($attempt = 0; $attempt -le 9; $attempt++) {
+        # get HTTP response header-only; do not auto-follow redirects; do not apply feed credentials
         $Response = GetHTTPResponse -Uri $akaMsLink -HeaderOnly $true -DisableRedirect $true -DisableFeedCredential $true
         Say-Verbose "Received response:`n$Response"
 
-        if ([string]::IsNullOrEmpty($Response)) {
+        if ($null -eq $Response) {
             Say-Verbose "The link '$akaMsLink' is not valid: failed to get redirect location. The resource is not available."
             return $null
         }
 
-        #if HTTP code is 301 (Moved Permanently), the redirect link exists
-        if ($Response.StatusCode -eq 301) {
-            try {
-                $akaMsDownloadLink = $Response.Headers.GetValues("Location")[0]
+        $code = [int]$Response.StatusCode
+        $statusCodes += $code
 
-                if ([string]::IsNullOrEmpty($akaMsDownloadLink)) {
+        if ($code -eq 301) {
+            # Capture Location header and follow it
+            try {
+                $locValues = $null
+                try {
+                    $locValues = $Response.Headers.GetValues("Location")
+                }
+                catch {
+                    # No Location found
+                    $locValues = $null
+                }
+
+                if ($null -eq $locValues -or $locValues.Count -eq 0 -or [string]::IsNullOrEmpty($locValues[0])) {
                     Say-Verbose "The link '$akaMsLink' is not valid: server returned 301 (Moved Permanently), but the headers do not contain the redirect location."
                     return $null
                 }
 
+                $akaMsDownloadLink = $locValues[0]
                 Say-Verbose "The redirect location retrieved: '$akaMsDownloadLink'."
-                # This may yet be a link to another redirection. Attempt to retrieve the page again.
+                # follow it for the next iteration (it may redirect again)
                 $akaMsLink = $akaMsDownloadLink
                 continue
             }
@@ -1048,18 +1060,78 @@ function Get-AkaMSDownloadLink([string]$Channel, [string]$Quality, [bool]$Intern
                 return $null
             }
         }
-        elseif ((($Response.StatusCode -lt 300) -or ($Response.StatusCode -ge 400)) -and (-not [string]::IsNullOrEmpty($akaMsDownloadLink))) {
-            # Redirections have ended.
-            return $akaMsDownloadLink
-        }
 
-        Say-Verbose "The link '$akaMsLink' is not valid: failed to retrieve the redirection location."
+        # Non-301 response observed — treat it as terminal for analysis
+        $finalResponse = $Response
+        break
+    }
+
+    if ($statusCodes.Count -eq 0) {
+        Say-Verbose "The link '$akaMsLink' is not valid: no HTTP responses were observed."
         return $null
     }
 
-    Say-Verbose "Aka.ms links have redirected more than the maximum allowed redirections. This may be caused by a cyclic redirection of aka.ms links."
-    return $null
+    # Find index of last terminal status (2xx, 4xx, 5xx)
+    $lastTerminalIdx = -1
+    for ($i = $statusCodes.Count - 1; $i -ge 0; $i--) {
+        $s = $statusCodes[$i]
+        if ((($s -ge 200) -and ($s -le 299)) -or (($s -ge 400) -and ($s -le 599))) {
+            $lastTerminalIdx = $i
+            break
+        }
+    }
 
+    # Build redirect candidate list: codes before last terminal (or the whole list if no terminal found)
+    if ($lastTerminalIdx -ge 0) {
+        if ($lastTerminalIdx -gt 0) {
+            $redirectCandidates = $statusCodes[0..($lastTerminalIdx - 1)]
+        }
+        else {
+            $redirectCandidates = @()
+        }
+
+        # Trim trailing 1xx/2xx entries from redirectCandidates (likely proxy "Connection Established" markers)
+        while ($redirectCandidates.Count -gt 0) {
+            $last = $redirectCandidates[-1]
+            if (($last -ge 100) -and ($last -le 299)) {
+                if ($redirectCandidates.Count -eq 1) {
+                    $redirectCandidates = @()
+                }
+                else {
+                    $redirectCandidates = $redirectCandidates[0..($redirectCandidates.Count - 2)]
+                }
+            }
+            else {
+                break
+            }
+        }
+    }
+    else {
+        # No terminal code found — conservative fallback: require all codes to be 301
+        $redirectCandidates = $statusCodes
+    }
+
+    # Any redirect candidate that is not 301 indicates a broken redirect chain.
+    $brokenRedirects = $redirectCandidates | Where-Object { $_ -ne 301 }
+
+    if ($brokenRedirects.Count -gt 0) {
+        Say-Verbose "The aka.ms link '$akaMsLink' is not valid: received HTTP code(s): $(( $brokenRedirects -join ',' ))"
+        return $null
+    }
+
+    # Success: return the last captured Location (if any)
+    if (-not [string]::IsNullOrEmpty($akaMsDownloadLink)) {
+        Say-Verbose "Final redirect location (aka.ms): '$akaMsDownloadLink'."
+        return $akaMsDownloadLink
+    }
+
+    # If we had a final non-301 response and a previously captured Location, return it; otherwise fail
+    if ($finalResponse -ne $null -and -not [string]::IsNullOrEmpty($akaMsDownloadLink)) {
+        return $akaMsDownloadLink
+    }
+
+    Say-Verbose "The link '$akaMsLink' is not valid: failed to retrieve the redirection location."
+    return $null
 }
 
 function Get-AkaMsLink-And-Version([string] $NormalizedChannel, [string] $NormalizedQuality, [bool] $Internal, [string] $ProductName, [string] $Architecture) {
