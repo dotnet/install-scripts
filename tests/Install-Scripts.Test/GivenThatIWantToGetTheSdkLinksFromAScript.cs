@@ -41,6 +41,32 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
+        [InlineData("NoFields.json", "STS")]
+        [InlineData("VersionOnly.json", "8.0.1xx")]
+        [InlineData("LatestPatch.json", "8.0.1xx")]
+        [InlineData("LatestFeature.json", "8.0")]
+        [InlineData("LatestMinor.json", "8.x")]
+        [InlineData("LatestMajor.json", "STS")]
+        [InlineData("Disable.json", "LTS", "8.0.100")]
+        public void WhenGlobalJsonFileIsPassedToInstallScripts(string filename, string channel, string version = "latest")
+        {
+            var installationScriptTestsJsonFile = Path.Combine(Environment.CurrentDirectory, "Assets", "GlobalJson", filename);
+
+            var args = new List<string> { "-verbose", "-dryrun", "-jsonfile", installationScriptTestsJsonFile };
+
+            var commandResult = CreateInstallCommand(args)
+                .CaptureStdOut()
+                .CaptureStdErr()
+                .Execute();
+
+            commandResult.Should().Pass();
+            commandResult.Should().NotHaveStdOutContaining("dryrun");
+            commandResult.Should().NotHaveStdOutContaining("jsonfile");
+            commandResult.Should().HaveStdOutContaining($"Normalized channel: '{channel}'.");
+            commandResult.Should().HaveStdOutContaining($"Version: '{version}'.");
+        }
+
+        [Theory]
         [InlineData("-nopath", "")]
         [InlineData("-verbose", "")]
         [InlineData("-azurefeed", "https://builds.dotnet.microsoft.com/dotnet")]
