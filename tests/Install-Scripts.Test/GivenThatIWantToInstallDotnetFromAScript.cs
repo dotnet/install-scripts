@@ -208,7 +208,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             }
             catch (UnauthorizedAccessException e)
             {
-                throw new Exception($"Failed to remove {_sdkInstallationDirectory}");
+                throw new Exception($"Failed to remove {_sdkInstallationDirectory}", e);
             }
         }
 
