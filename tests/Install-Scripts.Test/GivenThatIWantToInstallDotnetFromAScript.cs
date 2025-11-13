@@ -375,7 +375,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0.100-alpha.1.22054.9")]
         [InlineData("8.0.404")]
         [InlineData("9.0.100")]
-        [InlineData("10.0.100-preview.3.25201.16")]
+        [InlineData("10.0.100")]
         public void WhenInstallingASpecificVersionOfTheSdk(string version, string? effectiveVersion = null)
         {
             // Run install script to download and install.
@@ -405,7 +405,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0.0-alpha.1.21528.8")]
         [InlineData("8.0.11")]
         [InlineData("9.0.0")]
-        [InlineData("10.0.0-preview.3.25171.5")]
+        [InlineData("10.0.0")]
         public void WhenInstallingASpecificVersionOfDotnetRuntime(string version, string? effectiveVersion = null)
         {
             // Run install script to download and install.
@@ -435,7 +435,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0.0-alpha.1.21567.15")]
         [InlineData("8.0.11")]
         [InlineData("9.0.0")]
-        [InlineData("10.0.0-preview.3.25172.1")]
+        [InlineData("10.0.0")]
         public void WhenInstallingASpecificVersionOfAspNetCoreRuntime(string version, string? effectiveVersion = null)
         {
             // Run install script to download and install.
@@ -466,7 +466,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0.0-alpha.1.21472.1")]
         [InlineData("8.0.11")]
         [InlineData("9.0.0")]
-        [InlineData("10.0.0-preview.3.25174.1")]
+        [InlineData("10.0.0")]
         public void WhenInstallingASpecificVersionOfWindowsdesktopRuntime(string version)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -494,6 +494,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0.100-alpha.1.22054.9")]
         [InlineData("8.0.11", null, "aspnetcore")]
         [InlineData("9.0.0", null, "aspnetcore")]
+        [InlineData("10.0.0", null, "aspnetcore")]
         [InlineData("5.0.13-servicing.21552.32", "5.0.13", "aspnetcore")]
         [InlineData("6.0.0-preview.4.21176.7", null, "aspnetcore")]
         [InlineData("7.0.0-alpha.1.21567.15", null, "aspnetcore")]
