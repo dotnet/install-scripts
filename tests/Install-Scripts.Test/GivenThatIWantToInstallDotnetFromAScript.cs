@@ -31,7 +31,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("5.0", "5\\.0\\..*", Quality.None),
                 ("6.0", "6\\.0\\..*", Quality.Daily),
                 ("6.0", "6\\.0\\..*", Quality.None),
-                ("LTS", "8\\.0\\..*", Quality.None),
                 ("7.0", "7\\.0\\..*", Quality.None),
                 ("7.0", "7\\.0\\..*", Quality.Ga),
                 ("8.0", "8\\.0\\..*", Quality.None),
@@ -39,7 +38,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("STS", "9\\.0\\..*", Quality.None),
                 ("9.0", "9\\.0\\..*", Quality.None),
                 ("9.0", "9\\.0\\..*", Quality.Ga),
-                ("10.0", "10\\.0\\..*", Quality.Preview),
+                ("LTS", "10\\.0\\..*", Quality.None),
+                ("10.0", "10\\.0\\..*", Quality.None),
+                ("10.0", "10\\.0\\..*", Quality.Ga),
             };
 
         /// <summary>
@@ -62,7 +63,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("7.0", "7\\.0\\..*", Quality.None),
                 ("8.0", "8\\.0\\..*", Quality.None),
                 ("9.0", "9\\.0\\..*", Quality.None),
-                ("10.0", "10\\.0\\..*", Quality.Preview),
+                ("10.0", "10\\.0\\..*", Quality.None),
             };
 
         /// <summary>
