@@ -1796,7 +1796,6 @@ do
             echo "      -Quality"
             echo "          The possible values are: daily, preview, GA."
             echo "          Works only in combination with channel. Not applicable for STS and LTS channels and will be ignored if those channels are used." 
-            echo "          For SDK use channel in A.B.Cxx format. Using quality for SDK together with channel in A.B format is not supported." 
             echo "          Supported since 5.0 release." 
             echo "          Note: The version parameter overrides the channel parameter when any version other than 'latest' is used, and therefore overrides the quality."
             echo "  --internal,-Internal               Download internal builds. Requires providing credentials via --feed-credential parameter."

@@ -30,7 +30,6 @@
 .PARAMETER Quality
     Download the latest build of specified quality in the channel. The possible values are: daily, preview, GA.
     Works only in combination with channel. Not applicable for STS and LTS channels and will be ignored if those channels are used. 
-    For SDK use channel in A.B.Cxx format: using quality together with channel in A.B format is not supported.
     Supported since 5.0 release.
     Note: The version parameter overrides the channel parameter when any version other than 'latest' is used, and therefore overrides the quality.     
 .PARAMETER Version
