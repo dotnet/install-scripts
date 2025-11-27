@@ -1310,16 +1310,45 @@ get_download_link_from_aka_ms() {
     response="$(get_http_header $aka_ms_link $disable_feed_credential)"
 
     say_verbose "Received response: $response"
-    # Get results of all the redirects.
-    http_codes=$( echo "$response" | awk '$1 ~ /^HTTP/ {print $2}' )
-    # They all need to be 301, otherwise some links are broken (except for the last, which is not a redirect but 200 or 404).
-    broken_redirects=$( echo "$http_codes" | sed '$d' | grep -v '301' )
-    # The response may end without final code 2xx/4xx/5xx somehow, e.g. network restrictions on www.bing.com causes redirecting to bing.com fails with connection refused.
-    # In this case it should not exclude the last.
-    last_http_code=$(  echo "$http_codes" | tail -n 1 )
-    if ! [[ $last_http_code =~ ^(2|4|5)[0-9][0-9]$ ]]; then
-        broken_redirects=$( echo "$http_codes" | grep -v '301' )
+    # Get results of all the HTTP status codes in the response (one per line).
+    # strip CRs before parsing to avoid \r interfering with regex matches
+    local http_codes
+    http_codes=$( printf '%s' "$response" | tr -d '\r' | awk '$1 ~ /^HTTP/ {print $2}' )
+
+    # Find the index (line number) of the last terminal HTTP status code (2xx, 4xx, 5xx).
+    local last_terminal_idx
+    last_terminal_idx=$( printf '%s' "$http_codes" | awk '/^(2|4|5)[0-9][0-9]$/{idx=NR} END{ if(idx) print idx }' )
+
+    local redirect_candidates
+    if [[ -n "$last_terminal_idx" ]]; then
+        if [[ "$last_terminal_idx" -gt 1 ]]; then
+            # Candidate redirect codes are those that appear before the last terminal code.
+            redirect_candidates=$( printf '%s' "$http_codes" | awk -v n="$last_terminal_idx" 'NR < n {print}' )
+        else
+            redirect_candidates=""
+        fi
+
+        # Trim trailing 1xx/2xx entries from redirect_candidates that are likely proxy markers.
+        redirect_candidates=$( printf '%s' "$redirect_candidates" | awk '{
+            lines[NR] = $0
+        }
+        END {
+            last = NR
+            while (last > 0 && lines[last] ~ /^(1|2)[0-9][0-9]$/) last--
+            for (i = 1; i <= last; i++) print lines[i]
+        }' )
+
+    else
+        # No terminal code found — fall back to conservative behavior.
+        redirect_candidates="$http_codes"
     fi
+
+    # Any redirect candidate that is not '301' indicates a broken redirect chain.
+    local broken_redirects
+    broken_redirects=$( printf '%s' "$redirect_candidates" | grep -v '^301$' || true )
+
+    # Keep last_http_code for diagnostics
+    last_http_code=$( printf '%s' "$http_codes" | tail -n 1 )
 
     # All HTTP codes are 301 (Moved Permanently), the redirect link exists.
     if [[ -z "$broken_redirects" ]]; then
