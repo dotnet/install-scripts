@@ -185,7 +185,7 @@ function Measure-Action($name, $block) {
 
 function Get-Remote-File-Size($zipUri) {
     try {
-        $response = Invoke-WebRequest -Uri $zipUri -Method Head
+        $response = Invoke-WebRequest -UseBasicParsing -Uri $zipUri -Method Head
         $fileSize = $response.Headers["Content-Length"]
         if ((![string]::IsNullOrEmpty($fileSize))) {
             Say "Remote file $zipUri size is $fileSize bytes."
