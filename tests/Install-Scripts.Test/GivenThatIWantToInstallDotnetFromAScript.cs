@@ -41,6 +41,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("LTS", "10\\.0\\..*", Quality.None),
                 ("10.0", "10\\.0\\..*", Quality.None),
                 ("10.0", "10\\.0\\..*", Quality.Ga),
+                ("11.0", "11\\.0\\..*", Quality.Preview),
             };
 
         /// <summary>
@@ -64,6 +65,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("8.0", "8\\.0\\..*", Quality.None),
                 ("9.0", "9\\.0\\..*", Quality.None),
                 ("10.0", "10\\.0\\..*", Quality.None),
+                ("11.0", "11\\.0\\..*", Quality.Preview),
             };
 
         /// <summary>
@@ -87,7 +89,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("7.0.1xx", "7\\.0\\..*", Quality.Daily),
                 ("8.0.1xx", "8\\.0\\..*", Quality.Daily),
                 ("9.0.1xx", "9\\.0\\..*", Quality.Daily),
-                ("10.0.1xx", "10\\.0\\..*", Quality.Preview),
+                ("10.0.1xx", "10\\.0\\..*", Quality.Daily),
+                ("11.0.1xx", "11\\.0\\..*", Quality.Preview),
             };
 
         public static IEnumerable<object?[]> InstallSdkFromChannelTestCases
@@ -376,6 +379,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("8.0.404")]
         [InlineData("9.0.100")]
         [InlineData("10.0.100")]
+        [InlineData("11.0.100-preview.1.26104.118")]
         public void WhenInstallingASpecificVersionOfTheSdk(string version, string? effectiveVersion = null)
         {
             // Run install script to download and install.
@@ -406,6 +410,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("8.0.11")]
         [InlineData("9.0.0")]
         [InlineData("10.0.0")]
+        [InlineData("11.0.0-preview.1.26104.118")]
         public void WhenInstallingASpecificVersionOfDotnetRuntime(string version, string? effectiveVersion = null)
         {
             // Run install script to download and install.
@@ -436,6 +441,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("8.0.11")]
         [InlineData("9.0.0")]
         [InlineData("10.0.0")]
+        [InlineData("11.0.0-preview.1.26104.118")]
         public void WhenInstallingASpecificVersionOfAspNetCoreRuntime(string version, string? effectiveVersion = null)
         {
             // Run install script to download and install.
@@ -467,6 +473,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("8.0.11")]
         [InlineData("9.0.0")]
         [InlineData("10.0.0")]
+        [InlineData("11.0.0-preview.1.26104.118")]
         public void WhenInstallingASpecificVersionOfWindowsdesktopRuntime(string version)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
