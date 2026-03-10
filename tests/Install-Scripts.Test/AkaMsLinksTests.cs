@@ -38,6 +38,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("7.0", "daily", @"https://aka.ms/dotnet/7.0/daily/dotnet-sdk-")]
        [InlineData("8.0", "ga", @"https://aka.ms/dotnet/8.0/dotnet-sdk-")]
        [InlineData("9.0", "ga", @"https://aka.ms/dotnet/9.0/dotnet-sdk-")]
+       [InlineData("10.0", "ga", @"https://aka.ms/dotnet/10.0/dotnet-sdk-")]
        public void SDK_IntegrationTest(string channel, string quality, string expectedLink)
        {
            string expectedLinkPattern = Regex.Escape(expectedLink);
