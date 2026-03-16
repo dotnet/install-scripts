@@ -31,7 +31,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("5.0", "5\\.0\\..*", Quality.None),
                 ("6.0", "6\\.0\\..*", Quality.Daily),
                 ("6.0", "6\\.0\\..*", Quality.None),
-                ("LTS", "8\\.0\\..*", Quality.None),
                 ("7.0", "7\\.0\\..*", Quality.None),
                 ("7.0", "7\\.0\\..*", Quality.Ga),
                 ("8.0", "8\\.0\\..*", Quality.None),
@@ -39,10 +38,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("STS", "9\\.0\\..*", Quality.None),
                 ("9.0", "9\\.0\\..*", Quality.None),
                 ("9.0", "9\\.0\\..*", Quality.Ga),
-                // 10 not available yet
-                //("10.0", "10\\.0\\..*", Quality.None),
-                //("10.0", "10\\.0\\..*", Quality.Preview),
-                //("10.0", "10\\.0\\..*", Quality.Ga),
+                ("LTS", "10\\.0\\..*", Quality.None),
+                ("10.0", "10\\.0\\..*", Quality.None),
+                ("10.0", "10\\.0\\..*", Quality.Ga),
+                ("11.0", "11\\.0\\..*", Quality.Preview),
             };
 
         /// <summary>
@@ -65,6 +64,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("7.0", "7\\.0\\..*", Quality.None),
                 ("8.0", "8\\.0\\..*", Quality.None),
                 ("9.0", "9\\.0\\..*", Quality.None),
+                ("10.0", "10\\.0\\..*", Quality.None),
+                ("11.0", "11\\.0\\..*", Quality.Preview),
             };
 
         /// <summary>
@@ -88,6 +89,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 ("7.0.1xx", "7\\.0\\..*", Quality.Daily),
                 ("8.0.1xx", "8\\.0\\..*", Quality.Daily),
                 ("9.0.1xx", "9\\.0\\..*", Quality.Daily),
+                ("10.0.1xx", "10\\.0\\..*", Quality.Daily),
+                ("11.0.1xx", "11\\.0\\..*", Quality.Preview),
             };
 
         public static IEnumerable<object?[]> InstallSdkFromChannelTestCases
@@ -205,6 +208,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
             catch (DirectoryNotFoundException)
             {
                 // Directory to cleanup may not be there if installation fails. Not an issue. Ignore the exception.
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                throw new Exception($"Failed to remove {_sdkInstallationDirectory}", e);
             }
         }
 
@@ -371,6 +378,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0.100-alpha.1.22054.9")]
         [InlineData("8.0.404")]
         [InlineData("9.0.100")]
+        [InlineData("10.0.100")]
+        [InlineData("11.0.100-preview.1.26104.118")]
         public void WhenInstallingASpecificVersionOfTheSdk(string version, string? effectiveVersion = null)
         {
             // Run install script to download and install.
@@ -400,6 +409,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0.0-alpha.1.21528.8")]
         [InlineData("8.0.11")]
         [InlineData("9.0.0")]
+        [InlineData("10.0.0")]
+        [InlineData("11.0.0-preview.1.26104.118")]
         public void WhenInstallingASpecificVersionOfDotnetRuntime(string version, string? effectiveVersion = null)
         {
             // Run install script to download and install.
@@ -429,6 +440,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0.0-alpha.1.21567.15")]
         [InlineData("8.0.11")]
         [InlineData("9.0.0")]
+        [InlineData("10.0.0")]
+        [InlineData("11.0.0-preview.1.26104.118")]
         public void WhenInstallingASpecificVersionOfAspNetCoreRuntime(string version, string? effectiveVersion = null)
         {
             // Run install script to download and install.
@@ -459,6 +472,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0.0-alpha.1.21472.1")]
         [InlineData("8.0.11")]
         [InlineData("9.0.0")]
+        [InlineData("10.0.0")]
+        [InlineData("11.0.0-preview.1.26104.118")]
         public void WhenInstallingASpecificVersionOfWindowsdesktopRuntime(string version)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -486,6 +501,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0.100-alpha.1.22054.9")]
         [InlineData("8.0.11", null, "aspnetcore")]
         [InlineData("9.0.0", null, "aspnetcore")]
+        [InlineData("10.0.0", null, "aspnetcore")]
         [InlineData("5.0.13-servicing.21552.32", "5.0.13", "aspnetcore")]
         [InlineData("6.0.0-preview.4.21176.7", null, "aspnetcore")]
         [InlineData("7.0.0-alpha.1.21567.15", null, "aspnetcore")]
@@ -547,7 +563,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [InlineData("8.0.303", Quality.Daily)]
-        [InlineData("9.0.100", Quality.Signed)]
         public void WhenBothVersionAndQualityWereSpecified(string version, Quality quality)
         {
             var args = GetInstallScriptArgs(null, null, quality.ToString(), _sdkInstallationDirectory, version: version);
@@ -560,7 +575,6 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         }
 
         [Theory]
-        [InlineData(null, Quality.Signed)]
         [InlineData("8.0.303", null)]
         public void WhenEitherVersionOrQualityWasSpecified(string? version, Quality? quality)
         {

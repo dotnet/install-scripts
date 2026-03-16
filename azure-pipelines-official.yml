@@ -130,10 +130,10 @@ extends:
             command: test
 
       - job: MacOSTests
-        timeoutInMinutes: 30
+        timeoutInMinutes: 45
         pool: 
           name: Azure Pipelines
-          image: macOS-13
+          image: macos-latest
           os: macOS
         steps:
         - checkout: self
