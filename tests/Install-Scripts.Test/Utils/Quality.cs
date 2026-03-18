@@ -9,10 +9,8 @@ namespace Install_Scripts.Test.Utils
     {
         None = 0,
         Daily = 1,
-        Signed = 2,
-        Validated = 4,
         Preview = 8,
         Ga = 16,
-        All = Daily | Signed | Validated | Preview | Ga,
+        All = Daily | Preview | Ga,
     }
 }

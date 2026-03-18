@@ -55,13 +55,13 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
-            //  Standard 'dryrun' criterium
+            //  Standard 'dryrun' criterion
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
             commandResult.Should().HaveStdOutMatching(@"URL\s#0\s-\s(legacy|primary|aka\.ms):\shttps://");
 
-            //  Non-dynamic input parameters should always be on the ouput line
+            //  Non-dynamic input parameters should always be on the output line
             commandResult.Should().HaveStdOutContainingIgnoreCase(parameter);
         }
 
@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
-            //  Standard 'dryrun' criterium
+            //  Standard 'dryrun' criterion
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
@@ -108,6 +108,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("8.0", "dotnet", true)]
         [InlineData("9.0", "dotnet")]
         [InlineData("9.0", "dotnet", true)]
+        [InlineData("10.0", "dotnet")]
+        [InlineData("10.0", "dotnet", true)]
+        [InlineData("11.0", "dotnet")]
+        [InlineData("11.0", "dotnet", true)]
         [InlineData("STS", "dotnet")]
         [InlineData("LTS", "dotnet")]
         [InlineData("master", "dotnet")]
@@ -135,6 +139,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("8.0", "aspnetcore", true)]
         [InlineData("9.0", "aspnetcore")]
         [InlineData("9.0", "aspnetcore", true)]
+        [InlineData("10.0", "aspnetcore")]
+        [InlineData("10.0", "aspnetcore", true)]
+        [InlineData("11.0", "aspnetcore")]
+        [InlineData("11.0", "aspnetcore", true)]
         [InlineData("master", "aspnetcore")]
         [InlineData("release/2.1", "aspnetcore")]
         [InlineData("release/2.2", "aspnetcore")]
@@ -156,6 +164,10 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("8.0", "windowsdesktop", true)]
         [InlineData("9.0", "windowsdesktop")]
         [InlineData("9.0", "windowsdesktop", true)]
+        [InlineData("10.0", "windowsdesktop")]
+        [InlineData("10.0", "windowsdesktop", true)]
+        [InlineData("11.0", "windowsdesktop")]
+        [InlineData("11.0", "windowsdesktop", true)]
         [InlineData("master", "windowsdesktop")]
         [InlineData("master", "windowsdesktop", true)]
         public void WhenChannelResolvesToASpecificRuntimeVersion(string channel, string runtimeType, bool useCustomFeedCredential = false)
@@ -177,7 +189,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
-            //  Standard 'dryrun' criterium
+            //  Standard 'dryrun' criterion
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
@@ -205,6 +217,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0")]
         [InlineData("8.0")]
         [InlineData("9.0")]
+        [InlineData("10.0")]
+        [InlineData("11.0")]
         [InlineData("STS")]
         [InlineData("LTS")]
         [InlineData("master")]
@@ -254,7 +268,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
-            //  Standard 'dryrun' criterium
+            //  Standard 'dryrun' criterion
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdErr();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
@@ -298,7 +312,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
 
-            //  Standard 'dryrun' criterium
+            //  Standard 'dryrun' criterion
             commandResult.Should().Fail();
             commandResult.Should().HaveStdErrContaining("Failed to resolve the exact version number.");
             commandResult.Should().NotHaveStdOutContaining("Repeatable invocation:");
@@ -311,7 +325,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             var commandResult = TestUtils.CreateInstallCommand(new[] { "-DryRun", "-i", "installation_path" }).ExecuteInstallation();
 
-            //  Standard 'dryrun' criterium
+            //  Standard 'dryrun' criterion
             commandResult.Should().Pass();
             commandResult.Should().NotHaveStdOutContaining("dryrun");
             commandResult.Should().HaveStdOutContaining("Repeatable invocation:");
@@ -319,7 +333,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             // -i shouldn't be considered ambiguous on powershell.
             commandResult.Should().NotHaveStdOutContaining("the parameter name 'i' is ambiguous");
-            // bash doesn't give error on ambiguity. The first occurance of the alias wins.
+            // bash doesn't give error on ambiguity. The first occurrence of the alias wins.
 
             //  -i should translate to -InstallDir
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -338,6 +352,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("6.0.100", null)]
         [InlineData("8.0.303", null)]
         [InlineData("9.0.100", null)]
+        [InlineData("10.0.100", null)]
         public async Task WhenAnExactVersionIsPassedToBash(string version, string runtime)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -410,6 +425,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("6.0.100", null)]
         [InlineData("8.0.303", null)]
         [InlineData("9.0.100", null)]
+        [InlineData("10.0.100", null)]
         public async Task WhenAnExactVersionIsPassedToPowershell(string version, string? runtime)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

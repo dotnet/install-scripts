@@ -28,9 +28,8 @@
     Warning: Value "Current" is deprecated for the Channel parameter. Use "STS" instead.
     Note: The version parameter overrides the channel parameter when any version other than 'latest' is used.
 .PARAMETER Quality
-    Download the latest build of specified quality in the channel. The possible values are: daily, signed, validated, preview, GA.
+    Download the latest build of specified quality in the channel. The possible values are: daily, preview, GA.
     Works only in combination with channel. Not applicable for STS and LTS channels and will be ignored if those channels are used. 
-    For SDK use channel in A.B.Cxx format: using quality together with channel in A.B format is not supported.
     Supported since 5.0 release.
     Note: The version parameter overrides the channel parameter when any version other than 'latest' is used, and therefore overrides the quality.     
 .PARAMETER Version
@@ -64,7 +63,7 @@
 .PARAMETER DryRun
     If set it will not perform installation but instead display what command line to use to consistently install
     currently requested version of dotnet cli. In example if you specify version 'latest' it will display a link
-    with specific version so that this command can be used deterministicly in a build script.
+    with specific version so that this command can be used deterministically in a build script.
     It also displays binaries location if you prefer to install or download it yourself.
 .PARAMETER NoPath
     By default this script will set environment variable PATH for the current process to the binaries folder inside installation folder.
@@ -92,7 +91,7 @@
     Determines the SDK version from a user specified global.json file
     Note: global.json must have a value for 'SDK:Version'
 .PARAMETER DownloadTimeout
-    Determines timeout duration in seconds for dowloading of the SDK file
+    Determines timeout duration in seconds for downloading of the SDK file
     Default: 1200 seconds (20 minutes)
 .PARAMETER KeepZip
     If set, downloaded file is kept
@@ -160,7 +159,7 @@ function Say-Warning($str) {
 # Use this function to show a human-readable comment along with an exception.
 function Say-Error($str) {
     try {
-        # Write-Error is quite oververbose for the purpose of the function, let's write one line with error style settings.
+        # Write-Error is quite verbose for the purpose of the function, let's write one line with error style settings.
         $Host.UI.WriteErrorLine("dotnet-install: $str")
     }
     catch {
@@ -186,7 +185,7 @@ function Measure-Action($name, $block) {
 
 function Get-Remote-File-Size($zipUri) {
     try {
-        $response = Invoke-WebRequest -Uri $zipUri -Method Head
+        $response = Invoke-WebRequest -UseBasicParsing -Uri $zipUri -Method Head
         $fileSize = $response.Headers["Content-Length"]
         if ((![string]::IsNullOrEmpty($fileSize))) {
             Say "Remote file $zipUri size is $fileSize bytes."
@@ -300,10 +299,10 @@ function Get-NormalizedQuality([string]$Quality) {
     }
 
     switch ($Quality) {
-        { @("daily", "signed", "validated", "preview") -contains $_ } { return $Quality.ToLowerInvariant() }
+        { @("daily", "preview") -contains $_ } { return $Quality.ToLowerInvariant() }
         #ga quality is available without specifying quality, so normalizing it to empty
         { $_ -eq "ga" } { return "" }
-        default { throw "'$Quality' is not a supported value for -Quality option. Supported values are: daily, signed, validated, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues." }
+        default { throw "'$Quality' is not a supported value for -Quality option. Supported values are: daily, preview, ga. If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues." }
     }
 }
 
