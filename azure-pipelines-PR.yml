@@ -34,7 +34,7 @@ stages:
           displayName: Run Tests
           inputs: 
             command: test
-            testRunTitle: Windows
+            testRunTitle: $(Agent.JobName)
 
   - job: Linux
     timeoutInMinutes: 30
@@ -56,7 +56,7 @@ stages:
       displayName: Run Tests
       inputs: 
         command: test
-        testRunTitle: Linux
+        testRunTitle: $(Agent.JobName)
 
   - job: MacOS
     timeoutInMinutes: 45
@@ -77,4 +77,4 @@ stages:
       displayName: Run Tests
       inputs: 
         command: test
-        testRunTitle: MacOS
+        testRunTitle: $(Agent.JobName)

@@ -85,7 +85,7 @@ extends:
               displayName: Run Tests
               inputs: 
                 command: test
-                testRunTitle: Windows
+                testRunTitle: $(Agent.JobName)
             - script: eng\common\cibuild.cmd
                 -configuration Release
                 -projects src/Signing/SignScripts.csproj
@@ -125,7 +125,7 @@ extends:
               displayName: Run Tests
               inputs: 
                 command: test
-                testRunTitle: Linux
+                testRunTitle: $(Agent.JobName)
 
           - job: MacOS
             timeoutInMinutes: 45
@@ -148,7 +148,7 @@ extends:
               displayName: Run Tests
               inputs: 
                 command: test
-                testRunTitle: MacOS
+                testRunTitle: $(Agent.JobName)
 
     - template: eng\common\templates-official\post-build\post-build.yml@self
       parameters:
