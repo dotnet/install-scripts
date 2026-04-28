@@ -16,8 +16,9 @@ stages:
       workspace:
         clean: all
       jobs:
-      - job: Windows_NT
-        timeoutInMinutes: 90
+      - job: Windows_NT_Validation
+        displayName: Windows Validation Tests
+        timeoutInMinutes: 30
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals Windows.vs2022.amd64.open
@@ -35,9 +36,35 @@ stages:
           inputs:
             version: 8.x
         - task: DotNetCoreCLI@2
-          displayName: Run Tests
-          inputs: 
+          displayName: Run Validation Tests
+          inputs:
             command: test
+            arguments: '--filter "FullyQualifiedName~GivenThatIWantToGetTheSdkLinksFromAScript|FullyQualifiedName~AkaMsLinksTests"'
+
+      - job: Windows_NT_Installation
+        displayName: Windows Installation Tests
+        timeoutInMinutes: 60
+        pool:
+          name: NetCore-Public
+          demands: ImageOverride -equals Windows.vs2022.amd64.open
+
+        strategy:
+          matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+        preSteps:
+        - checkout: self
+          clean: true
+        steps:
+        - task: UseDotNet@2
+          displayName: Get .NET Core SDK
+          inputs:
+            version: 8.x
+        - task: DotNetCoreCLI@2
+          displayName: Run Installation Tests
+          inputs:
+            command: test
+            arguments: '--filter "FullyQualifiedName~GivenThatIWantToInstallDotnetFromAScript|FullyQualifiedName~GivenThatIWantToInstallDotnetRuntimeFromAScript"'
 
   - job: LinuxTests
     timeoutInMinutes: 30
@@ -79,3 +106,4 @@ stages:
       displayName: Run Tests
       inputs: 
         command: test
+

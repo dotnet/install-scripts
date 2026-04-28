@@ -47,7 +47,11 @@ namespace Install_Scripts.Test.Utils
             return new CommandResult(startInfo, process.ExitCode, output, errors);
         }
 
-        private string GetProcessName() => IsWindows ? "powershell.exe" : @"/bin/bash";
+        // pwsh (PowerShell Core 7+) is used instead of powershell.exe (Windows PowerShell 5.x) because
+        // it has significantly faster startup time, reducing overhead across the many test invocations.
+        // PowerShell Core is pre-installed on all modern Azure Pipelines Windows agents and is also
+        // the recommended shell for cross-platform automation.
+        private string GetProcessName() => IsWindows ? "pwsh" : @"/bin/bash";
 
         private string GetDotnetExecutablePath(string? dotnetPath) => string.IsNullOrEmpty(dotnetPath) ? string.Empty : $"{Path.Combine(dotnetPath!, "dotnet")}";
 
