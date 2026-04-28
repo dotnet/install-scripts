@@ -104,51 +104,51 @@ extends:
                 arguments: -task SigningValidation -restore -msbuildEngine vs 
                   /p:InputFiles='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/**/*.ps1'
                   /p:PackageBasePath='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/'
-          - job: Linux
-            timeoutInMinutes: 30
-            pool:
-              name: netcore1espool-internal
-              image: 1es-ubuntu-2204
-              os: linux
-            steps:
-            - checkout: self
-              displayName: Checkout Self
-              clean: true
-            - task: UseDotNet@2
-              displayName: Get .NET Core SDK
-              inputs:
-                version: 8.x
-            - script: |
-                chmod u+x src/dotnet-install.sh
-              displayName: 'Add permission to execute'
-            - task: DotNetCoreCLI@2
-              displayName: Run Tests
-              inputs: 
-                command: test
-                testRunTitle: $(Agent.JobName)
+      - job: Linux
+        timeoutInMinutes: 30
+        pool:
+          name: netcore1espool-internal
+          image: 1es-ubuntu-2204
+          os: linux
+        steps:
+        - checkout: self
+          displayName: Checkout Self
+          clean: true
+        - task: UseDotNet@2
+          displayName: Get .NET Core SDK
+          inputs:
+            version: 8.x
+        - script: |
+            chmod u+x src/dotnet-install.sh
+          displayName: 'Add permission to execute'
+        - task: DotNetCoreCLI@2
+          displayName: Run Tests
+          inputs: 
+            command: test
+            testRunTitle: $(Agent.JobName)
 
-          - job: MacOS
-            timeoutInMinutes: 45
-            pool: 
-              name: Azure Pipelines
-              image: macos-latest
-              os: macOS
-            steps:
-            - checkout: self
-              displayName: Checkout Self
-              clean: true
-            - task: UseDotNet@2
-              displayName: Get .NET Core SDK
-              inputs:
-                version: 8.x
-            - script: |
-                chmod u+x src/dotnet-install.sh
-              displayName: 'Add permission to execute'
-            - task: DotNetCoreCLI@2
-              displayName: Run Tests
-              inputs: 
-                command: test
-                testRunTitle: $(Agent.JobName)
+      - job: MacOS
+        timeoutInMinutes: 45
+        pool: 
+          name: Azure Pipelines
+          image: macos-latest
+          os: macOS
+        steps:
+        - checkout: self
+          displayName: Checkout Self
+          clean: true
+        - task: UseDotNet@2
+          displayName: Get .NET Core SDK
+          inputs:
+            version: 8.x
+        - script: |
+            chmod u+x src/dotnet-install.sh
+          displayName: 'Add permission to execute'
+        - task: DotNetCoreCLI@2
+          displayName: Run Tests
+          inputs: 
+            command: test
+            testRunTitle: $(Agent.JobName)
 
     - template: eng\common\templates-official\post-build\post-build.yml@self
       parameters:
