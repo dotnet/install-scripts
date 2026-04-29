@@ -24,7 +24,7 @@ stages:
           demands: ImageOverride -equals Windows.vs2022.amd64.open
 
         variables:
-          _BuildConfig: Debug
+        - _BuildConfig: Debug
 
         preSteps:
         - checkout: self
