@@ -172,7 +172,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("master", "windowsdesktop", true)]
         public void WhenChannelResolvesToASpecificRuntimeVersion(string channel, string runtimeType, bool useCustomFeedCredential = false)
         {
-            Skip.If(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtimeType == "windowsdesktop",
+            Assert.SkipWhen(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtimeType == "windowsdesktop",
                 "Do not run windowsdesktop tests on non-Windows environment.");
 
             var args = new List<string> { "-dryrun", "-channel", channel, "-runtime", runtimeType };
@@ -287,7 +287,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("3.1.10", "Runtime")]
         public void CanResolveCorrectLocationBasedOnVersion(string version, string location)
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
                 "Do not run windowsdesktop tests on non-Windows environment.");
 
             string expectedLinkLog = $"Constructed primary named payload URL: {Environment.NewLine}https://builds.dotnet.microsoft.com/dotnet/{location}/{version}";
@@ -351,7 +351,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("10.0.100", null)]
         public async Task WhenAnExactVersionIsPassedToBash(string version, string? runtime)
         {
-            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+            Assert.SkipWhen(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
                 "Do not run bash tests on Windows environment.");
 
             string[] args;
@@ -386,7 +386,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [Fact]
         public async Task WhenMacosIsPassedToBash()
         {
-            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+            Assert.SkipWhen(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
                 "Do not run bash tests on Windows environment.");
 
             string[] args = new string[] {
@@ -420,7 +420,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("10.0.100", null)]
         public async Task WhenAnExactVersionIsPassedToPowershell(string version, string? runtime)
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
                 "Do not run PowerShell tests on non-Windows environment.");
 
             string[] args;
@@ -451,7 +451,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [Fact]
         public void ShowScriptPurposeBlurbBash()
         {
-            Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+            Assert.SkipWhen(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
                 "Do not run bash tests on Windows environment.");
 
             const string IntroBlurb = @"
@@ -478,7 +478,7 @@ dotnet-install.sh is a simple command line interface for obtaining dotnet cli.
         [Fact]
         public void ShowScriptPurposeBlurbBashPowershellVerbose()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
                 "Do not run PowerShell tests on non-Windows environment.");
 
 

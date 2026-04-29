@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("7.0", "windowsdesktop", "daily", @"https://aka.ms/dotnet/7.0/daily/windowsdesktop-runtime-")]
        public void Runtime_IntegrationTest(string channel, string runtime, string quality, string expectedLink)
        {
-           Skip.If(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop",
+           Assert.SkipWhen(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop",
                "Do not run windowsdesktop tests on non-Windows environment.");
 
            string expectedLinkPattern = Regex.Escape(expectedLink);
@@ -243,7 +243,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("9.0", "windowsdesktop", "ga", true, @"https://aka.ms/dotnet/internal/9.0/windowsdesktop-runtime-")]
        public void LinkCanBeCreatedForGivenRuntime(string channel, string runtime, string? quality, bool isInternal, string expectedLink)
        {
-           Skip.If(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop",
+           Assert.SkipWhen(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop",
                "Do not run windowsdesktop tests on non-Windows environment.");
 
            string expectedLinkPattern = Regex.Escape(expectedLink);
@@ -292,7 +292,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("LTS", "windowsdesktop", "preview", @"https://aka.ms/dotnet/LTS/windowsdesktop-runtime-")]
        public void QualityIsSkippedForLTSAndCurrentChannel(string channel, string? runtime, string quality, string expectedLink)
        {
-           Skip.If(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop",
+           Assert.SkipWhen(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop",
                "Do not run windowsdesktop tests on non-Windows environment.");
 
            string expectedLinkPattern = Regex.Escape(expectedLink);
@@ -328,7 +328,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("Fake", "windowsdesktop", "daily")]
        public void NoFallbackIfQualityIsGiven(string channel, string? runtime, string quality)
        {
-           Skip.If(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop",
+           Assert.SkipWhen(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop",
                "Do not run windowsdesktop tests on non-Windows environment.");
 
            var args = new List<string> { "-dryrun", "-channel", channel, "-verbose", "-quality", quality };
