@@ -80,7 +80,7 @@ extends:
             - task: UseDotNet@2
               displayName: Get .NET Core SDK
               inputs:
-                version: 8.x
+                version: 10.x
             - task: DotNetCoreCLI@2
               displayName: Run Tests
               inputs: 
@@ -117,7 +117,7 @@ extends:
         - task: UseDotNet@2
           displayName: Get .NET Core SDK
           inputs:
-            version: 8.x
+            version: 10.x
         - script: |
             chmod u+x src/dotnet-install.sh
           displayName: 'Add permission to execute'
@@ -140,7 +140,7 @@ extends:
         - task: UseDotNet@2
           displayName: Get .NET Core SDK
           inputs:
-            version: 8.x
+            version: 10.x
         - script: |
             chmod u+x src/dotnet-install.sh
           displayName: 'Add permission to execute'
