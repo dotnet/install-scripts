@@ -16,17 +16,12 @@ stages:
       workspace:
         clean: all
       jobs:
-      - job: Windows_NT_Validation
-        displayName: Windows Validation Tests
+      - job: Windows
         timeoutInMinutes: 30
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals Windows.vs2022.amd64.open
 
-        strategy:
-          matrix:
-              Build_Debug:
-                _BuildConfig: Debug
         preSteps:
         - checkout: self
           clean: true
@@ -65,8 +60,8 @@ stages:
           inputs:
             command: test
             arguments: '--filter "FullyQualifiedName~GivenThatIWantToInstallDotnetFromAScript|FullyQualifiedName~GivenThatIWantToInstallDotnetRuntimeFromAScript"'
-
-  - job: LinuxTests
+            testRunTitle: $(Agent.JobName)
+  - job: Linux
     timeoutInMinutes: 30
     pool:
       name: NetCore-Public
@@ -86,8 +81,9 @@ stages:
       displayName: Run Tests
       inputs: 
         command: test
+        testRunTitle: $(Agent.JobName)
 
-  - job: MacOSTests
+  - job: MacOS
     timeoutInMinutes: 45
     pool: 
       vmImage: 'macOS-latest'
@@ -106,4 +102,4 @@ stages:
       displayName: Run Tests
       inputs: 
         command: test
-
+        testRunTitle: $(Agent.JobName)

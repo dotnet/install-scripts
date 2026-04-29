@@ -66,16 +66,12 @@ extends:
           workspace:
             clean: all
           jobs:
-          - job: Windows_NT
+          - job: Windows
             timeoutInMinutes: 90
             pool:
               name: netcore1espool-internal
               image: 1es-windows-2022
               os: windows
-            strategy:
-              matrix:
-                  Build_Release:
-                    _BuildConfig: Release
 
             preSteps:
             - checkout: self
@@ -89,8 +85,9 @@ extends:
               displayName: Run Tests
               inputs: 
                 command: test
+                testRunTitle: $(Agent.JobName)
             - script: eng\common\cibuild.cmd
-                -configuration $(_BuildConfig)
+                -configuration Release
                 -projects src/Signing/SignScripts.csproj
                 -prepareMachine
                 $(_InternalBuildArgs)
@@ -107,7 +104,7 @@ extends:
                 arguments: -task SigningValidation -restore -msbuildEngine vs 
                   /p:InputFiles='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/**/*.ps1'
                   /p:PackageBasePath='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/'
-      - job: LinuxTests
+      - job: Linux
         timeoutInMinutes: 30
         pool:
           name: netcore1espool-internal
@@ -128,8 +125,9 @@ extends:
           displayName: Run Tests
           inputs: 
             command: test
+            testRunTitle: $(Agent.JobName)
 
-      - job: MacOSTests
+      - job: MacOS
         timeoutInMinutes: 45
         pool: 
           name: Azure Pipelines
@@ -150,6 +148,7 @@ extends:
           displayName: Run Tests
           inputs: 
             command: test
+            testRunTitle: $(Agent.JobName)
 
     - template: eng\common\templates-official\post-build\post-build.yml@self
       parameters:
