@@ -270,12 +270,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingAspNetCoreRuntime(string channel, string? quality, string versionRegex)
         {
-            if (channel == "release/3.0"
-                || channel == "release/3.1")
-            {
-                // These scenarios are broken.
-                return;
-            }
+            Skip.If(channel == "release/3.0" || channel == "release/3.1",
+                "These scenarios are broken.");
 
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, "aspnetcore", quality, _sdkInstallationDirectory);
@@ -304,11 +300,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         public void WhenInstallingWindowsdesktopRuntime(string channel, string? quality, string versionRegex)
 #pragma warning restore xUnit1026
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Don't install windowsdesktop if not on Windows.
-                return;
-            }
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+                "Don't install windowsdesktop if not on Windows.");
 
             List<Regex> exclusions = new List<Regex>()
             {
@@ -319,11 +312,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 new Regex("6.0-preview2"), // Broken scenario.
             };
 
-            if (exclusions.Any(e => e.IsMatch(channel)))
-            {
-                // Test is excluded.
-                return;
-            }
+            Skip.If(exclusions.Any(e => e.IsMatch(channel)), "Test is excluded.");
 
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, "windowsdesktop", quality, _sdkInstallationDirectory);
@@ -482,11 +471,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("11.0.0-preview.1.26104.118")]
         public void WhenInstallingASpecificVersionOfWindowsdesktopRuntime(string version)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Don't install windowsdesktop if not on Windows.
-                return;
-            }
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+                "Don't install windowsdesktop if not on Windows.");
 
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel: null, "windowsdesktop", quality: null, _sdkInstallationDirectory, version: version);
@@ -518,11 +504,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0.0-alpha.1.21472.1", null, "windowsdesktop")]
         public void WhenInstallingAnAlreadyInstalledVersion(string version, string? effectiveVersion = null, string? runtime = null)
         {
-            if (runtime == "windowsdesktop" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Don't install windowsdesktop if not on Windows.
-                return;
-            }
+            Skip.If(runtime == "windowsdesktop" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+                "Don't install windowsdesktop if not on Windows.");
 
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel: null, runtime, quality: null, _sdkInstallationDirectory, version: version);

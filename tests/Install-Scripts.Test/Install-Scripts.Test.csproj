@@ -6,6 +6,7 @@
     <IsPackable>false</IsPackable>
     <IsUnitTestProject>true</IsUnitTestProject>
     <IsTestProject>true</IsTestProject>
+    <TestRunnerName>XUnitV3</TestRunnerName>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -18,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="AwesomeAssertions" Version="8.0.2" />
-    <PackageReference Include="Verify.Xunit" Version="19.10.0" />
+    <PackageReference Include="Verify.XunitV3" Version="28.12.0" />
     <PackageReference Include="coverlet.collector" Version="1.3.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
