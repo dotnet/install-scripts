@@ -174,6 +174,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             Skip.If(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtimeType == "windowsdesktop",
                 "Do not run windowsdesktop tests on non-Windows environment.");
+
             var args = new List<string> { "-dryrun", "-channel", channel, "-runtime", runtimeType };
 
             string? feedCredentials = default;
@@ -288,6 +289,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
                 "Do not run windowsdesktop tests on non-Windows environment.");
+
             string expectedLinkLog = $"Constructed primary named payload URL: {Environment.NewLine}https://builds.dotnet.microsoft.com/dotnet/{location}/{version}";
             var args = new string[] { "-version", version, "-runtime", "windowsdesktop", "-verbose", "-dryrun" };
             var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
@@ -351,6 +353,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
                 "Do not run bash tests on Windows environment.");
+
             string[] args;
 
             if (string.IsNullOrWhiteSpace(runtime))
@@ -385,6 +388,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             Skip.If(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
                 "Do not run bash tests on Windows environment.");
+
             string[] args = new string[] {
                     "--os", "macos",
                     "-installdir", "dotnet-sdk",
@@ -418,6 +422,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
                 "Do not run PowerShell tests on non-Windows environment.");
+
             string[] args;
 
             if (string.IsNullOrWhiteSpace(runtime))
