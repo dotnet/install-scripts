@@ -77,7 +77,7 @@ extends:
             - checkout: self
               clean: true
             steps:
-            - script: Build.cmd --test
+            - script: Build.cmd -test
               displayName: Run Tests
             - script: eng\common\cibuild.cmd
                 -configuration Release
