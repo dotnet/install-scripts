@@ -5,11 +5,19 @@
     <RootNamespace>Install_Scripts.Test</RootNamespace>
     <IsPackable>false</IsPackable>
     <Nullable>enable</Nullable>
+    <!-- Suppress conflicts with implicit test package references added by the Helix SDK during publish -->
+    <NoWarn>$(NoWarn);NETSDK1023;xUnit1026</NoWarn>
   </PropertyGroup>
 
 
   <ItemGroup>
     <Content Include="Assets\*.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Assets\*.verified.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="xunit.runner.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -17,10 +17,14 @@ stages:
         clean: all
       jobs:
       - job: Windows
-        timeoutInMinutes: 90
+        displayName: Tests (Helix)
+        timeoutInMinutes: 60
         pool:
           name: NetCore-Public
           demands: ImageOverride -equals Windows.vs2022.amd64.open
+
+        variables:
+        - _BuildConfig: Debug
 
         preSteps:
         - checkout: self
@@ -30,51 +34,22 @@ stages:
           displayName: Get .NET Core SDK
           inputs:
             version: 8.x
-        - task: DotNetCoreCLI@2
-          displayName: Run Tests
-          inputs: 
-            command: test
-            testRunTitle: $(Agent.JobName)
-
-  - job: Linux
-    timeoutInMinutes: 30
-    pool:
-      name: NetCore-Public
-      demands: ImageOverride -equals build.ubuntu.2204.amd64.open
-    steps:
-    - checkout: self
-      displayName: Checkout Self
-      clean: true
-    - task: UseDotNet@2
-      displayName: Get .NET Core SDK
-      inputs:
-        version: 8.x
-    - script: |
-        chmod u+x src/dotnet-install.sh
-      displayName: 'Add permission to execute'
-    - task: DotNetCoreCLI@2
-      displayName: Run Tests
-      inputs: 
-        command: test
-        testRunTitle: $(Agent.JobName)
-
-  - job: MacOS
-    timeoutInMinutes: 45
-    pool: 
-      vmImage: 'macOS-latest'
-    steps:
-    - checkout: self
-      displayName: Checkout Self
-      clean: true
-    - task: UseDotNet@2
-      displayName: Get .NET Core SDK
-      inputs:
-        version: 8.x
-    - script: |
-        chmod u+x src/dotnet-install.sh
-      displayName: 'Add permission to execute'
-    - task: DotNetCoreCLI@2
-      displayName: Run Tests
-      inputs: 
-        command: test
-        testRunTitle: $(Agent.JobName)
+        - powershell: |
+            $dest = "$(Build.StagingDirectory)\helix-payload\src"
+            New-Item -ItemType Directory -Path $dest -Force | Out-Null
+            Copy-Item -Path "$(Build.SourcesDirectory)\src\*" -Destination $dest -Recurse
+          displayName: Prepare Helix Correlation Payload
+        - template: /eng/common/templates/steps/send-to-helix.yml
+          parameters:
+            HelixSource: pr/dotnet/install-scripts/$(Build.SourceBranch)
+            HelixTargetQueues: Windows.10.Amd64.Open;Ubuntu.2204.Amd64.Open;OSX.15.ARM64.Open
+            XUnitProjects: $(Build.SourcesDirectory)\tests\Install-Scripts.Test\Install-Scripts.Test.csproj
+            XUnitPublishTargetFramework: net8.0
+            XUnitRuntimeTargetFramework: netcoreapp2.0
+            XUnitRunnerVersion: 2.4.2
+            XUnitWorkItemTimeout: '00:30:00'
+            IncludeDotNetCli: true
+            DotNetCliPackageType: sdk
+            DotNetCliVersion: 8.0.126
+            CorrelationPayloadDirectory: $(Build.StagingDirectory)\helix-payload
+            Creator: install-scripts

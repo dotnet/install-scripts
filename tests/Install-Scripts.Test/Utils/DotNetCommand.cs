@@ -20,7 +20,21 @@ namespace Install_Scripts.Test.Utils
 
         private readonly IEnumerable<string> _scriptArgs = args;
 
-        internal CommandResult ExecuteInstallation() => RunProcess(SetupScriptsExecutionArgs());
+        internal CommandResult ExecuteInstallation()
+        {
+            if (!IsWindows)
+            {
+                string scriptPath = GetInstallScriptPath();
+                if (File.Exists(scriptPath))
+                {
+                    // Ensure the script is executable (e.g. on Helix where the
+                    // correlation payload may not preserve Unix permissions).
+                    Process.Start("chmod", $"+x {scriptPath}")?.WaitForExit();
+                }
+            }
+
+            return RunProcess(SetupScriptsExecutionArgs());
+        }
 
         internal CommandResult ExecuteDotnetCommand(string dotnetPath) => RunProcess(SetupDotnetExecutionArgs(dotnetPath));
 
@@ -47,7 +61,11 @@ namespace Install_Scripts.Test.Utils
             return new CommandResult(startInfo, process.ExitCode, output, errors);
         }
 
-        private string GetProcessName() => IsWindows ? "powershell.exe" : @"/bin/bash";
+        // pwsh (PowerShell Core 7+) is used instead of powershell.exe (Windows PowerShell 5.x) because
+        // it has significantly faster startup time, reducing overhead across the many test invocations.
+        // PowerShell Core is pre-installed on all modern Azure Pipelines Windows agents and is also
+        // the recommended shell for cross-platform automation.
+        private string GetProcessName() => IsWindows ? "powershell" : @"/bin/bash";
 
         private string GetDotnetExecutablePath(string? dotnetPath) => string.IsNullOrEmpty(dotnetPath) ? string.Empty : $"{Path.Combine(dotnetPath!, "dotnet")}";
 
@@ -55,10 +73,15 @@ namespace Install_Scripts.Test.Utils
         /// Sets up the args required for executing the .NET Core installation script.
         /// </summary>
         /// <returns>The args required for script execution.</returns>
-        private string SetupScriptsExecutionArgs()
+        private static string GetInstallScriptPath()
         {
             string scriptExtension = IsWindows ? "ps1" : "sh";
-            string scriptPath = Path.Combine(Path.Combine(GetRepoRoot() ?? string.Empty, "src", $"{ScriptName}.{scriptExtension}"));
+            return Path.Combine(GetRepoRoot() ?? string.Empty, "src", $"{ScriptName}.{scriptExtension}");
+        }
+
+        private string SetupScriptsExecutionArgs()
+        {
+            string scriptPath = GetInstallScriptPath();
             
             return IsWindows
                     ? $"-ExecutionPolicy Bypass -NoProfile -NoLogo -Command \" {scriptPath} {ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(_scriptArgs)}"
@@ -75,16 +98,18 @@ namespace Install_Scripts.Test.Utils
 
         private static string? GetRepoRoot()
         {
-            string? directory = AppContext.BaseDirectory;
-
-            while (directory!= null && !Directory.Exists(Path.Combine(directory, ".git")) && directory != null)
+            // On Helix, the repo source is provided via the correlation payload
+            string? helixPayload = Environment.GetEnvironmentVariable("HELIX_CORRELATION_PAYLOAD");
+            if (!string.IsNullOrEmpty(helixPayload) && Directory.Exists(Path.Combine(helixPayload, "src")))
             {
-                directory = Directory.GetParent(directory)?.FullName;
+                return helixPayload;
             }
 
-            if (directory == null)
+            string? directory = AppContext.BaseDirectory;
+
+            while (directory != null && !Directory.Exists(Path.Combine(directory, ".git")))
             {
-                return null;
+                directory = Directory.GetParent(directory)?.FullName;
             }
 
             return directory;
