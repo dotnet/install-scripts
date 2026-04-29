@@ -305,6 +305,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("release/2.6.1xx")]
         [InlineData("4.8.2")]
         [InlineData("abcdefg")]
+        [InlineData("10")]
         public void WhenInvalidChannelWasUsed(string channel)
         {
             string feedCredentials = Guid.NewGuid().ToString();
@@ -314,7 +315,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
             //  Standard 'dryrun' criterion
             commandResult.Should().Fail();
-            commandResult.Should().HaveStdErrContaining("Failed to resolve the exact version number.");
+            commandResult.Should().HaveStdErrContaining("is not a supported value for --channel option.");
             commandResult.Should().NotHaveStdOutContaining("Repeatable invocation:");
             commandResult.Should().NotHaveStdOutContainingIgnoreCase(feedCredentials);
             commandResult.Should().NotHaveStdErrContainingIgnoreCase(feedCredentials);
