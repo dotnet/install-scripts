@@ -28,6 +28,20 @@ stages:
         steps:
         - script: Build.cmd -test
           displayName: Run Tests
+        - task: PublishTestResults@2
+          displayName: Publish Test Results
+          inputs:
+            testResultsFormat: xUnit
+            testResultsFiles: 'artifacts/TestResults/**/*.xml'
+            testRunTitle: $(Agent.JobName)
+            mergeTestResults: true
+          condition: always()
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Logs
+          inputs:
+            PathtoPublish: artifacts/log
+            ArtifactName: Logs_$(Agent.JobName)
+          condition: always()
 
   - job: Linux
     timeoutInMinutes: 30
@@ -40,6 +54,20 @@ stages:
       clean: true
     - script: ./build.sh --test
       displayName: Run Tests
+    - task: PublishTestResults@2
+      displayName: Publish Test Results
+      inputs:
+        testResultsFormat: xUnit
+        testResultsFiles: 'artifacts/TestResults/**/*.xml'
+        testRunTitle: $(Agent.JobName)
+        mergeTestResults: true
+      condition: always()
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Logs
+      inputs:
+        PathtoPublish: artifacts/log
+        ArtifactName: Logs_$(Agent.JobName)
+      condition: always()
 
   - job: MacOS
     timeoutInMinutes: 45
@@ -51,3 +79,17 @@ stages:
       clean: true
     - script: ./build.sh --test
       displayName: Run Tests
+    - task: PublishTestResults@2
+      displayName: Publish Test Results
+      inputs:
+        testResultsFormat: xUnit
+        testResultsFiles: 'artifacts/TestResults/**/*.xml'
+        testRunTitle: $(Agent.JobName)
+        mergeTestResults: true
+      condition: always()
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Logs
+      inputs:
+        PathtoPublish: artifacts/log
+        ArtifactName: Logs_$(Agent.JobName)
+      condition: always()
