@@ -130,17 +130,22 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             get
             {
+                var seen = new HashSet<(string, string?, string)>();
+
                 // Download runtimes using branches as channels.
                 foreach (var runtimeBranchInfo in _runtimeBranches)
                 {
                     foreach (string? quality in GetQualityOptionsFromFlags(runtimeBranchInfo.quality).DefaultIfEmpty())
                     {
-                        yield return new object?[]
+                        if (seen.Add((runtimeBranchInfo.branch, quality, runtimeBranchInfo.versionRegex)))
                         {
-                            runtimeBranchInfo.branch,
-                            quality,
-                            runtimeBranchInfo.versionRegex,
-                        };
+                            yield return new object?[]
+                            {
+                                runtimeBranchInfo.branch,
+                                quality,
+                                runtimeBranchInfo.versionRegex,
+                            };
+                        }
                     }
                 }
 
@@ -149,12 +154,15 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 {
                     foreach (string? quality in GetQualityOptionsFromFlags(channelInfo.quality).DefaultIfEmpty())
                     {
-                        yield return new object?[]
+                        if (seen.Add((channelInfo.channel, quality, channelInfo.versionRegex)))
                         {
-                            channelInfo.channel,
-                            quality,
-                            channelInfo.versionRegex,
-                        };
+                            yield return new object?[]
+                            {
+                                channelInfo.channel,
+                                quality,
+                                channelInfo.versionRegex,
+                            };
+                        }
                     }
                 }
             }
