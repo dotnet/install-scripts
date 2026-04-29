@@ -65,7 +65,7 @@ namespace Install_Scripts.Test.Utils
         // it has significantly faster startup time, reducing overhead across the many test invocations.
         // PowerShell Core is pre-installed on all modern Azure Pipelines Windows agents and is also
         // the recommended shell for cross-platform automation.
-        private string GetProcessName() => IsWindows ? "pwsh" : @"/bin/bash";
+        private string GetProcessName() => IsWindows ? "powershell" : @"/bin/bash";
 
         private string GetDotnetExecutablePath(string? dotnetPath) => string.IsNullOrEmpty(dotnetPath) ? string.Empty : $"{Path.Combine(dotnetPath!, "dotnet")}";
 
