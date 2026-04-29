@@ -271,7 +271,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         public void WhenInstallingAspNetCoreRuntime(string channel, string? quality, string versionRegex)
         {
             Skip.If(channel == "release/3.0" || channel == "release/3.1",
-                "These scenarios are broken.");
+                "These scenarios are broken for release/3.0 and release/3.1.");
 
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, "aspnetcore", quality, _sdkInstallationDirectory);
@@ -312,7 +312,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 new Regex("6.0-preview2"), // Broken scenario.
             };
 
-            Skip.If(exclusions.Any(e => e.IsMatch(channel)), "Test is excluded.");
+            Skip.If(exclusions.Any(e => e.IsMatch(channel)), "Test is excluded for this channel.");
 
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, "windowsdesktop", quality, _sdkInstallationDirectory);
