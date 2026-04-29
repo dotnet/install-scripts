@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("5.0.2xx", null, true, @"https://aka.ms/dotnet/internal/5.0.2xx/dotnet-sdk-")]
        [InlineData("STS", null, true, @"https://aka.ms/dotnet/internal/STS/dotnet-sdk-")]
        [InlineData("LTS", null, true, @"https://aka.ms/dotnet/internal/LTS/dotnet-sdk-")]
-       public void LinkCanBeCreatedForSdk(string channel, string quality, bool isInternal, string expectedLink)
+       public void LinkCanBeCreatedForSdk(string channel, string? quality, bool isInternal, string expectedLink)
        {
            string expectedLinkPattern = Regex.Escape(expectedLink);
            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -244,7 +244,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("7.0", "windowsdesktop", "ga", true, @"https://aka.ms/dotnet/internal/7.0/windowsdesktop-runtime-")]
        [InlineData("8.0", "windowsdesktop", "ga", true, @"https://aka.ms/dotnet/internal/8.0/windowsdesktop-runtime-")]
        [InlineData("9.0", "windowsdesktop", "ga", true, @"https://aka.ms/dotnet/internal/9.0/windowsdesktop-runtime-")]
-       public void LinkCanBeCreatedForGivenRuntime(string channel, string runtime, string quality, bool isInternal, string expectedLink)
+       public void LinkCanBeCreatedForGivenRuntime(string channel, string runtime, string? quality, bool isInternal, string expectedLink)
        {
            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop")
            {
@@ -296,7 +296,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("LTS", "dotnet", "preview", @"https://aka.ms/dotnet/LTS/dotnet-runtime-")]
        [InlineData("STS", "aspnetcore", "daily", @"https://aka.ms/dotnet/STS/aspnetcore-runtime-")]
        [InlineData("LTS", "windowsdesktop", "preview", @"https://aka.ms/dotnet/LTS/windowsdesktop-runtime-")]
-       public void QualityIsSkippedForLTSAndCurrentChannel(string channel, string runtime, string quality, string expectedLink)
+       public void QualityIsSkippedForLTSAndCurrentChannel(string channel, string? runtime, string quality, string expectedLink)
        {
            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop")
            {
@@ -335,7 +335,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        [InlineData("Fake", "dotnet", "daily")]
        [InlineData("Fake", "aspnetcore", "daily")]
        [InlineData("Fake", "windowsdesktop", "daily")]
-       public void NoFallbackIfQualityIsGiven(string channel, string runtime, string quality)
+       public void NoFallbackIfQualityIsGiven(string channel, string? runtime, string quality)
        {
            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop")
            {

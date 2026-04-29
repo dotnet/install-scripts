@@ -77,15 +77,22 @@ extends:
             - checkout: self
               clean: true
             steps:
-            - task: UseDotNet@2
-              displayName: Get .NET Core SDK
-              inputs:
-                version: 8.x
-            - task: DotNetCoreCLI@2
+            - script: Build.cmd -test
               displayName: Run Tests
-              inputs: 
-                command: test
+            - task: PublishTestResults@2
+              displayName: Publish Test Results
+              inputs:
+                testResultsFormat: xUnit
+                testResultsFiles: 'artifacts/TestResults/**/*.xml'
                 testRunTitle: $(Agent.JobName)
+                mergeTestResults: true
+              condition: always()
+            - task: PublishBuildArtifacts@1
+              displayName: Publish Logs
+              inputs:
+                PathtoPublish: artifacts/log
+                ArtifactName: Logs_$(Agent.JobName)
+              condition: always()
             - script: eng\common\cibuild.cmd
                 -configuration Release
                 -projects src/Signing/SignScripts.csproj
@@ -114,18 +121,22 @@ extends:
         - checkout: self
           displayName: Checkout Self
           clean: true
-        - task: UseDotNet@2
-          displayName: Get .NET Core SDK
-          inputs:
-            version: 8.x
-        - script: |
-            chmod u+x src/dotnet-install.sh
-          displayName: 'Add permission to execute'
-        - task: DotNetCoreCLI@2
+        - script: ./build.sh --test
           displayName: Run Tests
-          inputs: 
-            command: test
+        - task: PublishTestResults@2
+          displayName: Publish Test Results
+          inputs:
+            testResultsFormat: xUnit
+            testResultsFiles: 'artifacts/TestResults/**/*.xml'
             testRunTitle: $(Agent.JobName)
+            mergeTestResults: true
+          condition: always()
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Logs
+          inputs:
+            PathtoPublish: artifacts/log
+            ArtifactName: Logs_$(Agent.JobName)
+          condition: always()
 
       - job: MacOS
         timeoutInMinutes: 45
@@ -137,18 +148,22 @@ extends:
         - checkout: self
           displayName: Checkout Self
           clean: true
-        - task: UseDotNet@2
-          displayName: Get .NET Core SDK
-          inputs:
-            version: 8.x
-        - script: |
-            chmod u+x src/dotnet-install.sh
-          displayName: 'Add permission to execute'
-        - task: DotNetCoreCLI@2
+        - script: ./build.sh --test
           displayName: Run Tests
-          inputs: 
-            command: test
+        - task: PublishTestResults@2
+          displayName: Publish Test Results
+          inputs:
+            testResultsFormat: xUnit
+            testResultsFiles: 'artifacts/TestResults/**/*.xml'
             testRunTitle: $(Agent.JobName)
+            mergeTestResults: true
+          condition: always()
+        - task: PublishBuildArtifacts@1
+          displayName: Publish Logs
+          inputs:
+            PathtoPublish: artifacts/log
+            ArtifactName: Logs_$(Agent.JobName)
+          condition: always()
 
     - template: eng\common\templates-official\post-build\post-build.yml@self
       parameters:

@@ -353,7 +353,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("8.0.303", null)]
         [InlineData("9.0.100", null)]
         [InlineData("10.0.100", null)]
-        public async Task WhenAnExactVersionIsPassedToBash(string version, string runtime)
+        public async Task WhenAnExactVersionIsPassedToBash(string version, string? runtime)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
