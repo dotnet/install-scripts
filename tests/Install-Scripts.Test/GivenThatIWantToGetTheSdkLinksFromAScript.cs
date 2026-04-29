@@ -173,7 +173,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         public void WhenChannelResolvesToASpecificRuntimeVersion(string channel, string runtimeType, bool useCustomFeedCredential = false)
         {
             Skip.If(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtimeType == "windowsdesktop",
-                "Do not run windowsdesktop tests on Linux environment.");
+                "Do not run windowsdesktop tests on non-Windows environment.");
             var args = new List<string> { "-dryrun", "-channel", channel, "-runtime", runtimeType };
 
             string? feedCredentials = default;
@@ -287,7 +287,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         public void CanResolveCorrectLocationBasedOnVersion(string version, string location)
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
-                "Do not run windowsdesktop tests on Linux environment.");
+                "Do not run windowsdesktop tests on non-Windows environment.");
             string expectedLinkLog = $"Constructed primary named payload URL: {Environment.NewLine}https://builds.dotnet.microsoft.com/dotnet/{location}/{version}";
             var args = new string[] { "-version", version, "-runtime", "windowsdesktop", "-verbose", "-dryrun" };
             var commandResult = TestUtils.CreateInstallCommand(args).ExecuteInstallation();
@@ -417,7 +417,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         public async Task WhenAnExactVersionIsPassedToPowershell(string version, string? runtime)
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
-                "Do not run PowerShell tests on Linux environment.");
+                "Do not run PowerShell tests on non-Windows environment.");
             string[] args;
 
             if (string.IsNullOrWhiteSpace(runtime))
@@ -474,7 +474,7 @@ dotnet-install.sh is a simple command line interface for obtaining dotnet cli.
         public void ShowScriptPurposeBlurbBashPowershellVerbose()
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
-                "Do not run PowerShell tests on Linux environment.");
+                "Do not run PowerShell tests on non-Windows environment.");
 
 
             const string IntroBlurb = @"

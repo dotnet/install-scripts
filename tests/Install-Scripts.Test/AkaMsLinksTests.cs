@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        public void Runtime_IntegrationTest(string channel, string runtime, string quality, string expectedLink)
        {
            Skip.If(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop",
-               "Do not run windowsdesktop tests on Linux environment.");
+               "Do not run windowsdesktop tests on non-Windows environment.");
 
            string expectedLinkPattern = Regex.Escape(expectedLink);
            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -244,7 +244,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        public void LinkCanBeCreatedForGivenRuntime(string channel, string runtime, string? quality, bool isInternal, string expectedLink)
        {
            Skip.If(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop",
-               "Do not run windowsdesktop tests on Linux environment.");
+               "Do not run windowsdesktop tests on non-Windows environment.");
 
            string expectedLinkPattern = Regex.Escape(expectedLink);
            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -293,7 +293,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        public void QualityIsSkippedForLTSAndCurrentChannel(string channel, string? runtime, string quality, string expectedLink)
        {
            Skip.If(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop",
-               "Do not run windowsdesktop tests on Linux environment.");
+               "Do not run windowsdesktop tests on non-Windows environment.");
 
            string expectedLinkPattern = Regex.Escape(expectedLink);
            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -329,7 +329,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
        public void NoFallbackIfQualityIsGiven(string channel, string? runtime, string quality)
        {
            Skip.If(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && runtime == "windowsdesktop",
-               "Do not run windowsdesktop tests on Linux environment.");
+               "Do not run windowsdesktop tests on non-Windows environment.");
 
            var args = new List<string> { "-dryrun", "-channel", channel, "-verbose", "-quality", quality };
 
