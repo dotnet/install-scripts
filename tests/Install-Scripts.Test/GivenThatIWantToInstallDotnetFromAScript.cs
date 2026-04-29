@@ -300,7 +300,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
+#pragma warning disable xUnit1026 // Theory methods should use all of their parameters - versionRegex is required by MemberData
         public void WhenInstallingWindowsdesktopRuntime(string channel, string? quality, string versionRegex)
+#pragma warning restore xUnit1026
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -340,7 +342,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [MemberData(nameof(InstallSdkFromChannelTestCases))]
+#pragma warning disable xUnit1026 // Theory methods should use all of their parameters - versionRegex is required by MemberData
         public void WhenInstallingTheSdkWithFeedCredential(string channel, string? quality, string versionRegex)
+#pragma warning restore xUnit1026
         {
             string feedCredential = "?" + Guid.NewGuid().ToString();
 
@@ -357,7 +361,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
+#pragma warning disable xUnit1026 // Theory methods should use all of their parameters - versionRegex is required by MemberData
         public void WhenInstallingDotnetRuntimeWithFeedCredential(string channel, string? quality, string versionRegex)
+#pragma warning restore xUnit1026
         {
             string feedCredential = "?" + Guid.NewGuid().ToString();
 
