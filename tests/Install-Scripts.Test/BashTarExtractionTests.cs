@@ -42,7 +42,7 @@ set -e
 say_verbose() {{ :; }}
 say_err() {{ echo ""ERROR: $*"" >&2; }}
 eval_invocation=""return""
-invocation=""$(printf "" %-30s %s"" ""-- ${{FUNCNAME:-}}"" ""$*"")""
+invocation="":""
 
 override_non_versioned_files={overrideValue}
 temporary_file_template=""{Path.Combine(_testDir, "dotnet-install.XXXXXX").Replace("\"", "\\\"")}""

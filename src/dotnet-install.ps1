@@ -969,9 +969,13 @@ function Extract-Dotnet-Package-Tar([string]$TarPath, [string]$OutPath) {
 
     try {
         # Extract directly to install root, preserving hard links
-        & tar -xzf $TarPath -C $OutPath @excludeArgs 2>&1 | Out-Null
+        $tarOutput = & tar -xzf $TarPath -C $OutPath @excludeArgs 2>&1
         if ($LASTEXITCODE -ne 0) {
-            throw "Tar extraction failed with exit code $LASTEXITCODE."
+            $tarOutputText = ($tarOutput | Out-String).Trim()
+            if ([string]::IsNullOrWhiteSpace($tarOutputText)) {
+                throw "Tar extraction failed with exit code $LASTEXITCODE."
+            }
+            throw "Tar extraction failed with exit code $LASTEXITCODE. tar output: $tarOutputText"
         }
     }
     catch {
