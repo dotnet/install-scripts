@@ -67,28 +67,25 @@ function Find-ValidationPR {
 function Get-PRCheckStatus {
     param([string]$Repo, [int]$Number)
 
-    $checksJson = gh pr checks --repo $Repo $Number --json name,state,conclusion 2>&1
+    $checksJson = gh pr checks --repo $Repo $Number --json name,state 2>&1
     if ($LASTEXITCODE -ne 0) {
-        return "unknown"
+        return @{ Status = "unknown"; Pass = 0; Fail = 0; Pending = 0 }
     }
 
     $checks = $checksJson | ConvertFrom-Json
     if (-not $checks -or $checks.Count -eq 0) {
-        return "no-checks"
+        return @{ Status = "no-checks"; Pass = 0; Fail = 0; Pending = 0 }
     }
 
-    $failed = $checks | Where-Object { $_.conclusion -eq "FAILURE" -or $_.conclusion -eq "ERROR" }
-    $pending = $checks | Where-Object { $_.state -eq "PENDING" -or $_.state -eq "QUEUED" -or $_.state -eq "IN_PROGRESS" }
+    $passed = ($checks | Where-Object { $_.state -eq "SUCCESS" -or $_.state -eq "NEUTRAL" -or $_.state -eq "SKIPPED" }).Count
+    $failed = ($checks | Where-Object { $_.state -eq "FAILURE" -or $_.state -eq "ERROR" -or $_.state -eq "CANCELLED" }).Count
+    $pending = ($checks | Where-Object { $_.state -eq "PENDING" -or $_.state -eq "QUEUED" -or $_.state -eq "IN_PROGRESS" }).Count
 
-    if ($failed.Count -gt 0) {
-        return "failed"
-    }
-    elseif ($pending.Count -gt 0) {
-        return "pending"
-    }
-    else {
-        return "passed"
-    }
+    $status = if ($failed -gt 0) { "failed" }
+              elseif ($pending -gt 0) { "pending" }
+              else { "passed" }
+
+    return @{ Status = $status; Pass = $passed; Fail = $failed; Pending = $pending }
 }
 
 # --- Main ---
@@ -112,12 +109,15 @@ foreach ($repoName in $Repos) {
         continue
     }
 
-    $status = Get-PRCheckStatus -Repo $pr.Repo -Number $pr.Number
+    $checkResult = Get-PRCheckStatus -Repo $pr.Repo -Number $pr.Number
     $results += [PSCustomObject]@{
         Repo = $pr.Repo
-        Status = $status
+        Status = $checkResult.Status
         Url = $pr.Url
         Number = $pr.Number
+        Pass = $checkResult.Pass
+        Fail = $checkResult.Fail
+        Pending = $checkResult.Pending
     }
 }
 
@@ -138,7 +138,10 @@ foreach ($r in $results) {
         default { "Gray" }
     }
     $urlDisplay = if ($r.Url) { $r.Url } else { "No PR found" }
-    Write-Host "  $icon $($r.Repo): $urlDisplay" -ForegroundColor $color
+    $counts = if ($r.Status -ne "not-found" -and $r.Status -ne "unknown") {
+        " ($($r.Pass) pass, $($r.Fail) fail, $($r.Pending) pending)"
+    } else { "" }
+    Write-Host "  $icon $($r.Repo):$counts $urlDisplay" -ForegroundColor $color
 }
 
 # Close passed PRs
