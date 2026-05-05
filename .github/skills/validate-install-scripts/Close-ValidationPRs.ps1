@@ -78,14 +78,18 @@ function Get-PRCheckStatus {
     }
 
     $passed = ($checks | Where-Object { $_.state -eq "SUCCESS" -or $_.state -eq "NEUTRAL" -or $_.state -eq "SKIPPED" }).Count
-    $failed = ($checks | Where-Object { $_.state -eq "FAILURE" -or $_.state -eq "ERROR" -or $_.state -eq "CANCELLED" }).Count
+    $failed = ($checks | Where-Object { $_.state -eq "FAILURE" -or $_.state -eq "ERROR" }).Count
     $pending = ($checks | Where-Object { $_.state -eq "PENDING" -or $_.state -eq "QUEUED" -or $_.state -eq "IN_PROGRESS" }).Count
+    $cancelled = ($checks | Where-Object { $_.state -eq "CANCELLED" }).Count
 
+    # CANCELLED jobs are ambiguous (could be superseded runs or dependent jobs that didn't execute).
+    # Only report "failed" for actual FAILURE/ERROR states.
     $status = if ($failed -gt 0) { "failed" }
               elseif ($pending -gt 0) { "pending" }
+              elseif ($cancelled -gt 0) { "cancelled" }
               else { "passed" }
 
-    return @{ Status = $status; Pass = $passed; Fail = $failed; Pending = $pending }
+    return @{ Status = $status; Pass = $passed; Fail = $failed; Pending = $pending; Cancelled = $cancelled }
 }
 
 # --- Main ---
@@ -118,6 +122,7 @@ foreach ($repoName in $Repos) {
         Pass = $checkResult.Pass
         Fail = $checkResult.Fail
         Pending = $checkResult.Pending
+        Cancelled = $checkResult.Cancelled
     }
 }
 
@@ -128,6 +133,7 @@ foreach ($r in $results) {
         "passed" { "[PASS]" }
         "failed" { "[FAIL]" }
         "pending" { "[WAIT]" }
+        "cancelled" { "[CNCL]" }
         "not-found" { "[----]" }
         default { "[????]" }
     }
@@ -135,11 +141,14 @@ foreach ($r in $results) {
         "passed" { "Green" }
         "failed" { "Red" }
         "pending" { "Yellow" }
+        "cancelled" { "DarkYellow" }
         default { "Gray" }
     }
     $urlDisplay = if ($r.Url) { $r.Url } else { "No PR found" }
     $counts = if ($r.Status -ne "not-found" -and $r.Status -ne "unknown") {
-        " ($($r.Pass) pass, $($r.Fail) fail, $($r.Pending) pending)"
+        $parts = @("$($r.Pass) pass", "$($r.Fail) fail", "$($r.Pending) pending")
+        if ($r.Cancelled -gt 0) { $parts += "$($r.Cancelled) cancelled" }
+        " (" + ($parts -join ", ") + ")"
     } else { "" }
     Write-Host "  $icon $($r.Repo):$counts $urlDisplay" -ForegroundColor $color
 }
