@@ -12,13 +12,14 @@ namespace Install_Scripts.Test.Utils
     /// <summary>
     /// This command is designed to automate the installation and invocation of .NET Core SDK.
     /// </summary>
-    internal sealed class DotNetCommand(IEnumerable<string> args)
+    internal sealed class DotNetCommand(IEnumerable<string> args, IDictionary<string, string>? environmentVariables = null)
     {
         private const string ScriptName = "dotnet-install";
 
         private static bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
         private readonly IEnumerable<string> _scriptArgs = args;
+        private readonly IDictionary<string, string>? _environmentVariables = environmentVariables;
 
         internal CommandResult ExecuteInstallation() => RunProcess(SetupScriptsExecutionArgs());
 
@@ -35,6 +36,14 @@ namespace Install_Scripts.Test.Utils
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
+
+            if (_environmentVariables != null)
+            {
+                foreach (var kvp in _environmentVariables)
+                {
+                    startInfo.Environment[kvp.Key] = kvp.Value;
+                }
+            }
 
             using Process process = new Process { StartInfo = startInfo };
             process.Start();

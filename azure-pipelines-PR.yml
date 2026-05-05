@@ -32,7 +32,7 @@ stages:
           displayName: Publish Test Results
           inputs:
             testResultsFormat: xUnit
-            testResultsFiles: 'artifacts/TestResults/**/*.xml'
+            testResultsFiles: 'artifacts/TestResults/Debug/*.xml'
             testRunTitle: $(Agent.JobName)
             mergeTestResults: true
           condition: always()
@@ -58,7 +58,7 @@ stages:
       displayName: Publish Test Results
       inputs:
         testResultsFormat: xUnit
-        testResultsFiles: 'artifacts/TestResults/**/*.xml'
+        testResultsFiles: 'artifacts/TestResults/Debug/*.xml'
         testRunTitle: $(Agent.JobName)
         mergeTestResults: true
       condition: always()
@@ -83,7 +83,7 @@ stages:
       displayName: Publish Test Results
       inputs:
         testResultsFormat: xUnit
-        testResultsFiles: 'artifacts/TestResults/**/*.xml'
+        testResultsFiles: 'artifacts/TestResults/Debug/*.xml'
         testRunTitle: $(Agent.JobName)
         mergeTestResults: true
       condition: always()
