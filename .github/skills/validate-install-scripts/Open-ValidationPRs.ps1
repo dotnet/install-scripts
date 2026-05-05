@@ -81,8 +81,8 @@ function Open-ValidationPR {
     $Repo = "dotnet/$RepoName"
     Write-Host "`n=== Processing $Repo ===" -ForegroundColor Cyan
 
-    # Get default branch
-    $defaultBranch = gh repo view $Repo --json defaultBranchRef --jq '.defaultBranchRef.name'
+    # Get default branch (REST API — more reliable than GraphQL-based `gh repo view`)
+    $defaultBranch = gh api "repos/$Repo" --jq '.default_branch' 2>$null
     if ($LASTEXITCODE -ne 0) {
         Write-Warning "Failed to get default branch for $Repo. Skipping."
         return $null
@@ -96,13 +96,26 @@ function Open-ValidationPR {
         Write-Host "  Push access confirmed." -ForegroundColor Green
     }
     else {
-        Write-Host "  No push access. Forking..." -ForegroundColor Yellow
-        gh repo fork $Repo --clone=false 2>$null
+        Write-Host "  No push access. Using fork..." -ForegroundColor Yellow
         $ghUser = gh api user --jq '.login'
         $targetRepo = "$ghUser/$RepoName"
         $prHead = "${ghUser}:${BranchName}"
-        # Sync fork
-        gh repo sync $targetRepo --branch $defaultBranch 2>$null
+
+        # Check if fork already exists; if not, create it via REST API
+        $forkExists = gh api "repos/$targetRepo" --jq '.full_name' 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "  Creating fork..." -ForegroundColor Yellow
+            gh api "repos/$Repo/forks" --method POST -f "default_branch_only=true" --jq '.full_name' 2>$null
+            if ($LASTEXITCODE -ne 0) {
+                Write-Warning "  Failed to create fork of $Repo. Skipping."
+                return $null
+            }
+            # Wait briefly for fork to be ready
+            Start-Sleep -Seconds 5
+        }
+
+        # Sync fork's default branch with upstream
+        gh api "repos/$targetRepo/merge-upstream" --method POST -f "branch=$defaultBranch" 2>$null
         Write-Host "  Using fork: $targetRepo" -ForegroundColor Yellow
     }
 
@@ -226,7 +239,22 @@ Changes:
         --draft `
         --body $prBody
 
-    if ($LASTEXITCODE -eq 0) {
+    if ($LASTEXITCODE -ne 0) {
+        # gh pr create uses GraphQL which can timeout on large repos.
+        # Fall back to REST API for PR creation.
+        Write-Host "  GraphQL PR creation failed. Falling back to REST API..." -ForegroundColor Yellow
+        $prJson = @{
+            title = "[DO NOT MERGE] Install Scripts Update Validation PR"
+            head  = $prHead
+            base  = $defaultBranch
+            body  = $prBody
+            draft = $true
+        } | ConvertTo-Json -Compress
+
+        $prUrl = $prJson | gh api "repos/$Repo/pulls" --method POST --input - --jq '.html_url'
+    }
+
+    if ($LASTEXITCODE -eq 0 -and $prUrl) {
         Write-Host "  PR opened: $prUrl" -ForegroundColor Green
         return $prUrl
     }
