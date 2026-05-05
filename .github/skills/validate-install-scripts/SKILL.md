@@ -17,6 +17,26 @@ that replace the production install script URL with a raw GitHub URL pointing to
 - The `gh` CLI must be authenticated with permissions to create branches and PRs in the target repos.
 - The commit SHA must exist in the `dotnet/install-scripts` repository on GitHub.
 
+## Quick Start (Preferred)
+
+If PowerShell (Core or Windows PowerShell) is available, use the scripts directly:
+
+```powershell
+# Open validation PRs
+./.github/skills/validate-install-scripts/Open-ValidationPRs.ps1 -CommitSha "<sha>"
+
+# Later, check CI and close passed PRs
+./.github/skills/validate-install-scripts/Close-ValidationPRs.ps1 -CommitSha "<sha>"
+
+# To auto-close without prompting:
+./.github/skills/validate-install-scripts/Close-ValidationPRs.ps1 -CommitSha "<sha>" -AutoClose
+
+# To target specific repos only:
+./.github/skills/validate-install-scripts/Open-ValidationPRs.ps1 -CommitSha "<sha>" -Repos @("arcade", "sdk")
+```
+
+If PowerShell is not available, follow the manual steps below using the `gh` CLI directly.
+
 ## Modes
 
 ### Mode 1: Open Validation PRs
