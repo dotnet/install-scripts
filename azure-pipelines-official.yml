@@ -87,12 +87,12 @@ extends:
                 testRunTitle: $(Agent.JobName)
                 mergeTestResults: true
               condition: always()
-            - template: /eng/common/templates-official/steps/publish-build-artifacts.yml@self
-              parameters:
-                displayName: Publish Logs
-                pathToPublish: artifacts/log
-                artifactName: Logs_$(Agent.JobName)
-                condition: always()
+            - task: 1ES.PublishBuildArtifacts@1
+              displayName: Publish Logs
+              inputs:
+                PathtoPublish: artifacts/log
+                ArtifactName: Logs_$(Agent.JobName)
+              condition: always()
             - script: eng\common\cibuild.cmd
                 -configuration Release
                 -projects src/Signing/SignScripts.csproj
@@ -131,12 +131,12 @@ extends:
             testRunTitle: $(Agent.JobName)
             mergeTestResults: true
           condition: always()
-        - template: /eng/common/templates-official/steps/publish-build-artifacts.yml@self
-          parameters:
-            displayName: Publish Logs
-            pathToPublish: artifacts/log
-            artifactName: Logs_$(Agent.JobName)
-            condition: always()
+        - task: 1ES.PublishBuildArtifacts@1
+          displayName: Publish Logs
+          inputs:
+            PathtoPublish: artifacts/log
+            ArtifactName: Logs_$(Agent.JobName)
+          condition: always()
 
       - job: MacOS
         timeoutInMinutes: 45
@@ -158,12 +158,12 @@ extends:
             testRunTitle: $(Agent.JobName)
             mergeTestResults: true
           condition: always()
-        - template: /eng/common/templates-official/steps/publish-build-artifacts.yml@self
-          parameters:
-            displayName: Publish Logs
-            pathToPublish: artifacts/log
-            artifactName: Logs_$(Agent.JobName)
-            condition: always()
+        - task: 1ES.PublishBuildArtifacts@1
+          displayName: Publish Logs
+          inputs:
+            PathtoPublish: artifacts/log
+            ArtifactName: Logs_$(Agent.JobName)
+          condition: always()
 
     - template: eng\common\templates-official\post-build\post-build.yml@self
       parameters:
