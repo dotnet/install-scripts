@@ -73,6 +73,10 @@ $uri = "https://raw.githubusercontent.com/dotnet/install-scripts/<COMMIT_SHA>/sr
 
 For each repo, execute the following logic. **Stop and report an error** if any step fails.
 
+**Important: Preserving file content exactly.** Shell command substitution `$(...)` strips trailing newlines, and `printf '%s'` omits them. To avoid spurious whitespace diffs, use **base64 encoding** to round-trip file content through the Git Data API. Decode from the API response, perform the sed replacement on the decoded bytes written to a temp file, then re-encode to base64 for the blob creation. This preserves trailing newlines and avoids any shell-induced whitespace changes.
+
+**Important: Fork fallback for repos without push access.** Before creating a branch, check if the user has push access with `gh api "repos/${REPO}" --jq '.permissions.push'`. If `false`, fork the repo first with `gh repo fork "${REPO}" --clone=false`, then create the branch and commits in the user's fork. When opening the PR, use `--head "<username>:${BRANCH}"` to create a cross-fork PR.
+
 ```bash
 REPO="dotnet/<repo_name>"
 COMMIT_SHA="<full_commit_sha>"
@@ -82,11 +86,25 @@ BRANCH="validate-install-scripts/${SHORT_SHA}"
 # Get default branch
 DEFAULT_BRANCH=$(gh repo view "$REPO" --json defaultBranchRef --jq '.defaultBranchRef.name')
 
+# --- Determine where to push: upstream or fork ---
+HAS_PUSH=$(gh api "repos/${REPO}" --jq '.permissions.push')
+if [ "$HAS_PUSH" = "true" ]; then
+  TARGET_REPO="$REPO"
+  PR_HEAD="$BRANCH"
+else
+  # Fork the repo (idempotent — returns existing fork if already forked)
+  gh repo fork "$REPO" --clone=false
+  GH_USER=$(gh api user --jq '.login')
+  TARGET_REPO="${GH_USER}/$(basename $REPO)"
+  PR_HEAD="${GH_USER}:${BRANCH}"
+  # Sync fork's default branch with upstream
+  gh repo sync "$TARGET_REPO" --branch "$DEFAULT_BRANCH"
+fi
+
 # Check if branch already exists
-if gh api "repos/${REPO}/git/ref/heads/${BRANCH}" &>/dev/null; then
-  echo "Branch ${BRANCH} already exists in ${REPO}."
-  # Check if PR already exists
-  EXISTING_PR=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json url --jq '.[0].url')
+if gh api "repos/${TARGET_REPO}/git/ref/heads/${BRANCH}" &>/dev/null; then
+  echo "Branch ${BRANCH} already exists in ${TARGET_REPO}."
+  EXISTING_PR=$(gh pr list --repo "$REPO" --head "$PR_HEAD" --state open --json url --jq '.[0].url')
   if [ -n "$EXISTING_PR" ]; then
     echo "PR already exists: $EXISTING_PR"
     # Skip this repo and move to next
@@ -95,107 +113,58 @@ if gh api "repos/${REPO}/git/ref/heads/${BRANCH}" &>/dev/null; then
 fi
 
 # Get the HEAD SHA of the default branch
-BASE_SHA=$(gh api "repos/${REPO}/git/ref/heads/${DEFAULT_BRANCH}" --jq '.object.sha')
+BASE_SHA=$(gh api "repos/${TARGET_REPO}/git/ref/heads/${DEFAULT_BRANCH}" --jq '.object.sha')
 
 # Create the branch
-gh api "repos/${REPO}/git/refs" \
+gh api "repos/${TARGET_REPO}/git/refs" \
   -f "ref=refs/heads/${BRANCH}" \
   -f "sha=${BASE_SHA}"
 
-# --- Fetch and modify tools.sh ---
-TOOLS_SH_RESPONSE=$(gh api "repos/${REPO}/contents/eng/common/tools.sh?ref=${BRANCH}")
-TOOLS_SH_BLOB_SHA=$(echo "$TOOLS_SH_RESPONSE" | jq -r '.sha')
-TOOLS_SH_CONTENT=$(echo "$TOOLS_SH_RESPONSE" | jq -r '.content' | base64 -d)
+# --- Fetch file content using base64 to preserve exact bytes ---
+# Write raw bytes to temp files to avoid shell newline stripping
+TMPDIR=$(mktemp -d)
+gh api "repos/${REPO}/contents/eng/common/tools.sh?ref=${DEFAULT_BRANCH}" --jq '.content' | base64 -d > "$TMPDIR/tools.sh"
+gh api "repos/${REPO}/contents/eng/common/tools.ps1?ref=${DEFAULT_BRANCH}" --jq '.content' | base64 -d > "$TMPDIR/tools.ps1"
 
-# Perform the replacement and verify exactly 1 match
-MATCH_COUNT=$(echo "$TOOLS_SH_CONTENT" | grep -c 'builds.dotnet.microsoft.com/dotnet/scripts/\$dotnetInstallScriptVersion/dotnet-install.sh' || true)
+# --- Verify and replace in tools.sh ---
+MATCH_COUNT=$(grep -c 'builds.dotnet.microsoft.com/dotnet/scripts/\$dotnetInstallScriptVersion/dotnet-install.sh' "$TMPDIR/tools.sh" || true)
 if [ "$MATCH_COUNT" -ne 1 ]; then
   echo "ERROR: Expected 1 match in tools.sh, found $MATCH_COUNT. The file format may have changed."
+  rm -rf "$TMPDIR"
   exit 1
 fi
 
-UPDATED_SH=$(printf '%s' "$TOOLS_SH_CONTENT" | sed 's|https://builds.dotnet.microsoft.com/dotnet/scripts/\$dotnetInstallScriptVersion/dotnet-install.sh|https://raw.githubusercontent.com/dotnet/install-scripts/'"${COMMIT_SHA}"'/src/dotnet-install.sh|')
+sed -i 's|https://builds.dotnet.microsoft.com/dotnet/scripts/\$dotnetInstallScriptVersion/dotnet-install.sh|https://raw.githubusercontent.com/dotnet/install-scripts/'"${COMMIT_SHA}"'/src/dotnet-install.sh|' "$TMPDIR/tools.sh"
 
-# --- Fetch and modify tools.ps1 ---
-TOOLS_PS1_RESPONSE=$(gh api "repos/${REPO}/contents/eng/common/tools.ps1?ref=${BRANCH}")
-TOOLS_PS1_BLOB_SHA=$(echo "$TOOLS_PS1_RESPONSE" | jq -r '.sha')
-TOOLS_PS1_CONTENT=$(echo "$TOOLS_PS1_RESPONSE" | jq -r '.content' | base64 -d)
-
-MATCH_COUNT=$(echo "$TOOLS_PS1_CONTENT" | grep -c 'builds.dotnet.microsoft.com/dotnet/scripts/\$dotnetInstallScriptVersion/dotnet-install.ps1' || true)
+# --- Verify and replace in tools.ps1 ---
+MATCH_COUNT=$(grep -c 'builds.dotnet.microsoft.com/dotnet/scripts/\$dotnetInstallScriptVersion/dotnet-install.ps1' "$TMPDIR/tools.ps1" || true)
 if [ "$MATCH_COUNT" -ne 1 ]; then
   echo "ERROR: Expected 1 match in tools.ps1, found $MATCH_COUNT. The file format may have changed."
+  rm -rf "$TMPDIR"
   exit 1
 fi
 
-UPDATED_PS1=$(printf '%s' "$TOOLS_PS1_CONTENT" | sed 's|https://builds.dotnet.microsoft.com/dotnet/scripts/\$dotnetInstallScriptVersion/dotnet-install.ps1|https://raw.githubusercontent.com/dotnet/install-scripts/'"${COMMIT_SHA}"'/src/dotnet-install.ps1|')
+sed -i 's|https://builds.dotnet.microsoft.com/dotnet/scripts/\$dotnetInstallScriptVersion/dotnet-install.ps1|https://raw.githubusercontent.com/dotnet/install-scripts/'"${COMMIT_SHA}"'/src/dotnet-install.ps1|' "$TMPDIR/tools.ps1"
 
-# --- Create blobs, tree, and commit atomically via Git Data API ---
-# Create blob for tools.sh
-SH_BLOB=$(printf '%s' "$UPDATED_SH" | gh api "repos/${REPO}/git/blobs" \
+# --- Create blobs using base64 encoding to preserve exact bytes ---
+SH_BLOB=$(base64 -w 0 "$TMPDIR/tools.sh" | gh api "repos/${TARGET_REPO}/git/blobs" \
   --method POST \
-  -f "encoding=utf-8" \
+  -f "encoding=base64" \
   -F "content=@-" \
   --jq '.sha')
 
-# Create blob for tools.ps1
-PS1_BLOB=$(printf '%s' "$UPDATED_PS1" | gh api "repos/${REPO}/git/blobs" \
+PS1_BLOB=$(base64 -w 0 "$TMPDIR/tools.ps1" | gh api "repos/${TARGET_REPO}/git/blobs" \
   --method POST \
-  -f "encoding=utf-8" \
+  -f "encoding=base64" \
   -F "content=@-" \
   --jq '.sha')
 
-# Get the base tree
-BASE_TREE=$(gh api "repos/${REPO}/git/commits/${BASE_SHA}" --jq '.tree.sha')
+rm -rf "$TMPDIR"
 
-# Create a new tree with both file changes
-NEW_TREE=$(gh api "repos/${REPO}/git/trees" \
-  --method POST \
-  -f "base_tree=${BASE_TREE}" \
-  -f "tree[][path]=eng/common/tools.sh" \
-  -f "tree[][mode]=100755" \
-  -f "tree[][type]=blob" \
-  -f "tree[][sha]=${SH_BLOB}" \
-  -f "tree[][path]=eng/common/tools.ps1" \
-  -f "tree[][mode]=100644" \
-  -f "tree[][type]=blob" \
-  -f "tree[][sha]=${PS1_BLOB}" \
-  --jq '.sha')
+# --- Create tree and commit atomically ---
+BASE_TREE=$(gh api "repos/${TARGET_REPO}/git/commits/${BASE_SHA}" --jq '.tree.sha')
 
-# Create the commit
-NEW_COMMIT=$(gh api "repos/${REPO}/git/commits" \
-  --method POST \
-  -f "message=Validate install scripts from dotnet/install-scripts@${SHORT_SHA}" \
-  -f "tree=${NEW_TREE}" \
-  -f "parents[]=${BASE_SHA}" \
-  --jq '.sha')
-
-# Update the branch ref to point to the new commit
-gh api "repos/${REPO}/git/refs/heads/${BRANCH}" \
-  --method PATCH \
-  -f "sha=${NEW_COMMIT}"
-
-# Open the PR
-gh pr create --repo "$REPO" \
-  --base "$DEFAULT_BRANCH" \
-  --head "$BRANCH" \
-  --title "[DO NOT MERGE] Install Scripts Update Validation PR" \
-  --body "This PR validates install script changes from dotnet/install-scripts commit \`${COMMIT_SHA}\`.
-
-**Do not merge this PR.** It will be closed once CI passes.
-
-Install scripts commit: https://github.com/dotnet/install-scripts/commit/${COMMIT_SHA}
-
-Changes:
-- \`eng/common/tools.sh\`: Points to test install script
-- \`eng/common/tools.ps1\`: Points to test install script"
-```
-
-**Important:** The `tree[]` array syntax above is illustrative. When using `gh api`, you may need to construct the JSON body directly:
-
-```bash
-NEW_TREE=$(gh api "repos/${REPO}/git/trees" \
-  --method POST \
-  --input - <<EOF | jq -r '.sha'
+NEW_TREE=$(cat <<EOF | gh api "repos/${TARGET_REPO}/git/trees" --method POST --input - --jq '.sha'
 {
   "base_tree": "${BASE_TREE}",
   "tree": [
@@ -205,6 +174,36 @@ NEW_TREE=$(gh api "repos/${REPO}/git/trees" \
 }
 EOF
 )
+
+NEW_COMMIT=$(cat <<EOF | gh api "repos/${TARGET_REPO}/git/commits" --method POST --input - --jq '.sha'
+{
+  "message": "Validate install scripts from dotnet/install-scripts@${SHORT_SHA}",
+  "tree": "${NEW_TREE}",
+  "parents": ["${BASE_SHA}"]
+}
+EOF
+)
+
+# Update the branch ref
+gh api "repos/${TARGET_REPO}/git/refs/heads/${BRANCH}" \
+  --method PATCH \
+  -f "sha=${NEW_COMMIT}"
+
+# Open a draft PR
+gh pr create --repo "$REPO" \
+  --base "$DEFAULT_BRANCH" \
+  --head "$PR_HEAD" \
+  --title "[DO NOT MERGE] Install Scripts Update Validation PR" \
+  --draft \
+  --body "This PR validates install script changes from dotnet/install-scripts commit \`${COMMIT_SHA}\`.
+
+**Do not merge this PR.** It will be closed once CI passes.
+
+Install scripts commit: https://github.com/dotnet/install-scripts/commit/${COMMIT_SHA}
+
+Changes:
+- \`eng/common/tools.sh\`: Points to test install script
+- \`eng/common/tools.ps1\`: Points to test install script"
 ```
 
 ### Mode 2: Check CI Status and Close PRs
@@ -217,14 +216,19 @@ EOF
 
 1. Ask the user for the commit SHA that was used to open the validation PRs.
 
-2. For each target repo, find the PR by branch name:
+2. For each target repo, find the PR by branch name (check both direct and fork-based PRs):
 
 ```bash
 SHORT_SHA="${COMMIT_SHA:0:8}"
 BRANCH="validate-install-scripts/${SHORT_SHA}"
+GH_USER=$(gh api user --jq '.login')
 
 for REPO in dotnet/aspnetcore dotnet/arcade dotnet/sdk dotnet/runtime dotnet/winforms; do
+  # Search for PR from direct branch or from user's fork
   PR_INFO=$(gh pr list --repo "$REPO" --head "$BRANCH" --state open --json number,url,statusCheckRollup)
+  if [ -z "$PR_INFO" ] || [ "$PR_INFO" = "[]" ]; then
+    PR_INFO=$(gh pr list --repo "$REPO" --head "${GH_USER}:${BRANCH}" --state open --json number,url,statusCheckRollup)
+  fi
   # Process results...
 done
 ```
@@ -251,13 +255,17 @@ gh pr close --repo "$REPO" <PR_NUMBER> --delete-branch --comment "CI passed. Clo
 ## Error Handling
 
 - **Commit not found:** If the commit SHA doesn't exist in `dotnet/install-scripts`, stop immediately and tell the user.
-- **Permission denied:** If `gh` cannot create branches/PRs in a repo, report which repo failed and continue with the others.
+- **No push access:** If the user lacks push access to a repo, fork it and create the branch in the fork. Open a cross-fork PR using `--head "<username>:<branch>"`. This is automatic — do not ask the user.
 - **Branch already exists:** If the branch exists and has an open PR, report the existing PR URL. If the branch exists but has no PR, offer to open one or delete and recreate.
 - **Replacement not found:** If the expected URL pattern is not found in `tools.sh` or `tools.ps1`, stop and report that the file format may have changed. Do not open a PR with unchanged files.
+- **Fork already exists:** `gh repo fork` is idempotent — if the fork already exists it returns successfully. No special handling needed.
 
 ## Notes
 
 - The `eng/common/` directory in these repos is managed by Arcade. The validation PRs intentionally modify these files temporarily — the changes are never merged.
+- PRs are opened as **drafts** to prevent accidental merge. Combined with the `[DO NOT MERGE]` title prefix, this provides two layers of protection.
 - The Git Data API approach creates a single atomic commit with both file changes, avoiding partial updates.
+- File content is round-tripped through **base64 encoding** (decode from API → write to temp file → sed in-place → re-encode for blob creation) to preserve exact bytes including trailing newlines and line endings.
+- If the user lacks push access to a target repo, the skill automatically forks the repo and creates a cross-fork PR. This makes the skill usable by anyone with a GitHub account.
 - CI run times vary by repo: Arcade is fastest (~30 min), Runtime can take several hours.
 - The branch name `validate-install-scripts/<short-sha>` serves as the correlation key between open and check-close modes.
