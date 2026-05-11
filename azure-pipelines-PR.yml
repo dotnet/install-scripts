@@ -30,11 +30,16 @@ stages:
         - checkout: self
           clean: true
         steps:
+        - powershell: |
+            $payload = "$(Agent.TempDirectory)\helix-payload"
+            robocopy $(Build.SourcesDirectory) $payload /E /XD .git artifacts .dotnet .packages /NFL /NDL /NJH /NJS
+            if ($LASTEXITCODE -le 7) { $global:LASTEXITCODE = 0 }
+          displayName: Stage Helix payload
         - template: /eng/common/templates/steps/send-to-helix.yml
           parameters:
             HelixSource: pr/dotnet/install-scripts/$(Build.SourceBranch)
             HelixTargetQueues: Windows.10.Amd64.Open
-            WorkItemDirectory: $(Build.SourcesDirectory)
+            WorkItemDirectory: $(Agent.TempDirectory)\helix-payload
             WorkItemCommand: Build.cmd -test
             WorkItemTimeout: '00:30:00'
             Creator: install-scripts
@@ -53,11 +58,14 @@ stages:
         - checkout: self
           clean: true
         steps:
+        - script: |
+            rsync -a --exclude='.git' --exclude='artifacts' --exclude='.dotnet' --exclude='.packages' $(Build.SourcesDirectory)/ $(Agent.TempDirectory)/helix-payload/
+          displayName: Stage Helix payload
         - template: /eng/common/templates/steps/send-to-helix.yml
           parameters:
             HelixSource: pr/dotnet/install-scripts/$(Build.SourceBranch)
             HelixTargetQueues: Ubuntu.2204.Amd64.Open;OSX.15.ARM64.Open
-            WorkItemDirectory: $(Build.SourcesDirectory)
-            WorkItemCommand: build.sh -test
+            WorkItemDirectory: $(Agent.TempDirectory)/helix-payload
+            WorkItemCommand: ./build.sh --test
             WorkItemTimeout: '00:30:00'
             Creator: install-scripts
