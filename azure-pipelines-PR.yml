@@ -64,7 +64,7 @@ stages:
         - template: /eng/common/templates/steps/send-to-helix.yml
           parameters:
             HelixSource: pr/dotnet/install-scripts/$(Build.SourceBranch)
-            HelixTargetQueues: Ubuntu.2204.Amd64.Open;OSX.15.ARM64.Open
+            HelixTargetQueues: Ubuntu.2204.Amd64.Open;OSX.14.Amd64.Open
             WorkItemDirectory: $(Agent.TempDirectory)/helix-payload
             WorkItemCommand: ./build.sh --test
             HelixPreCommands: 'find . -name "*.sh" | xargs chmod +x'
