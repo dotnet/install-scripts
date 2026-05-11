@@ -17,7 +17,7 @@ stages:
         clean: all
       jobs:
       - job: Windows
-        displayName: Tests (Helix)
+        displayName: Tests - Windows (Helix)
         timeoutInMinutes: 60
         pool:
           name: NetCore-Public
@@ -30,26 +30,34 @@ stages:
         - checkout: self
           clean: true
         steps:
-        - task: UseDotNet@2
-          displayName: Get .NET Core SDK
-          inputs:
-            version: 10.x
-        - powershell: |
-            $dest = "$(Build.StagingDirectory)\helix-payload\src"
-            New-Item -ItemType Directory -Path $dest -Force | Out-Null
-            Copy-Item -Path "$(Build.SourcesDirectory)\src\*" -Destination $dest -Recurse
-          displayName: Prepare Helix Correlation Payload
         - template: /eng/common/templates/steps/send-to-helix.yml
           parameters:
             HelixSource: pr/dotnet/install-scripts/$(Build.SourceBranch)
-            HelixTargetQueues: Windows.10.Amd64.Open;Ubuntu.2204.Amd64.Open;OSX.15.ARM64.Open
-            XUnitProjects: $(Build.SourcesDirectory)\tests\Install-Scripts.Test\Install-Scripts.Test.csproj
-            XUnitPublishTargetFramework: net10.0
-            XUnitRuntimeTargetFramework: net10.0
-            XUnitRunnerVersion: 2.4.2
-            XUnitWorkItemTimeout: '00:30:00'
-            IncludeDotNetCli: true
-            DotNetCliPackageType: sdk
-            DotNetCliVersion: 10.0.106
-            CorrelationPayloadDirectory: $(Build.StagingDirectory)\helix-payload
+            HelixTargetQueues: Windows.10.Amd64.Open
+            WorkItemDirectory: $(Build.SourcesDirectory)
+            WorkItemCommand: Build.cmd -test
+            WorkItemTimeout: '00:30:00'
+            Creator: install-scripts
+
+      - job: Unix
+        displayName: Tests - Unix (Helix)
+        timeoutInMinutes: 60
+        pool:
+          name: NetCore-Public
+          demands: ImageOverride -equals Ubuntu.2204.Amd64.open
+
+        variables:
+        - _BuildConfig: Debug
+
+        preSteps:
+        - checkout: self
+          clean: true
+        steps:
+        - template: /eng/common/templates/steps/send-to-helix.yml
+          parameters:
+            HelixSource: pr/dotnet/install-scripts/$(Build.SourceBranch)
+            HelixTargetQueues: Ubuntu.2204.Amd64.Open;OSX.15.ARM64.Open
+            WorkItemDirectory: $(Build.SourcesDirectory)
+            WorkItemCommand: build.sh -test
+            WorkItemTimeout: '00:30:00'
             Creator: install-scripts
