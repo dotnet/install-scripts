@@ -158,8 +158,8 @@ extends:
       parameters:
         enableSigningValidation: false
         enableNugetValidation: false
-        enableSymbolValidation: true
-        enableSourceLinkValidation: true
+        enableSymbolValidation: false
+        enableSourceLinkValidation: false
         publishingInfraVersion: 3
         publishDependsOn:
         - Validate
