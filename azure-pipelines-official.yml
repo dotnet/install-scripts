@@ -61,6 +61,7 @@ extends:
               artifacts: true
               logs: true
               manifests: true
+          isAssetlessBuild: true
           enableMicrobuild: true
           workspace:
             clean: all
@@ -77,8 +78,8 @@ extends:
               clean: true
             steps:
             - script: Build.cmd
-                -test
                 -sign
+                -test
                 -configuration $(_BuildConfig)
                 -bl
                 $(_InternalBuildArgs)
