@@ -32,7 +32,7 @@ stages:
         steps:
         - powershell: |
             $payload = "$(Agent.TempDirectory)\helix-payload"
-            robocopy $(Build.SourcesDirectory) $payload /E /XD .git artifacts .dotnet .packages /NFL /NDL /NJH /NJS
+            robocopy $(Build.SourcesDirectory) $payload /E /XD artifacts .dotnet .packages /NFL /NDL /NJH /NJS
             if ($LASTEXITCODE -le 7) { $global:LASTEXITCODE = 0 }
           displayName: Stage Helix payload
         - template: /eng/common/templates/steps/send-to-helix.yml
@@ -59,7 +59,7 @@ stages:
           clean: true
         steps:
         - script: |
-            rsync -a --exclude='.git' --exclude='artifacts' --exclude='.dotnet' --exclude='.packages' $(Build.SourcesDirectory)/ $(Agent.TempDirectory)/helix-payload/
+            rsync -a --exclude='artifacts' --exclude='.dotnet' --exclude='.packages' $(Build.SourcesDirectory)/ $(Agent.TempDirectory)/helix-payload/
           displayName: Stage Helix payload
         - template: /eng/common/templates/steps/send-to-helix.yml
           parameters:
