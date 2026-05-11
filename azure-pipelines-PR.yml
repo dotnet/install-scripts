@@ -33,7 +33,7 @@ stages:
         - task: UseDotNet@2
           displayName: Get .NET Core SDK
           inputs:
-            version: 8.x
+            version: 10.x
         - powershell: |
             $dest = "$(Build.StagingDirectory)\helix-payload\src"
             New-Item -ItemType Directory -Path $dest -Force | Out-Null
@@ -44,12 +44,12 @@ stages:
             HelixSource: pr/dotnet/install-scripts/$(Build.SourceBranch)
             HelixTargetQueues: Windows.10.Amd64.Open;Ubuntu.2204.Amd64.Open;OSX.15.ARM64.Open
             XUnitProjects: $(Build.SourcesDirectory)\tests\Install-Scripts.Test\Install-Scripts.Test.csproj
-            XUnitPublishTargetFramework: net8.0
-            XUnitRuntimeTargetFramework: netcoreapp2.0
+            XUnitPublishTargetFramework: net10.0
+            XUnitRuntimeTargetFramework: net10.0
             XUnitRunnerVersion: 2.4.2
             XUnitWorkItemTimeout: '00:30:00'
             IncludeDotNetCli: true
             DotNetCliPackageType: sdk
-            DotNetCliVersion: 8.0.126
+            DotNetCliVersion: 10.0.106
             CorrelationPayloadDirectory: $(Build.StagingDirectory)\helix-payload
             Creator: install-scripts
