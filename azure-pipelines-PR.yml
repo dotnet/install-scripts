@@ -44,7 +44,7 @@ stages:
         timeoutInMinutes: 60
         pool:
           name: NetCore-Public
-          demands: ImageOverride -equals Ubuntu.2204.Amd64.open
+          demands: ImageOverride -equals build.ubuntu.2204.amd64.open
 
         variables:
         - _BuildConfig: Debug
