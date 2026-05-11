@@ -67,6 +67,6 @@ stages:
             HelixTargetQueues: Ubuntu.2204.Amd64.Open;OSX.15.ARM64.Open
             WorkItemDirectory: $(Agent.TempDirectory)/helix-payload
             WorkItemCommand: ./build.sh --test
-            HelixPreCommands: 'find . -name "*.sh" -exec chmod +x {} \;'
+            HelixPreCommands: 'find . -name "*.sh" | xargs chmod +x'
             WorkItemTimeout: '00:30:00'
             Creator: install-scripts
