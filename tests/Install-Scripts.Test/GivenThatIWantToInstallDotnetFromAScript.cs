@@ -53,7 +53,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [MemberData(nameof(InstallSdkFromChannelTestCases), MemberType = typeof(InstallScriptTestBase))]
+#pragma warning disable xUnit1026 // Theory methods should use all of their parameters - versionRegex is required by MemberData
         public void WhenInstallingTheSdkWithFeedCredential(string channel, string? quality, string versionRegex)
+#pragma warning restore xUnit1026
         {
             string feedCredential = "?" + Guid.NewGuid().ToString();
 
@@ -116,11 +118,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0.0-alpha.1.21472.1", null, "windowsdesktop")]
         public void WhenInstallingAnAlreadyInstalledVersion(string version, string? effectiveVersion = null, string? runtime = null)
         {
-            if (runtime == "windowsdesktop" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Don't install windowsdesktop if not on Windows.
-                return;
-            }
+            Assert.SkipWhen(runtime == "windowsdesktop" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+                "Don't install windowsdesktop if not on Windows.");
 
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel: null, runtime, quality: null, _sdkInstallationDirectory, version: version);
