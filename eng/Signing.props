@@ -1,5 +1,35 @@
 <Project>
+    <PropertyGroup>
+        <_SignOutputDir>$(ArtifactsDir)bin\SignScripts\$(Configuration)\</_SignOutputDir>
+    </PropertyGroup>
+
     <ItemGroup>
-        <ItemsToSign Include="$(ArtifactsDir)bin/SignScripts/$(Configuration)/dotnet-install.ps1" />
+        <!-- Remove default package artifacts - this repo doesn't produce NuGet packages -->
+        <ItemsToSign Remove="@(ItemsToSign)" />
+    </ItemGroup>
+
+    <Target Name="PrepareFilesForSigning" BeforeTargets="Sign">
+        <MakeDir Directories="$(_SignOutputDir)" />
+        <MakeDir Directories="$(ArtifactsPackagesDir)" />
+        <Copy SourceFiles="$(RepoRoot)src\dotnet-install.ps1" DestinationFolder="$(_SignOutputDir)" />
+        <Copy SourceFiles="$(RepoRoot)src\dotnet-install.sh" DestinationFolder="$(_SignOutputDir)" />
+    </Target>
+
+    <Target Name="RenameDetachedSignature" AfterTargets="Sign">
+        <Move SourceFiles="$(_SignOutputDir)dotnet-install.sh.sig" DestinationFiles="$(_SignOutputDir)dotnet-install.sig" />
+    </Target>
+
+    <ItemGroup>
+        <CertificatesSignInfo Include="Linux500046PGPDetached" SupportsDetachedSignature="true" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ItemsToSign Include="$(_SignOutputDir)dotnet-install.ps1" />
+        <ItemsToSign Include="$(_SignOutputDir)dotnet-install.sh" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <FileSignInfo Include="dotnet-install.ps1" CertificateName="Microsoft400" />
+        <FileSignInfo Include="dotnet-install.sh" CertificateName="Linux500046PGPDetached" />
     </ItemGroup>
 </Project>

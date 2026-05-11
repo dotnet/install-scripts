@@ -8,18 +8,24 @@ variables:
     value: True
   - name: _RunAsInternal
     value: False
-  - name: _InternalBuildArgs
-    value: ''
   - name: _UseBuildManifest
     value: False
   - name: _SignType
     value: test
+  - name: _BuildConfig
+    value: Debug
+  - name: _InternalBuildArgs
+    value: /p:DotNetSignType=$(_SignType) 
+      /p:TeamName=$(_TeamName)
+      /p:DotNetPublishUsingPipelines=false
 
   - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - name: _RunAsPublic
       value: False
     - name: _RunAsInternal
       value: True
+    - name: _BuildConfig
+      value: Release
     - name: _SignType
       value: real
     - name: _UseBuildManifest

@@ -62,7 +62,6 @@ extends:
               logs: true
               manifests: true
           enableMicrobuild: true
-          enablePublishUsingPipelines: true
           workspace:
             clean: all
           jobs:
@@ -77,8 +76,13 @@ extends:
             - checkout: self
               clean: true
             steps:
-            - script: Build.cmd -test
-              displayName: Run Tests
+            - script: Build.cmd
+                -test
+                -sign
+                -configuration $(_BuildConfig)
+                -bl
+                $(_InternalBuildArgs)
+              displayName: Test and Sign
             - task: PublishTestResults@2
               displayName: Publish Test Results
               inputs:
@@ -88,29 +92,20 @@ extends:
                 mergeTestResults: true
               condition: always()
             - task: 1ES.PublishBuildArtifacts@1
-              displayName: Publish Logs
+              displayName: Publish Artifacts (on failure)
               inputs:
-                PathtoPublish: artifacts/log
-                ArtifactName: Logs_$(Agent.JobName)
-              condition: always()
-            - script: eng\common\cibuild.cmd
-                -configuration Release
-                -projects src/Signing/SignScripts.csproj
-                -prepareMachine
-                $(_InternalBuildArgs)
-                /p:Test=false
-                /p:DotNetSignType=$(_SignType)
-                /p:TeamName=$(_TeamName)
-              displayName: Sign scripts
-              env:
-                SIGNTOOL_DISABLE_TELEMETRY: 'true'
+                PathtoPublish: '$(Build.Repository.LocalPath)/artifacts'
+                ArtifactName: Artifacts_$(Agent.Os)_$(_BuildConfig)_Attempt$(System.JobAttempt)
+              condition: failed()
+              continueOnError: true
             - task: PowerShell@2
               displayName: Validate Signature
               inputs:
                 filePath: eng/common/sdk-task.ps1
-                arguments: -task SigningValidation -restore -msbuildEngine vs 
-                  /p:InputFiles='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/**/*.ps1'
-                  /p:PackageBasePath='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/'
+                arguments: -task SigningValidation -restore -msbuildEngine vs
+                  /p:PackageBasePath='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/$(_BuildConfig)/'
+                  /p:RestoreConfigFile='$(Build.Repository.LocalPath)/NuGet.config'
+
       - job: Linux
         timeoutInMinutes: 30
         pool:
@@ -121,7 +116,7 @@ extends:
         - checkout: self
           displayName: Checkout Self
           clean: true
-        - script: ./build.sh --test
+        - script: ./build.sh --test -configuration $(_BuildConfig) -bl
           displayName: Run Tests
         - task: PublishTestResults@2
           displayName: Publish Test Results
@@ -148,7 +143,7 @@ extends:
         - checkout: self
           displayName: Checkout Self
           clean: true
-        - script: ./build.sh --test
+        - script: ./build.sh --test -configuration $(_BuildConfig)
           displayName: Run Tests
         - task: PublishTestResults@2
           displayName: Publish Test Results
@@ -189,4 +184,3 @@ extends:
           -TsaCodebaseName "Install-Scripts"
           -TsaPublish $True
           -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)\eng\policheck_exclusions.xml")'
-        
