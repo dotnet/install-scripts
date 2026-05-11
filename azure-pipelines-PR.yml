@@ -40,7 +40,7 @@ stages:
             HelixSource: pr/dotnet/install-scripts/$(Build.SourceBranch)
             HelixTargetQueues: Windows.10.Amd64.Open
             WorkItemDirectory: $(Agent.TempDirectory)\helix-payload
-            WorkItemCommand: Build.cmd -test
+            WorkItemCommand: .\Build.cmd -test
             WorkItemTimeout: '00:30:00'
             Creator: install-scripts
 
