@@ -47,13 +47,6 @@ stages:
             testRunTitle: $(Agent.JobName)
             mergeTestResults: true
           condition: always()
-        - task: PublishBuildArtifacts@1
-          displayName: Publish Artifacts (on failure)
-          inputs:
-            PathtoPublish: '$(Build.Repository.LocalPath)/artifacts'
-            ArtifactName: Artifacts_$(Agent.Os)_$(_BuildConfig)_Attempt$(System.JobAttempt)
-          condition: failed()
-          continueOnError: true
 
   - job: Linux
     timeoutInMinutes: 30

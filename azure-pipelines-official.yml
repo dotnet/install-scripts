@@ -92,13 +92,6 @@ extends:
                 testRunTitle: $(Agent.JobName)
                 mergeTestResults: true
               condition: always()
-            - task: 1ES.PublishBuildArtifacts@1
-              displayName: Publish Artifacts (on failure)
-              inputs:
-                PathtoPublish: '$(Build.Repository.LocalPath)/artifacts'
-                ArtifactName: Artifacts_$(Agent.Os)_$(_BuildConfig)_Attempt$(System.JobAttempt)
-              condition: failed()
-              continueOnError: true
             - task: PowerShell@2
               displayName: Validate Signature
               inputs:
