@@ -38,7 +38,7 @@ stages:
         - template: /eng/common/templates/steps/send-to-helix.yml
           parameters:
             HelixSource: pr/dotnet/install-scripts/$(Build.SourceBranch)
-            HelixTargetQueues: Windows.10.Amd64.Open
+            HelixTargetQueues: windows.amd64.vs2022.open
             WorkItemDirectory: $(Agent.TempDirectory)\helix-payload
             WorkItemCommand: .\Build.cmd -test
             WorkItemTimeout: '00:30:00'
