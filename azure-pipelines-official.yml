@@ -59,7 +59,6 @@ extends:
           artifacts:
             publish:
               artifacts: true
-              logs: true
               manifests: true
           isAssetlessBuild: true
           enableMicrobuild: true
@@ -99,6 +98,14 @@ extends:
                 arguments: -task SigningValidation -restore -msbuildEngine vs
                   /p:PackageBasePath='$(Build.Repository.LocalPath)/artifacts/bin/SignScripts/$(_BuildConfig)/'
                   /p:RestoreConfigFile='$(Build.Repository.LocalPath)/NuGet.config'
+            - task: CopyFiles@2
+              displayName: Gather logs for publish to artifacts
+              inputs:
+                SourceFolder: 'artifacts/log'
+                Contents: '**'
+                TargetFolder: '$(Build.ArtifactStagingDirectory)/artifacts/log'
+              continueOnError: true
+              condition: always()
 
       - job: Linux
         timeoutInMinutes: 30

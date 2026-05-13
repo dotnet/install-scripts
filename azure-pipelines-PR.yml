@@ -16,7 +16,6 @@ stages:
       artifacts:
         publish:
           artifacts: true
-          logs: true
           manifests: true
       enableMicrobuild: true
       workspace:
@@ -46,6 +45,14 @@ stages:
             testResultsFiles: 'artifacts/TestResults/$(_BuildConfig)/*.xml'
             testRunTitle: $(Agent.JobName)
             mergeTestResults: true
+          condition: always()
+        - task: CopyFiles@2
+          displayName: Gather logs for publish to artifacts
+          inputs:
+            SourceFolder: 'artifacts/log'
+            Contents: '**'
+            TargetFolder: '$(Build.ArtifactStagingDirectory)/artifacts/log'
+          continueOnError: true
           condition: always()
 
   - job: Linux
