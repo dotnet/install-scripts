@@ -13,7 +13,7 @@ variables:
   - name: _SignType
     value: test
   - name: _BuildConfig
-    value: Debug
+    value: Release
   - name: _InternalBuildArgs
     value: /p:DotNetSignType=$(_SignType) 
       /p:TeamName=$(_TeamName)
