@@ -137,7 +137,7 @@ extends:
         - checkout: self
           displayName: Checkout Self
           clean: true
-        - script: ./build.sh --test -configuration $(_BuildConfig)
+        - script: ./build.sh --test -configuration $(_BuildConfig) -bl
           displayName: Run Tests
         - task: PublishTestResults@2
           displayName: Publish Test Results
