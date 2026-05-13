@@ -13,6 +13,11 @@ stages:
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
+      artifacts:
+        publish:
+          artifacts: true
+          manifests: true
+      enableMicrobuild: true
       workspace:
         clean: all
       jobs:
@@ -26,21 +31,28 @@ stages:
         - checkout: self
           clean: true
         steps:
-        - script: Build.cmd -test
-          displayName: Run Tests
+        - script: Build.cmd
+            -test
+            -sign
+            -configuration $(_BuildConfig)
+            -bl
+            $(_InternalBuildArgs)
+          displayName: Test and Sign
         - task: PublishTestResults@2
           displayName: Publish Test Results
           inputs:
             testResultsFormat: xUnit
-            testResultsFiles: 'artifacts/TestResults/Debug/*.xml'
+            testResultsFiles: 'artifacts/TestResults/$(_BuildConfig)/*.xml'
             testRunTitle: $(Agent.JobName)
             mergeTestResults: true
           condition: always()
-        - task: PublishBuildArtifacts@1
-          displayName: Publish Logs
+        - task: CopyFiles@2
+          displayName: Gather logs for publish to artifacts
           inputs:
-            PathtoPublish: artifacts/log
-            ArtifactName: Logs_$(Agent.JobName)
+            SourceFolder: 'artifacts/log'
+            Contents: '**'
+            TargetFolder: '$(Build.ArtifactStagingDirectory)/artifacts/log'
+          continueOnError: true
           condition: always()
 
   - job: Linux
@@ -52,13 +64,13 @@ stages:
     - checkout: self
       displayName: Checkout Self
       clean: true
-    - script: ./build.sh --test
+    - script: ./build.sh --test --configuration $(_BuildConfig) -bl
       displayName: Run Tests
     - task: PublishTestResults@2
       displayName: Publish Test Results
       inputs:
         testResultsFormat: xUnit
-        testResultsFiles: 'artifacts/TestResults/Debug/*.xml'
+        testResultsFiles: 'artifacts/TestResults/$(_BuildConfig)/*.xml'
         testRunTitle: $(Agent.JobName)
         mergeTestResults: true
       condition: always()
@@ -77,13 +89,13 @@ stages:
     - checkout: self
       displayName: Checkout Self
       clean: true
-    - script: ./build.sh --test
+    - script: ./build.sh --test --configuration $(_BuildConfig) -bl
       displayName: Run Tests
     - task: PublishTestResults@2
       displayName: Publish Test Results
       inputs:
         testResultsFormat: xUnit
-        testResultsFiles: 'artifacts/TestResults/Debug/*.xml'
+        testResultsFiles: 'artifacts/TestResults/$(_BuildConfig)/*.xml'
         testRunTitle: $(Agent.JobName)
         mergeTestResults: true
       condition: always()
