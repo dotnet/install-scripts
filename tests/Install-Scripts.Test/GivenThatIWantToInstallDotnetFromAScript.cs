@@ -11,7 +11,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.InstallationScript.Tests
 {
@@ -131,17 +130,22 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         {
             get
             {
+                var seen = new HashSet<(string, string?, string)>();
+
                 // Download runtimes using branches as channels.
                 foreach (var runtimeBranchInfo in _runtimeBranches)
                 {
                     foreach (string? quality in GetQualityOptionsFromFlags(runtimeBranchInfo.quality).DefaultIfEmpty())
                     {
-                        yield return new object?[]
+                        if (seen.Add((runtimeBranchInfo.branch, quality, runtimeBranchInfo.versionRegex)))
                         {
-                            runtimeBranchInfo.branch,
-                            quality,
-                            runtimeBranchInfo.versionRegex,
-                        };
+                            yield return new object?[]
+                            {
+                                runtimeBranchInfo.branch,
+                                quality,
+                                runtimeBranchInfo.versionRegex,
+                            };
+                        }
                     }
                 }
 
@@ -150,12 +154,15 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 {
                     foreach (string? quality in GetQualityOptionsFromFlags(channelInfo.quality).DefaultIfEmpty())
                     {
-                        yield return new object?[]
+                        if (seen.Add((channelInfo.channel, quality, channelInfo.versionRegex)))
                         {
-                            channelInfo.channel,
-                            quality,
-                            channelInfo.versionRegex,
-                        };
+                            yield return new object?[]
+                            {
+                                channelInfo.channel,
+                                quality,
+                                channelInfo.versionRegex,
+                            };
+                        }
                     }
                 }
             }
@@ -270,12 +277,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
         public void WhenInstallingAspNetCoreRuntime(string channel, string? quality, string versionRegex)
         {
-            if (channel == "release/3.0"
-                || channel == "release/3.1")
-            {
-                // These scenarios are broken.
-                return;
-            }
+            Assert.SkipWhen(channel == "release/3.0" || channel == "release/3.1",
+                "These scenarios are broken for release/3.0 and release/3.1.");
 
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, "aspnetcore", quality, _sdkInstallationDirectory);
@@ -300,13 +303,12 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
+#pragma warning disable xUnit1026 // Theory methods should use all of their parameters - versionRegex is required by MemberData
         public void WhenInstallingWindowsdesktopRuntime(string channel, string? quality, string versionRegex)
+#pragma warning restore xUnit1026
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Don't install windowsdesktop if not on Windows.
-                return;
-            }
+            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+                "Don't install windowsdesktop if not on Windows.");
 
             List<Regex> exclusions = new List<Regex>()
             {
@@ -317,11 +319,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 new Regex("6.0-preview2"), // Broken scenario.
             };
 
-            if (exclusions.Any(e => e.IsMatch(channel)))
-            {
-                // Test is excluded.
-                return;
-            }
+            Assert.SkipWhen(exclusions.Any(e => e.IsMatch(channel)), "Test is excluded for this channel.");
 
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel, "windowsdesktop", quality, _sdkInstallationDirectory);
@@ -340,7 +338,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [MemberData(nameof(InstallSdkFromChannelTestCases))]
+#pragma warning disable xUnit1026 // Theory methods should use all of their parameters - versionRegex is required by MemberData
         public void WhenInstallingTheSdkWithFeedCredential(string channel, string? quality, string versionRegex)
+#pragma warning restore xUnit1026
         {
             string feedCredential = "?" + Guid.NewGuid().ToString();
 
@@ -357,7 +357,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         [Theory]
         [MemberData(nameof(InstallRuntimeFromChannelTestCases))]
+#pragma warning disable xUnit1026 // Theory methods should use all of their parameters - versionRegex is required by MemberData
         public void WhenInstallingDotnetRuntimeWithFeedCredential(string channel, string? quality, string versionRegex)
+#pragma warning restore xUnit1026
         {
             string feedCredential = "?" + Guid.NewGuid().ToString();
 
@@ -476,11 +478,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("11.0.0-preview.1.26104.118")]
         public void WhenInstallingASpecificVersionOfWindowsdesktopRuntime(string version)
         {
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Don't install windowsdesktop if not on Windows.
-                return;
-            }
+            Assert.SkipUnless(RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+                "Don't install windowsdesktop if not on Windows.");
 
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel: null, "windowsdesktop", quality: null, _sdkInstallationDirectory, version: version);
@@ -512,11 +511,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         [InlineData("7.0.0-alpha.1.21472.1", null, "windowsdesktop")]
         public void WhenInstallingAnAlreadyInstalledVersion(string version, string? effectiveVersion = null, string? runtime = null)
         {
-            if (runtime == "windowsdesktop" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                // Don't install windowsdesktop if not on Windows.
-                return;
-            }
+            Assert.SkipWhen(runtime == "windowsdesktop" && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows),
+                "Don't install windowsdesktop if not on Windows.");
 
             // Run install script to download and install.
             var args = GetInstallScriptArgs(channel: null, runtime, quality: null, _sdkInstallationDirectory, version: version);

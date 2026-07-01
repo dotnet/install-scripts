@@ -9,5 +9,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         internal static DotNetCommand CreateDotnetCommand(IEnumerable<string> args) => new DotNetCommand(args);
 
         internal static DotNetCommand CreateInstallCommand(IEnumerable<string> args) => new DotNetCommand(args);
+
+        internal static DotNetCommand CreateInstallCommand(IEnumerable<string> args, IDictionary<string, string> environmentVariables) => new DotNetCommand(args, environmentVariables);
     }
 }
