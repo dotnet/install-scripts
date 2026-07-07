@@ -939,7 +939,7 @@ function Extract-Dotnet-Package-Tar([string]$TarPath, [string]$OutPath) {
 
     foreach ($dir in $versionedDirs.GetEnumerator()) {
         if ($dir.Value) {
-            # This versioned directory already exists — exclude it from extraction
+            # This versioned directory already exists - exclude it from extraction
             $pattern = $dir.Key + '*'
             $excludeArgs += '--exclude'
             $excludeArgs += $pattern
@@ -956,7 +956,7 @@ function Extract-Dotnet-Package-Tar([string]$TarPath, [string]$OutPath) {
             if ($normalizedEntry.EndsWith('/')) { continue }
             $match = [regex]::Match($normalizedEntry, $versionRegex)
             if (-not $match.Success) {
-                # Non-versioned file — exclude if it already exists locally
+                # Non-versioned file - exclude if it already exists locally
                 $localPath = Join-Path -Path $OutPath -ChildPath $normalizedEntry
                 if (Test-Path $localPath) {
                     $excludeArgs += '--exclude'
