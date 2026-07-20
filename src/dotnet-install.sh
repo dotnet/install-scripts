@@ -609,17 +609,16 @@ validate_remote_local_file_sizes()
     if [ -n "$file_size" ]; then
         say "Downloaded file size is $file_size bytes."
 
-        if [ -n "$remote_file_size" ] && [ -n "$file_size" ]; then
-            if [ "$remote_file_size" -ne "$file_size" ]; then
-                say "The remote and local file sizes are not equal. The remote file size is $remote_file_size bytes and the local size is $file_size bytes. The local package may be corrupted."
-            else
-                say "The remote and local file sizes are equal."
-            fi
+        if [ -z "$remote_file_size" ]; then
+            say_verbose "Remote file size could not be determined. Skipping file size validation."
+        elif [ "$remote_file_size" -ne "$file_size" ]; then
+            say "The remote and local file sizes are not equal. The remote file size is $remote_file_size bytes and the local size is $file_size bytes. The local package may be corrupted."
+        else
+            say "The remote and local file sizes are equal."
         fi
-        
     else
-        say "Either downloaded or local package size can not be measured. One of them may be corrupted."      
-    fi 
+        say "Local file size could not be measured. The package may be corrupted or missing."
+    fi
 }
 
 # args:
