@@ -22,7 +22,7 @@ jobs:
       name: NetCore1ESPool-Internal
       demands: ImageOverride -equals Build.Server.Amd64.VS2017
     variables:
-    - group: Publish-Build-Assets
+    - group: DotNet-Maestro
     - _BuildConfig: ${{ parameters.buildConfig }}
     - _BuildArgs: ${{ parameters.buildArgs }}
     - _ValidateBlobFeedUrl: ${{ parameters.validateBlobFeedUrl }}
