@@ -524,8 +524,16 @@ get_normalized_channel() {
                 return 0
                 ;;
             *)
-                echo "$channel"
-                return 0
+                if [[ "$channel" =~ ^[0-9]+\.[0-9]+$ ]]; then
+                    echo "$channel"
+                    return 0
+                elif [[ "$channel" =~ ^[0-9]+\.[0-9]+\.[0-9]+[a-z]{2}$ ]]; then
+                    echo "$channel"
+                    return 0
+                else
+                    say_err "'$1' is not a supported value for --channel option. Supported values are: STS, LTS, a 2-part version in A.B format (e.g., 10.0), or a 3-part SDK band version in A.B.Cxx format (e.g., 5.0.1xx). If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues."
+                    return 1
+                fi
                 ;;
         esac
     fi
