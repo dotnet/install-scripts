@@ -216,15 +216,15 @@ extract_dotnet_package '{tarPath.Replace("'", "'\\''")}' '{outPath.Replace("'", 
             Directory.CreateDirectory(outPath);
             var dotnetPath = Path.Combine(outPath, "dotnet");
             File.WriteAllText(dotnetPath, "old-binary");
-            // A hard link shares the original file, so it only changes if that file is rewritten.
-            var originalFileAlias = Path.Combine(_testDir, "dotnet-original");
-            RunBash($"ln '{dotnetPath}' '{originalFileAlias}'").ExitCode.Should().Be(0);
+            // An open handle keeps pointing at the original file, like a running dotnet process,
+            // so it only sees the new content if that file is rewritten in place.
+            using var originalFile = new FileStream(dotnetPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
 
             var result = RunExtraction(tarPath, outPath, overrideNonVersionedFiles: true);
 
             result.ExitCode.Should().Be(0, because: $"extraction should succeed.\nStdOut: {result.StdOut}\nStdErr: {result.StdErr}");
             File.ReadAllText(dotnetPath).Should().Be("new-binary");
-            File.ReadAllText(originalFileAlias)
+            new StreamReader(originalFile).ReadToEnd()
                 .Should().Be("old-binary", "the original file should be replaced, not rewritten in place");
             Directory.GetFiles(outPath).Should().BeEquivalentTo(new[] { dotnetPath }, "no temporary files should be left behind");
         }
