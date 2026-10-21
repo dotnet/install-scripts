@@ -1008,7 +1008,15 @@ copy_files_or_dirs_from_list() {
             if [ -d "$target" ] || [ -L "$target" ]; then
                 rm -rf "$target"
             fi
-            cp -RP $override_switch "$root_path/$path" "$target"
+            if [ -f "$target" ]; then
+                # Copy to a temporary name, then rename over the target: rewriting an existing
+                # file in place keeps the same file, and macOS kills a re-signed binary such as
+                # dotnet on launch when its cached code signature no longer matches.
+                local temp_target="$target.tmp.$$"
+                cp -RP $override_switch "$root_path/$path" "$temp_target" && mv -f "$temp_target" "$target"
+            else
+                cp -RP $override_switch "$root_path/$path" "$target"
+            fi
         fi
     done
 }
