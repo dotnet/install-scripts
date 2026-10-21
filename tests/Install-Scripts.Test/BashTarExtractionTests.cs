@@ -198,9 +198,9 @@ extract_dotnet_package '{tarPath.Replace("'", "'\\''")}' '{outPath.Replace("'", 
         }
 
         /// <summary>
-        /// Verifies that an overwritten non-versioned file is replaced by a new file rather than
-        /// rewritten in place. macOS caches code signatures per file, so rewriting a signed
-        /// binary such as dotnet in place gets it killed on launch ("Killed: 9").
+        /// Verifies that an existing non-versioned file is replaced, not rewritten in place.
+        /// On macOS, rewriting dotnet while another dotnet process runs gets the next launch
+        /// killed ("Killed: 9").
         /// </summary>
         [Fact]
         public void OverwrittenNonVersionedFileIsReplacedNotRewrittenInPlace()
@@ -216,8 +216,8 @@ extract_dotnet_package '{tarPath.Replace("'", "'\\''")}' '{outPath.Replace("'", 
             Directory.CreateDirectory(outPath);
             var dotnetPath = Path.Combine(outPath, "dotnet");
             File.WriteAllText(dotnetPath, "old-binary");
-            // An open handle keeps pointing at the original file, like a running dotnet process,
-            // so it only sees the new content if that file is rewritten in place.
+            // Like a running dotnet, an open handle keeps the original file, so it only sees the
+            // new content if the file is rewritten in place.
             using var originalFile = new FileStream(dotnetPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
 
             var result = RunExtraction(tarPath, outPath, overrideNonVersionedFiles: true);

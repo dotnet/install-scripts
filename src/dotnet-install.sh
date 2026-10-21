@@ -1009,9 +1009,8 @@ copy_files_or_dirs_from_list() {
                 rm -rf "$target"
             fi
             if [ -f "$target" ]; then
-                # Copy to a temporary name, then rename over the target: rewriting an existing
-                # file in place keeps the same file, and macOS kills a re-signed binary such as
-                # dotnet on launch when its cached code signature no longer matches.
+                # Replace the file instead of rewriting it: on macOS, rewriting dotnet while
+                # another dotnet process runs gets the next launch killed ("Killed: 9").
                 local temp_target="$target.tmp.$$"
                 if ! { cp -RP $override_switch "$root_path/$path" "$temp_target" && mv -f "$temp_target" "$target"; }; then
                     rm -f "$temp_target"
