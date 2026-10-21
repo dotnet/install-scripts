@@ -1013,7 +1013,9 @@ copy_files_or_dirs_from_list() {
                 # file in place keeps the same file, and macOS kills a re-signed binary such as
                 # dotnet on launch when its cached code signature no longer matches.
                 local temp_target="$target.tmp.$$"
-                cp -RP $override_switch "$root_path/$path" "$temp_target" && mv -f "$temp_target" "$target"
+                if ! { cp -RP $override_switch "$root_path/$path" "$temp_target" && mv -f "$temp_target" "$target"; }; then
+                    rm -f "$temp_target"
+                fi
             else
                 cp -RP $override_switch "$root_path/$path" "$target"
             fi
