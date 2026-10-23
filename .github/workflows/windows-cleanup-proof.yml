@@ -1,0 +1,27 @@
+name: Windows cleanup proof
+
+on:
+  push:
+    branches: [fix/windows-test-cleanup-retry]
+  workflow_dispatch:
+    inputs:
+      full:
+        description: Run the whole test suite
+        type: boolean
+        default: false
+
+jobs:
+  test:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Cleanup test
+        if: ${{ !inputs.full }}
+        run: dotnet run --project tests/Install-Scripts.Test -- --filter-class "*InstallationDirectoryCleanupTests"
+      - name: Full suite
+        if: ${{ inputs.full }}
+        run: dotnet run --project tests/Install-Scripts.Test
