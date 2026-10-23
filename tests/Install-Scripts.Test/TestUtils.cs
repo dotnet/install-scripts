@@ -14,8 +14,9 @@ namespace Microsoft.DotNet.InstallationScript.Tests
 
         internal static DotNetCommand CreateInstallCommand(IEnumerable<string> args, IDictionary<string, string> environmentVariables) => new DotNetCommand(args, environmentVariables);
 
-        private const int DeleteAttempts = 10;
-        private static readonly TimeSpan DeleteRetryDelay = TimeSpan.FromMilliseconds(200);
+        private const int DeleteAttempts = 8;
+        private static readonly TimeSpan InitialDeleteRetryDelay = TimeSpan.FromMilliseconds(100);
+        private static readonly TimeSpan MaxDeleteRetryDelay = TimeSpan.FromSeconds(1);
 
         /// <remarks>
         /// Windows keeps an executable locked while it runs and sometimes briefly after it exits
@@ -23,6 +24,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         /// </remarks>
         internal static void DeleteInstallationDirectory(string path)
         {
+            TimeSpan delay = InitialDeleteRetryDelay;
             for (int attempt = 1; ; attempt++)
             {
                 try
@@ -42,7 +44,8 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                         throw new Exception($"Failed to remove {path}", e);
                     }
 
-                    Thread.Sleep(DeleteRetryDelay);
+                    Thread.Sleep(delay);
+                    delay = TimeSpan.FromTicks(Math.Min(delay.Ticks * 2, MaxDeleteRetryDelay.Ticks));
                 }
             }
         }
