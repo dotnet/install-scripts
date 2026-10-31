@@ -321,6 +321,10 @@ function Get-NormalizedChannel([string]$Channel) {
         Say-Warning 'Using branch name with -Channel option is no longer supported with newer releases. Use -Quality option with a channel in X.Y format instead, such as "-Channel 5.0 -Quality Daily."'
     }
 
+    if ($Channel -match '^\d+$') {
+        throw "'$Channel' is not a supported value for -Channel option. Supported values are: STS, LTS, a two-part version such as '10.0', or a three-part SDK feature band such as '10.0.1xx'. Did you mean '-Channel $Channel.0'? If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues."
+    }
+
     switch ($Channel) {
         { $_ -eq "lts" } { return "LTS" }
         { $_ -eq "sts" } { return "STS" }
