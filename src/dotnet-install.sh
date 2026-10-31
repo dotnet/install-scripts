@@ -240,6 +240,12 @@ check_min_reqs() {
         say_err "curl (recommended) or wget are required to download dotnet. Install missing prerequisite to proceed."
         return 1
     fi
+
+    # awk parses the redirect and status codes of the download, the aka.ms link and the version in global.json
+    if ! machine_has "awk"; then
+        say_err "awk is required to download and install dotnet. Install awk (for example the 'gawk' or 'mawk' package) and try again."
+        return 1
+    fi
     return 0
 }
 
