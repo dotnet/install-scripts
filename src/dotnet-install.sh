@@ -1008,7 +1008,16 @@ copy_files_or_dirs_from_list() {
             if [ -d "$target" ] || [ -L "$target" ]; then
                 rm -rf "$target"
             fi
-            cp -RP $override_switch "$root_path/$path" "$target"
+            if [ -f "$target" ]; then
+                # Replace the file instead of rewriting it: on macOS, rewriting dotnet while
+                # another dotnet process runs gets the next launch killed ("Killed: 9").
+                local temp_target="$target.tmp.$$"
+                if ! { cp -RP $override_switch "$root_path/$path" "$temp_target" && mv -f "$temp_target" "$target"; }; then
+                    rm -f "$temp_target"
+                fi
+            else
+                cp -RP $override_switch "$root_path/$path" "$target"
+            fi
         fi
     done
 }
