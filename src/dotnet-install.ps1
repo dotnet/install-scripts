@@ -1018,23 +1018,32 @@ function DownloadFile($Source, [string]$OutPath) {
 function ValidateRemoteLocalFileSizes([string]$LocalFileOutPath, $SourceUri) {
     try {
         $remoteFileSize = Get-Remote-File-Size -zipUri $SourceUri
-        $fileSize = [long](Get-Item $LocalFileOutPath).Length
-        Say "Downloaded file $SourceUri size is $fileSize bytes."
-    
-        if ((![string]::IsNullOrEmpty($remoteFileSize)) -and !([string]::IsNullOrEmpty($fileSize)) ) {
-            if ($remoteFileSize -ne $fileSize) {
-                Say "The remote and local file sizes are not equal. Remote file size is $remoteFileSize bytes and local size is $fileSize bytes. The local package may be corrupted."
-            }
-            else {
-                Say "The remote and local file sizes are equal."
-            }   
+        $localFileSize = $null
+
+        if (Test-Path $LocalFileOutPath) {
+            $localFileSize = [long](Get-Item $LocalFileOutPath).Length
+            Say "Downloaded file $SourceUri size is $localFileSize bytes."
+        }
+
+        if ($null -eq $localFileSize -or $localFileSize -le 0) {
+            Say "Local file size could not be measured. The package may be corrupted or missing."
+            return
+        }
+
+        if ([string]::IsNullOrEmpty($remoteFileSize)) {
+            Say-Verbose "Remote file size could not be determined. Skipping file size validation."
+            return
+        }
+
+        if ($remoteFileSize -ne $localFileSize) {
+            Say "The remote and local file sizes are not equal. Remote file size is $remoteFileSize bytes and local size is $localFileSize bytes. The local package may be corrupted."
         }
         else {
-            Say "Either downloaded or local package size can not be measured. One of them may be corrupted."
+            Say "The remote and local file sizes are equal."
         }
     }
     catch {
-        Say "Either downloaded or local package size can not be measured. One of them may be corrupted."
+        Say-Verbose "Unable to validate remote and local file sizes."
     }
 }
 
