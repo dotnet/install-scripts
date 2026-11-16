@@ -2,6 +2,7 @@
 
 using FluentAssertions;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO;
@@ -194,6 +195,38 @@ extract_dotnet_package '{tarPath.Replace("'", "'\\''")}' '{outPath.Replace("'", 
             var linkTarget = new FileInfo(crossDirSymlink).LinkTarget;
             linkTarget.Should().NotBeNull("symlink should have a target");
             linkTarget.Should().NotStartWith("/", "symlink should be relative, not absolute");
+        }
+
+        /// <summary>
+        /// Verifies that an existing non-versioned file is replaced, not rewritten in place.
+        /// On macOS, rewriting dotnet while another dotnet process runs gets the next launch
+        /// killed ("Killed: 9").
+        /// </summary>
+        [Fact]
+        public void OverwrittenNonVersionedFileIsReplacedNotRewrittenInPlace()
+        {
+            SkipUnlessPrerequisitesMet();
+
+            var tarPath = CreateTarball("replace.tar.gz", new Dictionary<string, string>
+            {
+                ["dotnet"] = "new-binary"
+            });
+
+            var outPath = Path.Combine(_testDir, "install-replace");
+            Directory.CreateDirectory(outPath);
+            var dotnetPath = Path.Combine(outPath, "dotnet");
+            File.WriteAllText(dotnetPath, "old-binary");
+            // Like a running dotnet, an open handle keeps the original file, so it only sees the
+            // new content if the file is rewritten in place.
+            using var originalFile = new FileStream(dotnetPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+
+            var result = RunExtraction(tarPath, outPath, overrideNonVersionedFiles: true);
+
+            result.ExitCode.Should().Be(0, because: $"extraction should succeed.\nStdOut: {result.StdOut}\nStdErr: {result.StdErr}");
+            File.ReadAllText(dotnetPath).Should().Be("new-binary");
+            new StreamReader(originalFile).ReadToEnd()
+                .Should().Be("old-binary", "the original file should be replaced, not rewritten in place");
+            Directory.GetFiles(outPath).Should().BeEquivalentTo(new[] { dotnetPath }, "no temporary files should be left behind");
         }
 
         private string CreateTarballWithSymlinks()
