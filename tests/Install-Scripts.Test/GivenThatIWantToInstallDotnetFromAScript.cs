@@ -206,21 +206,7 @@ namespace Microsoft.DotNet.InstallationScript.Tests
         /// </summary>
         /// <remarks>This method is called after each test. It is used for cleaning
         /// the leftover files from each test run.</remarks>
-        public void Dispose()
-        {
-            try
-            {
-                Directory.Delete(_sdkInstallationDirectory, true);
-            }
-            catch (DirectoryNotFoundException)
-            {
-                // Directory to cleanup may not be there if installation fails. Not an issue. Ignore the exception.
-            }
-            catch (UnauthorizedAccessException e)
-            {
-                throw new Exception($"Failed to remove {_sdkInstallationDirectory}", e);
-            }
-        }
+        public void Dispose() => TestUtils.DeleteInstallationDirectory(_sdkInstallationDirectory);
 
         [Theory]
         [MemberData(nameof(InstallSdkFromChannelTestCases))]
