@@ -652,7 +652,7 @@ get_version_from_latestversion_file() {
 
 # args:
 # json_file - $1
-parse_globaljson_file_for_version() {
+parse_globaljson_file() {
     eval $invocation
 
     local json_file="$1"
@@ -671,23 +671,77 @@ parse_globaljson_file_for_version() {
     sdk_list=${sdk_list//[\" ]/}
     sdk_list=${sdk_list//,/$'\n'}
 
-    local version_info=""
     while read -r line; do
       IFS=:
       while read -r key value; do
         if [[ "$key" == "version" ]]; then
-          version_info=$value
+          globaljson_version=$value
+        elif [[ "$key" == "rollForward" ]]; then
+          globaljson_roll_forward=$value
         fi
       done <<< "$line"
     done <<< "$sdk_list"
-    if [ -z "$version_info" ]; then
-        say_err "Unable to find the SDK:version node in \`$json_file\`"
-        return 1
-    fi
 
     unset IFS;
-    echo "$version_info"
     return 0
+}
+
+process_globaljson_file() {
+    if [[ -n "$json_file" ]]; then
+        globaljson_version=""
+        globaljson_roll_forward=""
+        parse_globaljson_file "$json_file" || return 1
+
+        # https://learn.microsoft.com/en-us/dotnet/core/tools/global-json#matching-rules
+        if [[ -z "$globaljson_roll_forward" ]]; then
+            if [[ -z "$globaljson_version" ]]; then
+                globaljson_roll_forward="latestMajor"
+            else
+                globaljson_roll_forward="latestPatch"
+            fi
+        fi
+
+        if [[ -n "$globaljson_version" ]]; then
+            IFS='.'
+            read -ra parts <<<"$globaljson_version"
+            unset IFS
+
+            local major="${parts[0]}"
+            local minor="${parts[1]}"
+            local featureBand="${parts[2]:0:1}"
+        fi
+
+        case "$globaljson_roll_forward" in
+        disable|major|minor|feature|patch)
+            version="$globaljson_version";
+            ;;
+
+        latestMajor)
+            version="latest"
+            channel="STS" # TODO this doesn't do what it should https://github.com/dotnet/install-scripts/issues/418
+            ;;
+
+        latestMinor)
+            version="latest"
+            channel="${major}.x" # TODO this doesn't work
+            ;;
+
+        latestFeature)
+            version="latest"
+            channel="${major}.${minor}"
+            ;;
+
+        latestPatch)
+            version="latest"
+            channel="${major}.${minor}.${featureBand}xx"
+            ;;
+
+        *)
+            say_err "Unsupported rollForward option: $globaljson_roll_forward"
+            return 1
+            ;;
+        esac
+    fi
 }
 
 # args:
@@ -695,7 +749,6 @@ parse_globaljson_file_for_version() {
 # channel - $2
 # normalized_architecture - $3
 # version - $4
-# json_file - $5
 get_specific_version_from_version() {
     eval $invocation
 
@@ -703,23 +756,15 @@ get_specific_version_from_version() {
     local channel="$2"
     local normalized_architecture="$3"
     local version="$(to_lowercase "$4")"
-    local json_file="$5"
 
-    if [ -z "$json_file" ]; then
-        if [[ "$version" == "latest" ]]; then
-            local version_info
-            version_info="$(get_version_from_latestversion_file "$azure_feed" "$channel" "$normalized_architecture" false)" || return 1
-            say_verbose "get_specific_version_from_version: version_info=$version_info"
-            echo "$version_info" | get_version_from_latestversion_file_content
-            return 0
-        else
-            echo "$version"
-            return 0
-        fi
-    else
+    if [[ "$version" == "latest" ]]; then
         local version_info
-        version_info="$(parse_globaljson_file_for_version "$json_file")" || return 1
-        echo "$version_info"
+        version_info="$(get_version_from_latestversion_file "$azure_feed" "$channel" "$normalized_architecture" false)" || return 1
+        say_verbose "get_specific_version_from_version: version_info=$version_info"
+        echo "$version_info" | get_version_from_latestversion_file_content
+        return 0
+    else
+        echo "$version"
         return 0
     fi
 }
@@ -1397,8 +1442,8 @@ generate_akams_links() {
         return 1
     fi
 
-    if [[ -n "$json_file" || "$normalized_version" != "latest" ]]; then
-        # aka.ms links are not needed when exact version is specified via command or json file
+    if [[ "$normalized_version" != "latest" ]]; then
+        # aka.ms links are not needed when exact version is specified via command
         return
     fi
 
@@ -1452,7 +1497,7 @@ generate_regular_links() {
     local feed="$1"
     local valid_legacy_download_link=true
 
-    specific_version=$(get_specific_version_from_version "$feed" "$channel" "$normalized_architecture" "$version" "$json_file") || specific_version='0'
+    specific_version=$(get_specific_version_from_version "$feed" "$channel" "$normalized_architecture" "$version") || specific_version='0'
 
     if [[ "$specific_version" == '0' ]]; then
         say_verbose "Failed to resolve the specific version number using feed '$feed'"
@@ -1539,6 +1584,7 @@ calculate_vars() {
     say_verbose "Normalized product: '$normalized_product'."
     install_root="$(resolve_installation_path "$install_dir")"
     say_verbose "InstallRoot: '$install_root'."
+    say_verbose "Version: '$version'."
 
     normalized_architecture="$(get_normalized_architecture_for_specific_sdk_version "$version" "$normalized_channel" "$normalized_architecture")"
 
@@ -1826,7 +1872,6 @@ do
             echo "  --skip-non-versioned-files         Skips non-versioned files if they already exist, such as the dotnet executable."
             echo "      -SkipNonVersionedFiles"
             echo "  --jsonfile <JSONFILE>              Determines the SDK version from a user specified global.json file."
-            echo "                                     Note: global.json must have a value for 'SDK:Version'"
             echo "  --keep-zip,-KeepZip                If set, downloaded file is kept."
             echo "  --zip-path, -ZipPath               If set, downloaded file is stored at the specified path."
             echo "  -?,--?,-h,--help,-Help             Shows this help message"
@@ -1863,6 +1908,7 @@ if [ "$internal" = true ] && [ -z "$(echo $feed_credential)" ]; then
 fi
 
 check_min_reqs
+process_globaljson_file
 calculate_vars
 # generate_regular_links call below will 'exit' if the determined version is already installed.
 generate_download_links
