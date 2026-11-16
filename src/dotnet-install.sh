@@ -509,6 +509,11 @@ get_normalized_channel() {
         say_warning 'Using branch name with -Channel option is no longer supported with newer releases. Use -Quality option with a channel in X.Y format instead.';
     fi
 
+    if [[ $channel =~ ^[0-9]+$ ]]; then
+        say_err "'$channel' is not a supported value for --channel option. Supported values are: STS, LTS, a two-part version such as '10.0', or a three-part SDK feature band such as '10.0.1xx'. Did you mean '-Channel $channel.0'? If you think this is a bug, report it at https://github.com/dotnet/install-scripts/issues."
+        return 1
+    fi
+
     if [ ! -z "$channel" ]; then
         case "$channel" in
             lts)
