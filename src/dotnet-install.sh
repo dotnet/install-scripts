@@ -581,7 +581,7 @@ is_dotnet_package_installed() {
     local dotnet_package_path="$(combine_paths "$(combine_paths "$install_root" "$relative_path_to_package")" "$specific_version")"
     say_verbose "is_dotnet_package_installed: dotnet_package_path=$dotnet_package_path"
 
-    if [ -d "$dotnet_package_path" ]; then
+    if [ -d "$dotnet_package_path" ] && [ -f "$(combine_paths "$install_root" "dotnet")" ]; then
         return 0
     else
         return 1

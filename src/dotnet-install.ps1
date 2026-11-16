@@ -819,6 +819,12 @@ function Test-User-Write-Access([string]$InstallDir) {
 function Is-Dotnet-Package-Installed([string]$InstallRoot, [string]$RelativePathToPackage, [string]$SpecificVersion) {
     Say-Invocation $MyInvocation
 
+    # The Windows Desktop runtime package does not include the dotnet host.
+    if ($RelativePathToPackage.Replace('\', '/') -ne 'shared/Microsoft.WindowsDesktop.App' -and
+        -not (Test-Path (Join-Path -Path $InstallRoot -ChildPath 'dotnet.exe') -PathType Leaf)) {
+        return $false
+    }
+
     $DotnetPackagePath = Join-Path -Path $InstallRoot -ChildPath $RelativePathToPackage | Join-Path -ChildPath $SpecificVersion
     Say-Verbose "Is-Dotnet-Package-Installed: DotnetPackagePath=$DotnetPackagePath"
     return Test-Path $DotnetPackagePath -PathType Container
