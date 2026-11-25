@@ -69,10 +69,15 @@ namespace Microsoft.DotNet.InstallationScript.Tests
                 Directory.CreateDirectory(_shimDir);
                 string unamePath = Path.Combine(_shimDir, "uname");
                 File.WriteAllText(unamePath, "#!/bin/sh\ncase \"${1:-}\" in\n  -m) echo aarch64 ;;\n  -s) echo HarmonyOS ;;\n  *) echo HarmonyOS ;;\nesac\n");
-                File.SetUnixFileMode(unamePath,
-                    UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
-                    UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
-                    UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+                // CA1416: SetUnixFileMode is Unix-only. The tests are skipped on Windows; the
+                // guard keeps the analyzer (and a future Windows run) happy.
+                if (!OperatingSystem.IsWindows())
+                {
+                    File.SetUnixFileMode(unamePath,
+                        UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+                        UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+                        UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
+                }
 
                 FeedPath = Path.Combine(_root, "feed");
                 string versionDir = Path.Combine(FeedPath, "Sdk", "11.0.100");
